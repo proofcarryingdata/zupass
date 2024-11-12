@@ -2,7 +2,7 @@ import { RollbarService } from "@pcd/server-shared";
 import { getCacheSize } from "../database/queries/cache";
 import { fetchE2EEStorageCount } from "../database/queries/e2ee";
 import { fetchUserCount } from "../database/queries/users";
-import { namedSqlTransaction } from "../database/sqlQuery";
+import { sqlQueryWithPool } from "../database/sqlQuery";
 import { ApplicationContext, ServerMode } from "../types";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
@@ -54,19 +54,15 @@ export class MetricsService {
   }
 
   private async collectMetrics(): Promise<Metrics> {
-    return await namedSqlTransaction(
-      this.context.dbPool,
-      "collectMetrics",
-      async (client) => {
-        const metrics: Metrics = {
-          usersCount: await fetchUserCount(client),
-          e2eeCount: await fetchE2EEStorageCount(client),
-          cacheSize: await getCacheSize(client)
-        };
+    return await sqlQueryWithPool(this.context.dbPool, async (client) => {
+      const metrics: Metrics = {
+        usersCount: await fetchUserCount(client),
+        e2eeCount: await fetchE2EEStorageCount(client),
+        cacheSize: await getCacheSize(client)
+      };
 
-        return metrics;
-      }
-    );
+      return metrics;
+    });
   }
 
   private async reportMetrics(metrics: Metrics): Promise<void> {

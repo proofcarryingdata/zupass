@@ -4,7 +4,7 @@ import {
   serializeSemaphoreGroup
 } from "@pcd/semaphore-group-pcd";
 import express, { Request, Response } from "express";
-import { sqlTransaction } from "../../database/sqlQuery";
+import { sqlQueryWithPool } from "../../database/sqlQuery";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { checkExistsForRoute } from "../../util/util";
@@ -40,7 +40,7 @@ export function initSemaphoreRoutes(
       const groupId = checkUrlParam(req, "id");
       const roothash = checkUrlParam(req, "root");
 
-      const historicGroupValid = await sqlTransaction(
+      const historicGroupValid = await sqlQueryWithPool(
         context.dbPool,
         (client) =>
           semaphoreService.getHistoricSemaphoreGroupValid(
@@ -70,7 +70,7 @@ export function initSemaphoreRoutes(
     "/semaphore/historic/:id/:root",
     async (req: Request, res: Response) => {
       checkExistsForRoute(semaphoreService);
-      const historicGroup = await sqlTransaction(context.dbPool, (client) =>
+      const historicGroup = await sqlQueryWithPool(context.dbPool, (client) =>
         semaphoreService.getHistoricSemaphoreGroup(
           client,
           checkUrlParam(req, "id"),
@@ -99,7 +99,7 @@ export function initSemaphoreRoutes(
   app.get("/semaphore/latest-root/:id", async (req: Request, res: Response) => {
     checkExistsForRoute(semaphoreService);
     const id = checkUrlParam(req, "id");
-    const latestGroups = await sqlTransaction(context.dbPool, (client) =>
+    const latestGroups = await sqlQueryWithPool(context.dbPool, (client) =>
       semaphoreService.getLatestSemaphoreGroups(client)
     );
     const matchingGroup = latestGroups.find((g) => g.groupId.toString() === id);

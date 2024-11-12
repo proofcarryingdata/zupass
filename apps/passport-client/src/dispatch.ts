@@ -1160,14 +1160,23 @@ async function doSync(
         onSubscriptionResult,
         state.subscriptions
           .getActiveSubscriptions()
-          .filter(
-            (s) =>
-              s.id !==
+          .filter((s) => {
+            if (
+              s.id ===
               state.subscriptions.findSubscription(
                 ZUPASS_FEED_URL,
                 ZupassFeedIds.Email
               )?.id
-          )
+            ) {
+              return false;
+            }
+
+            if (appConfig.ignoreNonPriorityFeeds) {
+              return appConfig.priorityFeedProviderUrls.includes(s.providerUrl);
+            }
+
+            return true;
+          })
           .map((s) => s.id)
       );
 

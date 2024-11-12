@@ -10,10 +10,7 @@ import {
 } from "@pcd/passport-interface";
 import { randomUUID } from "@pcd/util";
 import { PipelineUserDB } from "../../../../src/database/queries/pipelineUserDB";
-import {
-  namedSqlTransaction,
-  sqlTransaction
-} from "../../../../src/database/sqlQuery";
+import { namedSqlTransaction } from "../../../../src/database/sqlQuery";
 import { GenericIssuanceService } from "../../../../src/services/generic-issuance/GenericIssuanceService";
 import { PODPipeline } from "../../../../src/services/generic-issuance/pipelines/PODPipeline/PODPipeline";
 import { Zupass } from "../../../../src/types";
@@ -104,10 +101,7 @@ export async function updateAndRestartPipeline(
     "updateAndRestartPipeline",
     async (client) => {
       const userDB = new PipelineUserDB();
-      const adminUser = await sqlTransaction(
-        giBackend.context.dbPool,
-        (client) => userDB.getUserById(client, adminGIUserId)
-      );
+      const adminUser = await userDB.getUserById(client, adminGIUserId);
       expectToExist(adminUser);
 
       const pipelines = await giService.getAllPipelineInstances();

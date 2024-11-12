@@ -3,7 +3,7 @@ import {
   UploadEncryptedStorageRequest
 } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
-import { namedSqlTransaction } from "../../database/sqlQuery";
+import { sqlQueryWithPool, sqlTransaction } from "../../database/sqlQuery";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { checkExistsForRoute } from "../../util/util";
@@ -30,10 +30,8 @@ export function initE2EERoutes(
       checkExistsForRoute(e2eeService);
       const request = req.body as ChangeBlobKeyRequest;
 
-      const result = await namedSqlTransaction(
-        context.dbPool,
-        "/sync/v3/changeBlobKey",
-        (client) => e2eeService.handleChangeBlobKey(client, request)
+      const result = await sqlTransaction(context.dbPool, (client) =>
+        e2eeService.handleChangeBlobKey(client, request)
       );
 
       res.status(200).json(result);
@@ -55,15 +53,12 @@ export function initE2EERoutes(
     clusterProxy(),
     async (req: Request, res: Response) => {
       checkExistsForRoute(e2eeService);
-      const result = await namedSqlTransaction(
-        context.dbPool,
-        "/sync/v3/load/",
-        (client) =>
-          e2eeService.handleLoad(
-            client,
-            checkQueryParam(req, "blobKey"),
-            checkOptionalQueryParam(req, "knownRevision")
-          )
+      const result = await sqlQueryWithPool(context.dbPool, (client) =>
+        e2eeService.handleLoad(
+          client,
+          checkQueryParam(req, "blobKey"),
+          checkOptionalQueryParam(req, "knownRevision")
+        )
       );
 
       res.status(200).json(result);
@@ -88,10 +83,8 @@ export function initE2EERoutes(
     async (req: Request, res: Response) => {
       checkExistsForRoute(e2eeService);
       const request = req.body as UploadEncryptedStorageRequest;
-      const result = await namedSqlTransaction(
-        context.dbPool,
-        "/sync/v3/save",
-        (client) => e2eeService.handleSave(client, request)
+      const result = await sqlQueryWithPool(context.dbPool, (client) =>
+        e2eeService.handleSave(client, request)
       );
 
       res.status(200).json(result);

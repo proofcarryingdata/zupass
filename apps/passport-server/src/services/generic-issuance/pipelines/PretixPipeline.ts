@@ -60,10 +60,7 @@ import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerD
 import { IPipelineDefinitionDB } from "../../../database/queries/pipelineDefinitionDB";
 import { IPipelineManualTicketDB } from "../../../database/queries/pipelineManualTicketDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
-import {
-  namedSqlTransaction,
-  sqlTransaction
-} from "../../../database/sqlQuery";
+import { sqlQueryWithPool } from "../../../database/sqlQuery";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
@@ -253,7 +250,7 @@ export class PretixPipeline implements BasePipeline {
         getSerializedLatestGroup: async (
           groupId: string
         ): Promise<SerializedSemaphoreGroup | undefined> => {
-          return sqlTransaction(
+          return sqlQueryWithPool(
             this.context.dbPool,
             async (client) =>
               this.semaphoreGroupProvider?.getSerializedLatestGroup(
@@ -265,7 +262,7 @@ export class PretixPipeline implements BasePipeline {
         getLatestGroupRoot: async (
           groupId: string
         ): Promise<string | undefined> => {
-          return sqlTransaction(
+          return sqlQueryWithPool(
             this.context.dbPool,
             async (client) =>
               this.semaphoreGroupProvider?.getLatestGroupRoot(client, groupId)
@@ -275,7 +272,7 @@ export class PretixPipeline implements BasePipeline {
           groupId: string,
           rootHash: string
         ): Promise<SerializedSemaphoreGroup | undefined> => {
-          return sqlTransaction(
+          return sqlQueryWithPool(
             this.context.dbPool,
             async (client) =>
               this.semaphoreGroupProvider?.getSerializedHistoricalGroup(
@@ -307,7 +304,7 @@ export class PretixPipeline implements BasePipeline {
       throw new Error(`pipeline ${this.id} already stopped`);
     }
     logger(`starting pretix pipeline with id ${this.definition.id}`);
-    await sqlTransaction(this.context.dbPool, (client) =>
+    await sqlQueryWithPool(this.context.dbPool, (client) =>
       this.cleanUpManualCheckins(client)
     );
     await this.semaphoreGroupProvider?.start();
@@ -457,85 +454,80 @@ export class PretixPipeline implements BasePipeline {
           `saving ${atomsToSave.length} atoms for pipeline id '${this.id}' of type ${this.type}`
         );
 
-        return namedSqlTransaction(
-          this.context.dbPool,
-          "load",
-          async (client) => {
-            if (this.autoIssuanceProvider) {
-              const newManualTickets =
-                await this.autoIssuanceProvider.dripNewManualTickets(
-                  client,
-                  this.consumerDB,
-                  await this.getAllManualTickets(client),
-                  atomsToSave
-                );
-
-              await Promise.allSettled(
-                newManualTickets.map((t) =>
-                  this.manualTicketDB.save(client, this.id, t)
-                )
+        return sqlQueryWithPool(this.context.dbPool, async (client) => {
+          if (this.autoIssuanceProvider) {
+            const newManualTickets =
+              await this.autoIssuanceProvider.dripNewManualTickets(
+                client,
+                this.consumerDB,
+                await this.getAllManualTickets(client),
+                atomsToSave
               );
-            }
 
-            await this.db.clear(this.definition.id);
-            await this.db.save(this.definition.id, atomsToSave);
-            await this.db.markAsLoaded(this.id);
-
-            logs.push(makePLogInfo(`saved ${atomsToSave.length} items`));
-
-            const loadEnd = Date.now();
-
-            logger(
-              LOG_TAG,
-              `loaded ${atomsToSave.length} atoms for pipeline id ${
-                this.id
-              } in ${loadEnd - startTime.getTime()}ms`
-            );
-
-            span?.setAttribute("atoms_saved", atomsToSave.length);
-
-            // Remove any pending check-ins that succeeded before loading started.
-            // Those that succeeded after loading started might not be represented in
-            // the data we fetched, so we can remove them on the next run.
-            // Pending checkins with the "Pending" status should not be removed, as
-            // they are still in-progress.
-            this.pendingCheckIns.forEach((value, key) => {
-              if (
-                value.status === CheckinStatus.Success &&
-                value.timestamp <= startTime.getTime()
-              ) {
-                this.pendingCheckIns.delete(key);
-              }
-            });
-
-            const end = new Date();
-            logs.push(
-              makePLogInfo(
-                `load finished in ${end.getTime() - startTime.getTime()}ms`
+            await Promise.allSettled(
+              newManualTickets.map((t) =>
+                this.manualTicketDB.save(client, this.id, t)
               )
             );
-
-            if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-              await this.triggerSemaphoreGroupUpdate(client);
-            }
-
-            const loadSummary: PipelineLoadSummary = {
-              paused: false,
-              fromCache: false,
-              lastRunEndTimestamp: end.toISOString(),
-              lastRunStartTimestamp: startTime.toISOString(),
-              latestLogs: logs,
-              atomsLoaded: atomsToSave.length,
-              atomsExpected: atomsToSave.length,
-              errorMessage: undefined,
-              semaphoreGroups:
-                this.semaphoreGroupProvider?.getSupportedGroups(),
-              success: true
-            };
-
-            return loadSummary;
           }
-        );
+
+          await this.db.clear(this.definition.id);
+          await this.db.save(this.definition.id, atomsToSave);
+          await this.db.markAsLoaded(this.id);
+
+          logs.push(makePLogInfo(`saved ${atomsToSave.length} items`));
+
+          const loadEnd = Date.now();
+
+          logger(
+            LOG_TAG,
+            `loaded ${atomsToSave.length} atoms for pipeline id ${this.id} in ${
+              loadEnd - startTime.getTime()
+            }ms`
+          );
+
+          span?.setAttribute("atoms_saved", atomsToSave.length);
+
+          // Remove any pending check-ins that succeeded before loading started.
+          // Those that succeeded after loading started might not be represented in
+          // the data we fetched, so we can remove them on the next run.
+          // Pending checkins with the "Pending" status should not be removed, as
+          // they are still in-progress.
+          this.pendingCheckIns.forEach((value, key) => {
+            if (
+              value.status === CheckinStatus.Success &&
+              value.timestamp <= startTime.getTime()
+            ) {
+              this.pendingCheckIns.delete(key);
+            }
+          });
+
+          const end = new Date();
+          logs.push(
+            makePLogInfo(
+              `load finished in ${end.getTime() - startTime.getTime()}ms`
+            )
+          );
+
+          if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+            await this.triggerSemaphoreGroupUpdate(client);
+          }
+
+          const loadSummary: PipelineLoadSummary = {
+            paused: false,
+            fromCache: false,
+            lastRunEndTimestamp: end.toISOString(),
+            lastRunStartTimestamp: startTime.toISOString(),
+            latestLogs: logs,
+            atomsLoaded: atomsToSave.length,
+            atomsExpected: atomsToSave.length,
+            errorMessage: undefined,
+            semaphoreGroups: this.semaphoreGroupProvider?.getSupportedGroups(),
+            success: true
+          };
+
+          return loadSummary;
+        });
       }
     );
   }
@@ -1187,50 +1179,50 @@ export class PretixPipeline implements BasePipeline {
       span?.setAttribute("email", emails.map((e) => e.email).join(","));
       span?.setAttribute("semaphore_id", semaphoreId);
 
-      let didUpdate = false;
+      //let didUpdate = false;
 
-      return namedSqlTransaction(this.context.dbPool, "", async (client) => {
-        for (const e of emails) {
-          didUpdate =
-            didUpdate ||
-            (await this.consumerDB.save(
-              client,
-              this.id,
-              e.email,
-              semaphoreId,
-              new Date()
-            ));
-        }
+      return sqlQueryWithPool(this.context.dbPool, async (client) => {
+        // for (const e of emails) {
+        //   didUpdate =
+        //     didUpdate ||
+        //     (await this.consumerDB.save(
+        //       client,
+        //       this.id,
+        //       e.email,
+        //       semaphoreId,
+        //       new Date()
+        //     ));
+        // }
 
-        const provider = this.autoIssuanceProvider;
-        if (provider) {
-          const newManualTickets = (
-            await Promise.all(
-              emails.map(async (e) =>
-                provider.maybeIssueForUser(
-                  e.email,
-                  await this.getAllManualTickets(client),
-                  await this.db.loadByEmail(this.id, e.email)
-                )
-              )
-            )
-          ).flat();
+        // const provider = this.autoIssuanceProvider;
+        // if (provider) {
+        //   const newManualTickets = (
+        //     await Promise.all(
+        //       emails.map(async (e) =>
+        //         provider.maybeIssueForUser(
+        //           e.email,
+        //           await this.getAllManualTickets(client),
+        //           await this.db.loadByEmail(this.id, e.email)
+        //         )
+        //       )
+        //     )
+        //   ).flat();
 
-          await Promise.allSettled(
-            newManualTickets.map((t) =>
-              this.manualTicketDB.save(client, this.id, t)
-            )
-          );
-        }
+        //   await Promise.allSettled(
+        //     newManualTickets.map((t) =>
+        //       this.manualTicketDB.save(client, this.id, t)
+        //     )
+        //   );
+        // }
 
         // If the user's Semaphore commitment has changed, `didUpdate` will be
         // true, and we need to update the Semaphore groups
-        if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-          if (didUpdate) {
-            span?.setAttribute("semaphore_groups_updated", true);
-            await this.triggerSemaphoreGroupUpdate(client);
-          }
-        }
+        // if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+        //   if (didUpdate) {
+        //     span?.setAttribute("semaphore_groups_updated", true);
+        //     await this.triggerSemaphoreGroupUpdate(client);
+        //   }
+        // }
 
         const tickets = (
           await Promise.all(
@@ -1791,95 +1783,141 @@ export class PretixPipeline implements BasePipeline {
       LOG_NAME,
       "checkPretixTicketPCDCanBeCheckedIn",
       async (span): Promise<ActionConfigResponseValue> => {
-        return namedSqlTransaction(
-          this.context.dbPool,
-          "checkPretixTicketPCDCanBeCheckedIn",
-          async (client) => {
-            tracePipeline(this.definition);
+        return sqlQueryWithPool(this.context.dbPool, async (client) => {
+          tracePipeline(this.definition);
 
-            let checkerEmails: string[];
-            const { eventId, ticketId } = request;
+          let checkerEmails: string[];
+          const { eventId, ticketId } = request;
 
-            // This method can only be used to pre-check for check-ins.
-            // There is no pre-check for any other kind of action at this time.
-            if (request.action.checkin !== true) {
-              throw new PCDHTTPError(400, "Not supported");
+          // This method can only be used to pre-check for check-ins.
+          // There is no pre-check for any other kind of action at this time.
+          if (request.action.checkin !== true) {
+            throw new PCDHTTPError(400, "Not supported");
+          }
+
+          try {
+            span?.setAttribute("ticket_id", ticketId);
+
+            const { emails, semaphoreId } =
+              await this.credentialSubservice.verifyAndExpectZupassEmail(
+                request.credential
+              );
+
+            span?.setAttribute(
+              "checker_email",
+              emails?.map((e) => e.email).join(",") ?? ""
+            );
+            span?.setAttribute("checked_semaphore_id", semaphoreId);
+
+            checkerEmails = emails?.map((e) => e.email) ?? [];
+            if (checkerEmails.length === 0) {
+              throw new Error("missing emails in credential");
             }
-
-            try {
-              span?.setAttribute("ticket_id", ticketId);
-
-              const { emails, semaphoreId } =
-                await this.credentialSubservice.verifyAndExpectZupassEmail(
-                  request.credential
-                );
-
-              span?.setAttribute(
-                "checker_email",
-                emails?.map((e) => e.email).join(",") ?? ""
-              );
-              span?.setAttribute("checked_semaphore_id", semaphoreId);
-
-              checkerEmails = emails?.map((e) => e.email) ?? [];
-              if (checkerEmails.length === 0) {
-                throw new Error("missing emails in credential");
+          } catch (e) {
+            logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
+            setError(e, span);
+            span?.setAttribute("precheck_error", "InvalidSignature");
+            return {
+              success: true,
+              checkinActionInfo: {
+                canCheckIn: false,
+                permissioned: false,
+                reason: { name: "InvalidSignature" }
               }
-            } catch (e) {
-              logger(
-                `${LOG_TAG} Failed to verify credential due to error: `,
-                e
-              );
-              setError(e, span);
-              span?.setAttribute("precheck_error", "InvalidSignature");
+            };
+          }
+
+          const realTicket = await this.db.loadById(this.id, ticketId);
+          const manualTicket = await this.getManualTicketById(client, ticketId);
+          const checkinInProductId =
+            realTicket?.productId ?? manualTicket?.productId;
+          if (!checkinInProductId) {
+            throw new Error(`ticket with id '${ticketId}' does not exist`);
+          }
+
+          try {
+            // Verify that checker can check in tickets for the specified event
+            const canCheckInResult = await this.canCheckInForEvent(
+              client,
+              eventId,
+              checkinInProductId,
+              checkerEmails
+            );
+
+            if (canCheckInResult !== true) {
+              span?.setAttribute("precheck_error", canCheckInResult.name);
               return {
                 success: true,
                 checkinActionInfo: {
-                  canCheckIn: false,
                   permissioned: false,
-                  reason: { name: "InvalidSignature" }
+                  canCheckIn: false,
+                  reason: canCheckInResult
                 }
               };
             }
 
-            const realTicket = await this.db.loadById(this.id, ticketId);
-            const manualTicket = await this.getManualTicketById(
-              client,
-              ticketId
-            );
-            const checkinInProductId =
-              realTicket?.productId ?? manualTicket?.productId;
-            if (!checkinInProductId) {
-              throw new Error(`ticket with id '${ticketId}' does not exist`);
-            }
-
-            try {
-              // Verify that checker can check in tickets for the specified event
-              const canCheckInResult = await this.canCheckInForEvent(
-                client,
-                eventId,
-                checkinInProductId,
-                checkerEmails
-              );
-
-              if (canCheckInResult !== true) {
-                span?.setAttribute("precheck_error", canCheckInResult.name);
+            // First see if we have an atom which matches the ticket ID
+            const ticketAtom = await this.db.loadById(this.id, ticketId);
+            if (ticketAtom && ticketAtom.eventId === eventId) {
+              const canCheckInTicketResult =
+                await this.canCheckInPretixTicket(ticketAtom);
+              if (canCheckInTicketResult !== true) {
+                if (canCheckInTicketResult.name === "AlreadyCheckedIn") {
+                  return {
+                    success: true,
+                    checkinActionInfo: {
+                      permissioned: true,
+                      canCheckIn: false,
+                      reason: canCheckInTicketResult,
+                      ticket: {
+                        eventName: this.atomToEventName(ticketAtom),
+                        ticketName: this.atomToTicketName(ticketAtom),
+                        attendeeEmail: ticketAtom.email as string,
+                        attendeeName: ticketAtom.name
+                      }
+                    }
+                  };
+                }
                 return {
                   success: true,
                   checkinActionInfo: {
                     permissioned: false,
                     canCheckIn: false,
-                    reason: canCheckInResult
+                    reason: canCheckInTicketResult
+                  }
+                };
+              } else {
+                return {
+                  success: true,
+                  checkinActionInfo: {
+                    permissioned: true,
+                    canCheckIn: true,
+                    ticket: {
+                      eventName: this.atomToEventName(ticketAtom),
+                      ticketName: this.atomToTicketName(ticketAtom),
+                      attendeeEmail: ticketAtom.email as string,
+                      attendeeName: ticketAtom.name
+                    }
                   }
                 };
               }
-
-              // First see if we have an atom which matches the ticket ID
-              const ticketAtom = await this.db.loadById(this.id, ticketId);
-              if (ticketAtom && ticketAtom.eventId === eventId) {
+            } else {
+              // No Pretix atom found, try looking for a manual ticket
+              const manualTicket = await this.getManualTicketById(
+                client,
+                ticketId
+              );
+              if (manualTicket && manualTicket.eventId === eventId) {
+                // Manual ticket found
                 const canCheckInTicketResult =
-                  await this.canCheckInPretixTicket(ticketAtom);
+                  await this.canCheckInManualTicket(client, manualTicket);
                 if (canCheckInTicketResult !== true) {
                   if (canCheckInTicketResult.name === "AlreadyCheckedIn") {
+                    const eventConfig = this.getEventById(manualTicket.eventId);
+                    const ticketType = this.getProductById(
+                      eventConfig,
+                      manualTicket.productId
+                    );
                     return {
                       success: true,
                       checkinActionInfo: {
@@ -1887,10 +1925,10 @@ export class PretixPipeline implements BasePipeline {
                         canCheckIn: false,
                         reason: canCheckInTicketResult,
                         ticket: {
-                          eventName: this.atomToEventName(ticketAtom),
-                          ticketName: this.atomToTicketName(ticketAtom),
-                          attendeeEmail: ticketAtom.email as string,
-                          attendeeName: ticketAtom.name
+                          eventName: eventConfig.name,
+                          ticketName: ticketType.name,
+                          attendeeEmail: manualTicket.attendeeEmail,
+                          attendeeName: manualTicket.attendeeName
                         }
                       }
                     };
@@ -1904,108 +1942,35 @@ export class PretixPipeline implements BasePipeline {
                     }
                   };
                 } else {
+                  const eventConfig = this.getEventById(manualTicket.eventId);
+                  const ticketType = this.getProductById(
+                    eventConfig,
+                    manualTicket.productId
+                  );
                   return {
                     success: true,
                     checkinActionInfo: {
                       permissioned: true,
                       canCheckIn: true,
                       ticket: {
-                        eventName: this.atomToEventName(ticketAtom),
-                        ticketName: this.atomToTicketName(ticketAtom),
-                        attendeeEmail: ticketAtom.email as string,
-                        attendeeName: ticketAtom.name
+                        eventName: eventConfig.name,
+                        ticketName: ticketType.name,
+                        attendeeEmail: manualTicket.attendeeEmail,
+                        attendeeName: manualTicket.attendeeName
                       }
                     }
                   };
                 }
-              } else {
-                // No Pretix atom found, try looking for a manual ticket
-                const manualTicket = await this.getManualTicketById(
-                  client,
-                  ticketId
-                );
-                if (manualTicket && manualTicket.eventId === eventId) {
-                  // Manual ticket found
-                  const canCheckInTicketResult =
-                    await this.canCheckInManualTicket(client, manualTicket);
-                  if (canCheckInTicketResult !== true) {
-                    if (canCheckInTicketResult.name === "AlreadyCheckedIn") {
-                      const eventConfig = this.getEventById(
-                        manualTicket.eventId
-                      );
-                      const ticketType = this.getProductById(
-                        eventConfig,
-                        manualTicket.productId
-                      );
-                      return {
-                        success: true,
-                        checkinActionInfo: {
-                          permissioned: true,
-                          canCheckIn: false,
-                          reason: canCheckInTicketResult,
-                          ticket: {
-                            eventName: eventConfig.name,
-                            ticketName: ticketType.name,
-                            attendeeEmail: manualTicket.attendeeEmail,
-                            attendeeName: manualTicket.attendeeName
-                          }
-                        }
-                      };
-                    }
-                    return {
-                      success: true,
-                      checkinActionInfo: {
-                        permissioned: false,
-                        canCheckIn: false,
-                        reason: canCheckInTicketResult
-                      }
-                    };
-                  } else {
-                    const eventConfig = this.getEventById(manualTicket.eventId);
-                    const ticketType = this.getProductById(
-                      eventConfig,
-                      manualTicket.productId
-                    );
-                    return {
-                      success: true,
-                      checkinActionInfo: {
-                        permissioned: true,
-                        canCheckIn: true,
-                        ticket: {
-                          eventName: eventConfig.name,
-                          ticketName: ticketType.name,
-                          attendeeEmail: manualTicket.attendeeEmail,
-                          attendeeName: manualTicket.attendeeName
-                        }
-                      }
-                    };
-                  }
-                }
               }
-            } catch (e) {
-              logger(
-                `${LOG_TAG} Error when finding ticket ${ticketId} for checkin by ${JSON.stringify(
-                  checkerEmails
-                )} on pipeline ${this.id}`,
-                e
-              );
-              setError(e);
-              span?.setAttribute("checkin_error", "InvalidTicket");
-              return {
-                success: true,
-                checkinActionInfo: {
-                  permissioned: false,
-                  canCheckIn: false,
-                  reason: { name: "InvalidTicket" }
-                }
-              };
             }
-            // Didn't find any matching ticket
+          } catch (e) {
             logger(
-              `${LOG_TAG} Could not find ticket ${ticketId} for event ${eventId} for checkin requested by ${JSON.stringify(
+              `${LOG_TAG} Error when finding ticket ${ticketId} for checkin by ${JSON.stringify(
                 checkerEmails
-              )} on pipeline ${this.id}`
+              )} on pipeline ${this.id}`,
+              e
             );
+            setError(e);
             span?.setAttribute("checkin_error", "InvalidTicket");
             return {
               success: true,
@@ -2016,7 +1981,22 @@ export class PretixPipeline implements BasePipeline {
               }
             };
           }
-        );
+          // Didn't find any matching ticket
+          logger(
+            `${LOG_TAG} Could not find ticket ${ticketId} for event ${eventId} for checkin requested by ${JSON.stringify(
+              checkerEmails
+            )} on pipeline ${this.id}`
+          );
+          span?.setAttribute("checkin_error", "InvalidTicket");
+          return {
+            success: true,
+            checkinActionInfo: {
+              permissioned: false,
+              canCheckIn: false,
+              reason: { name: "InvalidTicket" }
+            }
+          };
+        });
       }
     );
   }
@@ -2031,89 +2011,82 @@ export class PretixPipeline implements BasePipeline {
     request: PodboxTicketActionRequest
   ): Promise<PodboxTicketActionResponseValue> {
     return traced(LOG_NAME, "checkinPretixTicketPCDs", async (span) => {
-      return namedSqlTransaction(
-        this.context.dbPool,
-        "checkinPretixTicketPCDs",
-        async (client) => {
-          tracePipeline(this.definition);
+      return sqlQueryWithPool(this.context.dbPool, async (client) => {
+        tracePipeline(this.definition);
 
-          logger(
-            LOG_TAG,
-            `got request to check in tickets with request ${JSON.stringify(
-              request
-            )}`
-          );
+        logger(
+          LOG_TAG,
+          `got request to check in tickets with request ${JSON.stringify(
+            request
+          )}`
+        );
 
-          let checkerEmails: string[];
-          const { ticketId, eventId } = request;
+        let checkerEmails: string[];
+        const { ticketId, eventId } = request;
 
-          try {
-            span?.setAttribute("ticket_id", ticketId);
-            const { emails, semaphoreId } =
-              await this.credentialSubservice.verifyAndExpectZupassEmail(
-                request.credential
-              );
-
-            span?.setAttribute(
-              "checker_email",
-              emails?.map((e) => e.email).join(",") ?? ""
+        try {
+          span?.setAttribute("ticket_id", ticketId);
+          const { emails, semaphoreId } =
+            await this.credentialSubservice.verifyAndExpectZupassEmail(
+              request.credential
             );
-            span?.setAttribute("checked_semaphore_id", semaphoreId);
-            checkerEmails = emails?.map((e) => e.email) ?? [];
 
-            if (checkerEmails.length === 0) {
-              throw new Error("missing emails in credential");
-            }
-          } catch (e) {
-            logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
-            setError(e, span);
-            span?.setAttribute("checkin_error", "InvalidSignature");
-            return { success: false, error: { name: "InvalidSignature" } };
+          span?.setAttribute(
+            "checker_email",
+            emails?.map((e) => e.email).join(",") ?? ""
+          );
+          span?.setAttribute("checked_semaphore_id", semaphoreId);
+          checkerEmails = emails?.map((e) => e.email) ?? [];
+
+          if (checkerEmails.length === 0) {
+            throw new Error("missing emails in credential");
           }
+        } catch (e) {
+          logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
+          setError(e, span);
+          span?.setAttribute("checkin_error", "InvalidSignature");
+          return { success: false, error: { name: "InvalidSignature" } };
+        }
 
-          const realTicket = await this.db.loadById(this.id, ticketId);
+        const realTicket = await this.db.loadById(this.id, ticketId);
+        const manualTicket = await this.getManualTicketById(client, ticketId);
+        const checkinInProductId =
+          realTicket?.productId ?? manualTicket?.productId;
+        if (!checkinInProductId) {
+          throw new Error(`ticket with id '${ticketId}' does not exist`);
+        }
+        const canCheckInResult = await this.canCheckInForEvent(
+          client,
+          eventId,
+          checkinInProductId,
+          checkerEmails
+        );
+
+        if (canCheckInResult !== true) {
+          return { success: false, error: canCheckInResult };
+        }
+
+        // First see if we have an atom which matches the ticket ID
+        const ticketAtom = await this.db.loadById(this.id, ticketId);
+        if (ticketAtom && ticketAtom.eventId === eventId) {
+          return this.checkInPretixTicket(ticketAtom, checkerEmails[0]);
+        } else {
           const manualTicket = await this.getManualTicketById(client, ticketId);
-          const checkinInProductId =
-            realTicket?.productId ?? manualTicket?.productId;
-          if (!checkinInProductId) {
-            throw new Error(`ticket with id '${ticketId}' does not exist`);
-          }
-          const canCheckInResult = await this.canCheckInForEvent(
-            client,
-            eventId,
-            checkinInProductId,
-            checkerEmails
-          );
-
-          if (canCheckInResult !== true) {
-            return { success: false, error: canCheckInResult };
-          }
-
-          // First see if we have an atom which matches the ticket ID
-          const ticketAtom = await this.db.loadById(this.id, ticketId);
-          if (ticketAtom && ticketAtom.eventId === eventId) {
-            return this.checkInPretixTicket(ticketAtom, checkerEmails[0]);
+          if (manualTicket && manualTicket.eventId === eventId) {
+            // Manual ticket found, check in with the DB
+            return this.checkInManualTicket(manualTicket, checkerEmails[0]);
           } else {
-            const manualTicket = await this.getManualTicketById(
-              client,
-              ticketId
+            // Didn't find any matching ticket
+            logger(
+              `${LOG_TAG} Could not find ticket ${ticketId} for event ${eventId} for checkin requested by ${JSON.stringify(
+                checkerEmails
+              )} on pipeline ${this.id}`
             );
-            if (manualTicket && manualTicket.eventId === eventId) {
-              // Manual ticket found, check in with the DB
-              return this.checkInManualTicket(manualTicket, checkerEmails[0]);
-            } else {
-              // Didn't find any matching ticket
-              logger(
-                `${LOG_TAG} Could not find ticket ${ticketId} for event ${eventId} for checkin requested by ${JSON.stringify(
-                  checkerEmails
-                )} on pipeline ${this.id}`
-              );
-              span?.setAttribute("checkin_error", "InvalidTicket");
-              return { success: false, error: { name: "InvalidTicket" } };
-            }
+            span?.setAttribute("checkin_error", "InvalidTicket");
+            return { success: false, error: { name: "InvalidTicket" } };
           }
         }
-      );
+      });
     });
   }
 
@@ -2128,70 +2101,66 @@ export class PretixPipeline implements BasePipeline {
       LOG_NAME,
       "checkInManualTicket",
       async (span): Promise<PodboxTicketActionResponseValue> => {
-        return namedSqlTransaction(
-          this.context.dbPool,
-          "checkInManualTicket",
-          async (client) => {
-            const pendingCheckin = this.pendingCheckIns.get(manualTicket.id);
-            if (pendingCheckin) {
-              span?.setAttribute("checkin_error", "AlreadyCheckedIn");
-              return {
-                success: false,
-                error: {
-                  name: "AlreadyCheckedIn",
-                  checkinTimestamp: new Date(
-                    pendingCheckin.timestamp
-                  ).toISOString(),
-                  checker: PRETIX_CHECKER
-                }
-              };
-            }
+        return sqlQueryWithPool(this.context.dbPool, async (client) => {
+          const pendingCheckin = this.pendingCheckIns.get(manualTicket.id);
+          if (pendingCheckin) {
+            span?.setAttribute("checkin_error", "AlreadyCheckedIn");
+            return {
+              success: false,
+              error: {
+                name: "AlreadyCheckedIn",
+                checkinTimestamp: new Date(
+                  pendingCheckin.timestamp
+                ).toISOString(),
+                checker: PRETIX_CHECKER
+              }
+            };
+          }
 
-            try {
-              await this.checkinDB.checkIn(
+          try {
+            await this.checkinDB.checkIn(
+              client,
+              this.id,
+              manualTicket.id,
+              new Date(),
+              checkerEmail
+            );
+            this.pendingCheckIns.set(manualTicket.id, {
+              status: CheckinStatus.Success,
+              timestamp: Date.now()
+            });
+          } catch (e) {
+            logger(
+              `${LOG_TAG} Failed to check in ticket ${manualTicket.id} for event ${manualTicket.eventId} on behalf of checker ${checkerEmail} on pipeline ${this.id}`
+            );
+            setError(e, span);
+            this.pendingCheckIns.delete(manualTicket.id);
+
+            if (e instanceof DatabaseError) {
+              // We may have received a DatabaseError due to an insertion conflict
+              // Detect this conflict by looking for an existing check-in.
+              const existingCheckin = await this.checkinDB.getByTicketId(
                 client,
                 this.id,
-                manualTicket.id,
-                new Date(),
-                checkerEmail
+                manualTicket.id
               );
-              this.pendingCheckIns.set(manualTicket.id, {
-                status: CheckinStatus.Success,
-                timestamp: Date.now()
-              });
-            } catch (e) {
-              logger(
-                `${LOG_TAG} Failed to check in ticket ${manualTicket.id} for event ${manualTicket.eventId} on behalf of checker ${checkerEmail} on pipeline ${this.id}`
-              );
-              setError(e, span);
-              this.pendingCheckIns.delete(manualTicket.id);
-
-              if (e instanceof DatabaseError) {
-                // We may have received a DatabaseError due to an insertion conflict
-                // Detect this conflict by looking for an existing check-in.
-                const existingCheckin = await this.checkinDB.getByTicketId(
-                  client,
-                  this.id,
-                  manualTicket.id
-                );
-                if (existingCheckin) {
-                  span?.setAttribute("checkin_error", "AlreadyCheckedIn");
-                  return {
-                    success: false,
-                    error: {
-                      name: "AlreadyCheckedIn",
-                      checkinTimestamp: existingCheckin.timestamp.toISOString(),
-                      checker: PRETIX_CHECKER
-                    }
-                  };
-                }
+              if (existingCheckin) {
+                span?.setAttribute("checkin_error", "AlreadyCheckedIn");
+                return {
+                  success: false,
+                  error: {
+                    name: "AlreadyCheckedIn",
+                    checkinTimestamp: existingCheckin.timestamp.toISOString(),
+                    checker: PRETIX_CHECKER
+                  }
+                };
               }
-              span?.setAttribute("checkin_error", "ServerError");
-              return { success: false, error: { name: "ServerError" } };
             }
-            return { success: true };
+            span?.setAttribute("checkin_error", "ServerError");
+            return { success: false, error: { name: "ServerError" } };
           }
-        );
+          return { success: true };
+        });
       }
     );
   }

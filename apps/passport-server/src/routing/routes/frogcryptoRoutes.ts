@@ -15,7 +15,7 @@ import {
 } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
 import urljoin from "url-join";
-import { namedSqlTransaction } from "../../database/sqlQuery";
+import { sqlQueryWithPool } from "../../database/sqlQuery";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { checkExistsForRoute } from "../../util/util";
@@ -72,10 +72,8 @@ export function initFrogcryptoRoutes(
 
   app.get("/frogcrypto/scoreboard", clusterProxy(), async (req, res) => {
     checkExistsForRoute(frogcryptoService);
-    const result = await namedSqlTransaction(
-      context.dbPool,
-      "/frogcrypto/scoreboard",
-      (client) => frogcryptoService.getScoreboard(client)
+    const result = await sqlQueryWithPool(context.dbPool, (client) =>
+      frogcryptoService.getScoreboard(client)
     );
     res.json(result);
   });
@@ -85,14 +83,11 @@ export function initFrogcryptoRoutes(
     clusterProxy(),
     async (req, res) => {
       checkExistsForRoute(frogcryptoService);
-      const result = await namedSqlTransaction(
-        context.dbPool,
-        "/frogcrypto/telegram-handle-sharing",
-        (client) =>
-          frogcryptoService.updateTelegramHandleSharing(
-            client,
-            req.body as FrogCryptoShareTelegramHandleRequest
-          )
+      const result = await sqlQueryWithPool(context.dbPool, (client) =>
+        frogcryptoService.updateTelegramHandleSharing(
+          client,
+          req.body as FrogCryptoShareTelegramHandleRequest
+        )
       );
       res.json(result satisfies FrogCryptoShareTelegramHandleResponseValue);
     }
@@ -100,14 +95,11 @@ export function initFrogcryptoRoutes(
 
   app.post("/frogcrypto/user-state", clusterProxy(), async (req, res) => {
     checkExistsForRoute(frogcryptoService);
-    const result = await namedSqlTransaction(
-      context.dbPool,
-      "/frogcrypto/user-state",
-      (client) =>
-        frogcryptoService.getUserState(
-          client,
-          req.body as FrogCryptoUserStateRequest
-        )
+    const result = await sqlQueryWithPool(context.dbPool, (client) =>
+      frogcryptoService.getUserState(
+        client,
+        req.body as FrogCryptoUserStateRequest
+      )
     );
     res.json(result satisfies FrogCryptoUserStateResponseValue);
   });
@@ -124,14 +116,11 @@ export function initFrogcryptoRoutes(
 
   app.post("/frogcrypto/admin/frogs", clusterProxy(), async (req, res) => {
     checkExistsForRoute(frogcryptoService);
-    const result = await namedSqlTransaction(
-      context.dbPool,
-      "/frogcrypto/admin/frogs",
-      (client) =>
-        frogcryptoService.updateFrogData(
-          client,
-          req.body as FrogCryptoUpdateFrogsRequest
-        )
+    const result = await sqlQueryWithPool(context.dbPool, (client) =>
+      frogcryptoService.updateFrogData(
+        client,
+        req.body as FrogCryptoUpdateFrogsRequest
+      )
     );
     res.json(result satisfies FrogCryptoUpdateFrogsResponseValue);
   });
@@ -141,14 +130,11 @@ export function initFrogcryptoRoutes(
     clusterProxy(),
     async (req, res) => {
       checkExistsForRoute(frogcryptoService);
-      const result = await namedSqlTransaction(
-        context.dbPool,
-        "/frogcrypto/admin/delete-frogs",
-        (client) =>
-          frogcryptoService.deleteFrogData(
-            client,
-            req.body as FrogCryptoDeleteFrogsRequest
-          )
+      const result = await sqlQueryWithPool(context.dbPool, (client) =>
+        frogcryptoService.deleteFrogData(
+          client,
+          req.body as FrogCryptoDeleteFrogsRequest
+        )
       );
       res.json(result satisfies FrogCryptoDeleteFrogsResponseValue);
     }
@@ -156,14 +142,11 @@ export function initFrogcryptoRoutes(
 
   app.post("/frogcrypto/admin/feeds", clusterProxy(), async (req, res) => {
     checkExistsForRoute(frogcryptoService);
-    const result = await namedSqlTransaction(
-      context.dbPool,
-      "/frogcrypto/admin/feeds",
-      (client) =>
-        frogcryptoService.updateFeedData(
-          client,
-          req.body as FrogCryptoUpdateFeedsRequest
-        )
+    const result = await sqlQueryWithPool(context.dbPool, (client) =>
+      frogcryptoService.updateFeedData(
+        client,
+        req.body as FrogCryptoUpdateFeedsRequest
+      )
     );
     res.json(result satisfies FrogCryptoUpdateFeedsResponseValue);
   });

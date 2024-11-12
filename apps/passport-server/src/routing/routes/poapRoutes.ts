@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { namedSqlTransaction } from "../../database/sqlQuery";
+import { sqlQueryWithPool } from "../../database/sqlQuery";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { checkExistsForRoute } from "../../util/util";
@@ -23,15 +23,11 @@ export function initPoapRoutes(
       );
     }
 
-    await namedSqlTransaction(
-      context.dbPool,
-      "/poap/devconnect/callback",
-      async (client) => {
-        res.redirect(
-          await poapService.getDevconnectPoapRedirectUrl(client, proof)
-        );
-      }
-    );
+    await sqlQueryWithPool(context.dbPool, async (client) => {
+      res.redirect(
+        await poapService.getDevconnectPoapRedirectUrl(client, proof)
+      );
+    });
   });
 
   app.get("/poap/zuzalu23/callback", async (req: Request, res: Response) => {
@@ -44,15 +40,9 @@ export function initPoapRoutes(
       );
     }
 
-    await namedSqlTransaction(
-      context.dbPool,
-      "/poap/zuzalu23/callback",
-      async (client) => {
-        res.redirect(
-          await poapService.getZuzalu23PoapRedirectUrl(client, proof)
-        );
-      }
-    );
+    await sqlQueryWithPool(context.dbPool, async (client) => {
+      res.redirect(await poapService.getZuzalu23PoapRedirectUrl(client, proof));
+    });
   });
 
   app.get("/poap/zuconnect/callback", async (req: Request, res: Response) => {
@@ -65,15 +55,11 @@ export function initPoapRoutes(
       );
     }
 
-    await namedSqlTransaction(
-      context.dbPool,
-      "/poap/devconnect/callback",
-      async (client) => {
-        res.redirect(
-          await poapService.getZuConnectPoapRedirectUrl(client, proof)
-        );
-      }
-    );
+    await sqlQueryWithPool(context.dbPool, async (client) => {
+      res.redirect(
+        await poapService.getZuConnectPoapRedirectUrl(client, proof)
+      );
+    });
   });
 
   app.get("/poap/vitalia/callback", async (req: Request, res: Response) => {
@@ -86,15 +72,9 @@ export function initPoapRoutes(
       );
     }
 
-    await namedSqlTransaction(
-      context.dbPool,
-      "/poap/vitalia/callback",
-      async (client) => {
-        res.redirect(
-          await poapService.getVitaliaPoapRedirectUrl(client, proof)
-        );
-      }
-    );
+    await sqlQueryWithPool(context.dbPool, async (client) => {
+      res.redirect(await poapService.getVitaliaPoapRedirectUrl(client, proof));
+    });
   });
 
   app.get(
@@ -109,15 +89,11 @@ export function initPoapRoutes(
         );
       }
 
-      await namedSqlTransaction(
-        context.dbPool,
-        "/poap/edgecitydenver/callback",
-        async (client) => {
-          res.redirect(
-            await poapService.getEdgeCityDenverPoapRedirectUrl(client, proof)
-          );
-        }
-      );
+      await sqlQueryWithPool(context.dbPool, async (client) => {
+        res.redirect(
+          await poapService.getEdgeCityDenverPoapRedirectUrl(client, proof)
+        );
+      });
     }
   );
 
@@ -131,14 +107,8 @@ export function initPoapRoutes(
       );
     }
 
-    await namedSqlTransaction(
-      context.dbPool,
-      "/poap/ethlatam/callback",
-      async (client) => {
-        res.redirect(
-          await poapService.getETHLatamPoapRedirectUrl(client, proof)
-        );
-      }
-    );
+    await sqlQueryWithPool(context.dbPool, async (client) => {
+      res.redirect(await poapService.getETHLatamPoapRedirectUrl(client, proof));
+    });
   });
 }
