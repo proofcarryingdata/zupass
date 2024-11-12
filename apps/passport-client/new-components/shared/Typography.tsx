@@ -3,8 +3,8 @@ import React from "react";
 import styled from "styled-components";
 
 export type FontWeight = 400 | 500 | 600 | 700 | 800 | 900;
-export type FontSize = 10 | 12 | 14 | 16 | 18 | 20 | 24 | 28;
-export type FontFamily = "Barlow" | "Rubik";
+export type FontSize = 10 | 12 | 14 | 16 | 18 | 20 | 24 | 28 | 32;
+export type FontFamily = "Barlow" | "Rubik" | "PlexSans";
 const LINE_HEIGHT: Record<FontSize, number> = {
   "10": 13.5,
   "12": 16.2,
@@ -13,7 +13,8 @@ const LINE_HEIGHT: Record<FontSize, number> = {
   "18": 24.3,
   "20": 27,
   "24": 32.4,
-  "28": 37.8
+  "28": 37.8,
+  "32": 44.8
 };
 
 const TypographyText = styled.span<{
