@@ -120,8 +120,6 @@
     "DEVCON_TICKET_QUERY_ORIGINS",
     "GENERATED_CHUNKS",
     "TELEGRAM_CHAT_TO_PRODUCT_IDS",
-    "IGNORE_NON_PRIORITY_FEEDS",
-    "PRIORITY_FEED_PROVIDER_URLS",
     "//// add env vars above this line ////"
   ],
   "globalEnv": [
