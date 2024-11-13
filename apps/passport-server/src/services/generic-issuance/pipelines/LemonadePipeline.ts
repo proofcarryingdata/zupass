@@ -781,45 +781,50 @@ export class LemonadePipeline implements BasePipeline {
     email: string,
     identityCommitment: string
   ): Promise<EdDSATicketPCD[]> {
-    // Load atom-backed tickets
-    const relevantTickets = await this.db.loadByEmail(this.id, email);
+    return traced(LOG_NAME, "getTicketsForEmail", async () => {
+      // Load atom-backed tickets
 
-    // Load check-in data
-    const checkIns = await this.checkinDB.getByTicketIds(
-      client,
-      this.id,
-      relevantTickets.map((ticket) => ticket.id)
-    );
-    const checkInsById = _.keyBy(checkIns, (checkIn) => checkIn.ticketId);
+      const relevantTickets = await this.db.loadByEmail(this.id, email);
 
-    // Convert atoms to ticket data
-    const ticketDatas = relevantTickets.map((t) => {
-      if (checkInsById[t.id]) {
-        t.checkinDate = checkInsById[t.id].timestamp;
-      }
-      return this.atomToTicketData(t, identityCommitment);
-    });
-    // Load manual tickets from the definition
-    const manualTickets = this.getManualTicketsForEmail(email);
-    // Convert manual tickets to ticket data and add to array
-    ticketDatas.push(
-      ...(await Promise.all(
-        manualTickets.map((manualTicket) =>
-          this.manualTicketToTicketData(
-            client,
-            manualTicket,
-            identityCommitment
-          )
+      // Load check-in data
+      const checkIns = await traced(LOG_NAME, "get checkins", async () =>
+        this.checkinDB.getByTicketIds(
+          client,
+          this.id,
+          relevantTickets.map((ticket) => ticket.id)
         )
-      ))
-    );
+      );
+      const checkInsById = _.keyBy(checkIns, (checkIn) => checkIn.ticketId);
 
-    // Turn ticket data into PCDs
-    const tickets = await Promise.all(
-      ticketDatas.map((t) => this.getOrGenerateTicket(t))
-    );
+      // Convert atoms to ticket data
+      const ticketDatas = relevantTickets.map((t) => {
+        if (checkInsById[t.id]) {
+          t.checkinDate = checkInsById[t.id].timestamp;
+        }
+        return this.atomToTicketData(t, identityCommitment);
+      });
+      // Load manual tickets from the definition
+      const manualTickets = this.getManualTicketsForEmail(email);
+      // Convert manual tickets to ticket data and add to array
+      ticketDatas.push(
+        ...(await Promise.all(
+          manualTickets.map((manualTicket) =>
+            this.manualTicketToTicketData(
+              client,
+              manualTicket,
+              identityCommitment
+            )
+          )
+        ))
+      );
 
-    return tickets;
+      // Turn ticket data into PCDs
+      const tickets = await Promise.all(
+        ticketDatas.map((t) => this.getOrGenerateTicket(t))
+      );
+
+      return tickets;
+    });
   }
 
   private async issueLemonadeTicketPCDs(
@@ -893,8 +898,11 @@ export class LemonadePipeline implements BasePipeline {
           });
         }
 
-        const ticketPCDs = await Promise.all(
-          tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
+        const ticketPCDs = await traced(
+          LOG_NAME,
+          "serialize tickets",
+          async () =>
+            Promise.all(tickets.map((t) => EdDSATicketPCDPackage.serialize(t)))
         );
 
         ticketActions.push({
@@ -903,54 +911,13 @@ export class LemonadePipeline implements BasePipeline {
           pcds: ticketPCDs
         });
 
-        const contactsFolder = `${this.definition.options.feedOptions.feedFolder}/contacts`;
-        const contacts = (
-          await Promise.all(
-            emails.map((e) => this.getReceivedContactsForEmail(client, e.email))
-          )
-        ).flat();
-        const contactActions: PCDAction[] = [
-          {
-            type: PCDActionType.DeleteFolder,
-            folder: contactsFolder,
-            recursive: true
-          },
-          {
-            type: PCDActionType.ReplaceInFolder,
-            folder: contactsFolder,
-            pcds: contacts
-          }
-        ];
-
-        const badgeFolder = `${this.definition.options.feedOptions.feedFolder}/badges`;
-
-        const badges = (
-          await Promise.all(
-            emails.map((e) => this.getReceivedBadgesForEmail(client, e.email))
-          )
-        ).flat();
-        const badgeActions: PCDAction[] = [
-          {
-            type: PCDActionType.DeleteFolder,
-            folder: badgeFolder,
-            recursive: true
-          },
-          {
-            type: PCDActionType.ReplaceInFolder,
-            folder: badgeFolder,
-            pcds: badges
-          }
-        ];
-
         traceFlattenedObject(span, {
-          pcds_issued: tickets.length + badges.length + contacts.length,
-          tickets_issued: tickets.length,
-          badges_issued: badges.length,
-          contacts_issued: contacts.length
+          pcds_issued: tickets.length,
+          tickets_issued: tickets.length
         });
 
         return {
-          actions: [...ticketActions, ...contactActions, ...badgeActions]
+          actions: [...ticketActions]
         };
       });
     });
