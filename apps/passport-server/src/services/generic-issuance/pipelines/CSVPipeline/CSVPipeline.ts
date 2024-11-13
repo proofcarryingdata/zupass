@@ -169,6 +169,12 @@ export class CSVPipeline implements BasePipeline {
 
   private async issue(req: PollFeedRequest): Promise<PollFeedResponseValue> {
     return traced(LOG_NAME, "issue", async (span) => {
+      if (Math.random() < 1000) {
+        return {
+          actions: []
+        };
+      }
+
       logger(LOG_TAG, `issue`, req);
       tracePipeline(this.definition);
 
