@@ -105,15 +105,26 @@ export class VerificationError extends Error {}
  * application code has access to but library code such as this does not).
  */
 export async function verifyCredential(
-  credential: Credential
+  credential: Credential,
+  verifySignature?: (
+    signature: SerializedPCD<SemaphoreSignaturePCD>
+  ) => Promise<boolean>
 ): Promise<VerifiedCredential> {
   if (credential.type !== SemaphoreSignaturePCDPackage.name) {
     throw new VerificationError(`Credential is not a Semaphore Signature PCD`);
   }
-  // Ensure that the signature part of the credential verifies.
+
   const pcd = await SemaphoreSignaturePCDPackage.deserialize(credential.pcd);
-  if (!(await SemaphoreSignaturePCDPackage.verify(pcd))) {
-    throw new VerificationError(`Could not verify signature PCD`);
+
+  // Ensure that the signature part of the credential verifies.
+  if (verifySignature) {
+    if (!(await verifySignature(credential))) {
+      throw new VerificationError(`Could not verify signature PCD`);
+    }
+  } else {
+    if (!(await SemaphoreSignaturePCDPackage.verify(pcd))) {
+      throw new VerificationError(`Could not verify signature PCD`);
+    }
   }
 
   // Parse data from the Semaphore Signature claim. Will throw if the message

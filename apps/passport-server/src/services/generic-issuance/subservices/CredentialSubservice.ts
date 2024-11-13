@@ -9,6 +9,7 @@ import {
 import { LRUCache } from "lru-cache";
 import { Pool } from "postgres-pool";
 import { loadZupassEdDSAPublicKey } from "../../issuanceService";
+import { MultiProcessService } from "../../multiProcessService";
 import { traced } from "../../telemetryService";
 
 /**
@@ -22,11 +23,17 @@ export class CredentialSubservice {
   private verificationCache: LRUCache<string, Promise<VerifiedCredential>>;
   private zupassPublicKey: EdDSAPublicKey;
   private dbPool: Pool | undefined;
+  private multiProcessService: MultiProcessService;
 
-  public constructor(zupassPublicKey: EdDSAPublicKey, dbPool?: Pool) {
+  public constructor(
+    zupassPublicKey: EdDSAPublicKey,
+    multiProcessService: MultiProcessService,
+    dbPool?: Pool
+  ) {
     this.verificationCache = new LRUCache({ max: 20000 });
     this.zupassPublicKey = zupassPublicKey;
     this.dbPool = dbPool;
+    this.multiProcessService = multiProcessService;
   }
 
   public tryVerify(
@@ -46,7 +53,10 @@ export class CredentialSubservice {
     if (cached) {
       return cached;
     }
-    const promise = verifyCredential(credential).catch((err) => {
+    const promise = verifyCredential(
+      credential,
+      this.multiProcessService.verifySignaturePCD
+    ).catch((err) => {
       this.verificationCache.delete(key);
       throw err;
     });
@@ -105,7 +115,8 @@ export class CredentialSubservice {
 }
 
 export async function startCredentialSubservice(
-  dbPool: Pool
+  dbPool: Pool,
+  multiProcessService: MultiProcessService
 ): Promise<CredentialSubservice> {
   const zupassEddsaPublicKey = await loadZupassEdDSAPublicKey();
 
@@ -113,5 +124,9 @@ export async function startCredentialSubservice(
     throw new Error("Missing generic issuance zupass public key");
   }
 
-  return new CredentialSubservice(zupassEddsaPublicKey, dbPool);
+  return new CredentialSubservice(
+    zupassEddsaPublicKey,
+    multiProcessService,
+    dbPool
+  );
 }
