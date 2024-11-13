@@ -9,6 +9,7 @@ import {
 import { LRUCache } from "lru-cache";
 import { Pool } from "postgres-pool";
 import { loadZupassEdDSAPublicKey } from "../../issuanceService";
+import { traced } from "../../telemetryService";
 
 /**
  * Manages server-side verification of credential PCDs.
@@ -62,26 +63,35 @@ export class CredentialSubservice {
   public async verifyAndExpectZupassEmail(
     credential: Credential
   ): Promise<VerifiedCredential> {
-    const verifiedCredential = await this.verify(credential);
+    return traced(
+      "CredentialSubservice",
+      "verifyAndExpectZupassEmail",
+      async () => {
+        const verifiedCredential = await this.verify(credential);
 
-    if (!verifiedCredential.emails || verifiedCredential.emails.length === 0) {
-      throw new VerificationError("Missing Email PCDs");
-    }
+        if (
+          !verifiedCredential.emails ||
+          verifiedCredential.emails.length === 0
+        ) {
+          throw new VerificationError("Missing Email PCDs");
+        }
 
-    for (const signedEmail of verifiedCredential.emails) {
-      const { email, semaphoreId, signer } = signedEmail;
+        for (const signedEmail of verifiedCredential.emails) {
+          const { email, semaphoreId, signer } = signedEmail;
 
-      if (!email || !semaphoreId) {
-        throw new VerificationError("Missing email PCD in credential");
+          if (!email || !semaphoreId) {
+            throw new VerificationError("Missing email PCD in credential");
+          }
+          if (!verifiedCredential.authKey && !this.isZupassPublicKey(signer)) {
+            throw new VerificationError(
+              `Email PCD not signed by Zupass. expected ${this.zupassPublicKey} but got ${signer}`
+            );
+          }
+        }
+
+        return { ...verifiedCredential, emails: verifiedCredential.emails };
       }
-      if (!verifiedCredential.authKey && !this.isZupassPublicKey(signer)) {
-        throw new VerificationError(
-          `Email PCD not signed by Zupass. expected ${this.zupassPublicKey} but got ${signer}`
-        );
-      }
-    }
-
-    return { ...verifiedCredential, emails: verifiedCredential.emails };
+    );
   }
 
   /**
