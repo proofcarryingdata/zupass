@@ -58,6 +58,7 @@ import {
   useParams,
   useSearchParams
 } from "react-router-dom";
+import { setPendingZapp } from "../../../src/sessionStorage";
 import { SyncIndicator } from "./SyncIndicator";
 
 // @ts-expect-error TMP fix for bad lib
@@ -197,6 +198,10 @@ export const NewHomeScreen = (): ReactElement => {
       orientation.type === "landscape-secondary");
   useEffect(() => {
     if (!self && !location.pathname.includes("one-click-preview")) {
+      if (window.location.href.includes("folder=frogcrypto")) {
+        setPendingZapp(window.location.href);
+      }
+
       navigate("/login", { replace: true });
     }
   });

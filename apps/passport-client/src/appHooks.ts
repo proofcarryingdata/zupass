@@ -430,6 +430,7 @@ export const useAutoLoginFromOneClick = (): { loading: boolean } => {
           throw new Error("User is already logged in");
 
         const base = `#${oneClickRedirect.trim()}`;
+        clearAllPendingRequests();
         window.location.hash = redirectHash
           ? `${base}?redirectHash=${encodeURIComponent(redirectHash.trim())}`
           : base;
