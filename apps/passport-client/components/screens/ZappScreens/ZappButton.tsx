@@ -1,5 +1,5 @@
 import styled from "styled-components";
-export const ZAPP_BUTTON_HEIGHT = 80;
+export const ZAPP_BUTTON_HEIGHT = 60;
 export const ZappButton = styled.div`
   display: flex;
   width: 100%;
