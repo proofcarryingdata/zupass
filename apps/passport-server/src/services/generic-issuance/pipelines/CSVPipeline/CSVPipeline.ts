@@ -172,6 +172,11 @@ export class CSVPipeline implements BasePipeline {
       logger(LOG_TAG, `issue`, req);
       tracePipeline(this.definition);
 
+      // Early return to avoid unnecessary processing during Devcon
+      return {
+        actions: []
+      };
+
       const atoms = await this.db.load(this.id);
       span?.setAttribute("atoms", atoms.length);
 
