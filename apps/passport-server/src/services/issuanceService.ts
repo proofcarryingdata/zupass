@@ -115,7 +115,7 @@ export class IssuanceService {
       string,
       Promise<VerifiedCredential>
     >({
-      max: 1000
+      max: 20000
     });
 
     this.feedHost = new FeedHost(
