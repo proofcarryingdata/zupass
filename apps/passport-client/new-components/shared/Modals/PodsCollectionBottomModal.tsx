@@ -337,7 +337,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
               isMainIdentity={false}
               pcd={activePod}
               deletePodPcd={
-                isPODPCD(activePod)
+                isPODPCD(activePod) || isEdDSAFrogPCD(activePod)
                   ? async (): Promise<void> => {
                       if (
                         !confirm(
