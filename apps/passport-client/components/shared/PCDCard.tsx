@@ -1,3 +1,5 @@
+import { isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
+import { EdDSAFrogPCDUI } from "@pcd/eddsa-frog-pcd-ui";
 import {
   EdDSATicketPCD,
   TicketCategory,
@@ -342,6 +344,10 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
       }
       if (isPODPCD(pcd)) {
         const Component = PODPCDUI.renderCardBody;
+        return <Component pcd={pcd} deletePcd={deletePodPcd} />;
+      }
+      if (isEdDSAFrogPCD(pcd)) {
+        const Component = EdDSAFrogPCDUI.renderCardBody;
         return <Component pcd={pcd} deletePcd={deletePodPcd} />;
       }
       const ui = getUI(pcd.type);
