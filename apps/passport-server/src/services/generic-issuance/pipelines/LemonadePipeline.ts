@@ -831,95 +831,95 @@ export class LemonadePipeline implements BasePipeline {
     req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
     return traced(LOG_NAME, "issueLemonadeTicketPCDs", async (span) => {
-      return sqlQueryWithPool(this.context.dbPool, async (client) => {
-        tracePipeline(this.definition);
+      tracePipeline(this.definition);
 
-        if (!req.pcd) {
-          throw new Error("missing credential pcd");
-        }
+      if (!req.pcd) {
+        throw new Error("missing credential pcd");
+      }
 
-        if (
-          this.definition.options.paused &&
-          !(await this.db.hasLoaded(this.id))
-        ) {
-          return { actions: [] };
-        }
+      if (
+        this.definition.options.paused &&
+        !(await this.db.hasLoaded(this.id))
+      ) {
+        return { actions: [] };
+      }
 
-        const credential =
-          await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
+      const credential =
+        await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
-        const { emails, semaphoreId } = credential;
+      const { emails, semaphoreId } = credential;
 
-        if (!emails || emails.length === 0) {
-          throw new Error("missing emails in credential");
-        }
+      if (!emails || emails.length === 0) {
+        throw new Error("missing emails in credential");
+      }
 
-        span?.setAttribute("emails", emails.map((e) => e.email).join(","));
-        span?.setAttribute("semaphore_id", semaphoreId);
+      span?.setAttribute("emails", emails.map((e) => e.email).join(","));
+      span?.setAttribute("semaphore_id", semaphoreId);
 
-        // let didUpdate = false;
-        // for (const email of emails) {
-        //   // Consumer is validated, so save them in the consumer list
-        //   didUpdate =
-        //     didUpdate ||
-        //     (await this.consumerDB.save(
-        //       client,
-        //       this.id,
-        //       email.email,
-        //       semaphoreId,
-        //       new Date()
-        //     ));
-        // }
+      // let didUpdate = false;
+      // for (const email of emails) {
+      //   // Consumer is validated, so save them in the consumer list
+      //   didUpdate =
+      //     didUpdate ||
+      //     (await this.consumerDB.save(
+      //       client,
+      //       this.id,
+      //       email.email,
+      //       semaphoreId,
+      //       new Date()
+      //     ));
+      // }
 
-        // if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        //   // If the user's Semaphore commitment has changed, `didUpdate` will be
-        //   // true, and we need to update the Semaphore groups
-        //   if (didUpdate) {
-        //     span?.setAttribute("semaphore_groups_updated", true);
-        //     await this.triggerSemaphoreGroupUpdate(client);
-        //   }
-        // }
+      // if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+      //   // If the user's Semaphore commitment has changed, `didUpdate` will be
+      //   // true, and we need to update the Semaphore groups
+      //   if (didUpdate) {
+      //     span?.setAttribute("semaphore_groups_updated", true);
+      //     await this.triggerSemaphoreGroupUpdate(client);
+      //   }
+      // }
 
-        const tickets = (
-          await Promise.all(
-            emails.map((e) =>
-              this.getTicketsForEmail(client, e.email, semaphoreId)
+      const tickets = await sqlQueryWithPool(
+        this.context.dbPool,
+        async (client) => {
+          return (
+            await Promise.all(
+              emails.map((e) =>
+                this.getTicketsForEmail(client, e.email, semaphoreId)
+              )
             )
-          )
-        ).flat();
-
-        const ticketActions: PCDAction[] = [];
-
-        if (await this.db.hasLoaded(this.id)) {
-          ticketActions.push({
-            type: PCDActionType.DeleteFolder,
-            folder: this.definition.options.feedOptions.feedFolder,
-            recursive: true
-          });
+          ).flat();
         }
+      );
 
-        const ticketPCDs = await traced(
-          LOG_NAME,
-          "serialize tickets",
-          async () =>
-            Promise.all(tickets.map((t) => EdDSATicketPCDPackage.serialize(t)))
-        );
+      const ticketActions: PCDAction[] = [];
 
+      if (await this.db.hasLoaded(this.id)) {
         ticketActions.push({
-          type: PCDActionType.ReplaceInFolder,
+          type: PCDActionType.DeleteFolder,
           folder: this.definition.options.feedOptions.feedFolder,
-          pcds: ticketPCDs
+          recursive: true
         });
+      }
 
-        traceFlattenedObject(span, {
-          pcds_issued: tickets.length,
-          tickets_issued: tickets.length
-        });
+      const ticketPCDs = await traced(LOG_NAME, "serialize tickets", async () =>
+        Promise.all(tickets.map((t) => EdDSATicketPCDPackage.serialize(t)))
+      );
 
-        return {
-          actions: [...ticketActions]
-        };
+      ticketActions.push({
+        type: PCDActionType.ReplaceInFolder,
+        folder: this.definition.options.feedOptions.feedFolder,
+        pcds: ticketPCDs
       });
+
+      traceFlattenedObject(span, {
+        pcds_issued: tickets.length,
+        tickets_issued: tickets.length
+      });
+
+      return {
+        actions: [...ticketActions]
+      };
     });
   }
 
