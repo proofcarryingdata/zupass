@@ -24,7 +24,7 @@ export class CredentialSubservice {
   private dbPool: Pool | undefined;
 
   public constructor(zupassPublicKey: EdDSAPublicKey, dbPool?: Pool) {
-    this.verificationCache = new LRUCache({ max: 1000 });
+    this.verificationCache = new LRUCache({ max: 20000 });
     this.zupassPublicKey = zupassPublicKey;
     this.dbPool = dbPool;
   }
