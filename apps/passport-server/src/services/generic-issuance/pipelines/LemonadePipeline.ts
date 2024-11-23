@@ -13,6 +13,7 @@ import {
   BadgeConfig,
   CONTACT_EVENT_NAME,
   GenericIssuanceSendPipelineEmailResponseValue,
+  ImageOptions,
   LemonadePipelineDefinition,
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
@@ -586,6 +587,37 @@ export class LemonadePipeline implements BasePipeline {
     });
   }
 
+  private imageOptionsToImageUrl(
+    imageOptions: ImageOptions | undefined,
+    isCheckedIn: boolean
+  ): string | undefined {
+    if (!imageOptions) return undefined;
+    if (imageOptions.requireCheckedIn && !isCheckedIn) return undefined;
+    return imageOptions.imageUrl;
+  }
+
+  private atomToQrCodeOverrideImageUrl(
+    ticketAtom: LemonadeAtom
+  ): string | undefined {
+    return this.getEventById(ticketAtom.lemonadeEventId).imageOptions
+      ?.qrCodeOverrideImageUrl;
+  }
+
+  private atomToImageUrl(ticketAtom: LemonadeAtom): string | undefined {
+    return this.imageOptionsToImageUrl(
+      this.getEventById(ticketAtom.lemonadeEventId).imageOptions,
+      ticketAtom.checkinDate !== undefined
+    );
+  }
+
+  private atomToEventLocation(atom: LemonadeAtom): string | undefined {
+    return this.getEventById(atom.lemonadeEventId).imageOptions?.eventLocation;
+  }
+
+  private atomToEventStartDate(atom: LemonadeAtom): string | undefined {
+    return this.getEventById(atom.lemonadeEventId).imageOptions?.eventStartDate;
+  }
+
   private async manualTicketToTicketData(
     client: PoolClient,
     manualTicket: ManualTicket,
@@ -608,6 +640,10 @@ export class LemonadePipeline implements BasePipeline {
       attendeeName: manualTicket.attendeeName,
       attendeeSemaphoreId: sempahoreId,
       isConsumed: checkIn ? true : false,
+      imageUrl: this.imageOptionsToImageUrl(event.imageOptions, !!checkIn),
+      qrCodeOverrideImageUrl: event.imageOptions?.qrCodeOverrideImageUrl,
+      eventStartDate: event.imageOptions?.eventStartDate,
+      eventLocation: event.imageOptions?.eventLocation,
       isRevoked: false,
       timestampSigned: Date.now(),
       timestampConsumed: checkIn ? checkIn.timestamp.getTime() : 0,
@@ -1160,6 +1196,10 @@ export class LemonadePipeline implements BasePipeline {
       timestampConsumed:
         atom.checkinDate instanceof Date ? atom.checkinDate.getTime() : 0,
       timestampSigned: Date.now(),
+      imageUrl: this.atomToImageUrl(atom),
+      qrCodeOverrideImageUrl: this.atomToQrCodeOverrideImageUrl(atom),
+      eventStartDate: this.atomToEventStartDate(atom),
+      eventLocation: this.atomToEventLocation(atom),
       attendeeSemaphoreId: semaphoreId,
       isConsumed: atom.checkinDate instanceof Date,
       isRevoked: false, // Not clear what concept this maps to in Lemonade
