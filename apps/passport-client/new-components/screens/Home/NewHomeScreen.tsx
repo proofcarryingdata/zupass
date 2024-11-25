@@ -469,7 +469,7 @@ export const NewHomeScreen = (): ReactElement => {
               </_SwipableViews>
               <ButtonsContainer>
                 <SyncIndicator />
-                {getZapps(tickets[currentPos][0]).length > 0 && (
+                {getZapps(tickets[currentPos]?.[0]).length > 0 && (
                   <ZappButtonsContainer>
                     {Object.entries(appConfig.embeddedZapps).map(
                       ([zappName, url]) => (
