@@ -1,6 +1,7 @@
 import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
 import { PipelineLoadSummary } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
+import { sleep } from "@pcd/util";
 import { Pool } from "postgres-pool";
 import { sqlQueryWithPool } from "../../../../database/sqlQuery";
 import { logger } from "../../../../util/logger";
@@ -21,6 +22,7 @@ import { UserSubservice } from "../UserSubservice";
 import { maybeAlertForPipelineRun } from "./maybeAlertForPipelineRun";
 
 const LOG_TAG = `[performPipelineLoad]`;
+const PIPELINE_LOAD_TIMEOUT_MS = 1000 * 60 * 10; // 10 minutes
 
 /**
  * Performs a {@link Pipeline#load} for the given {@link Pipeline}, and
@@ -34,8 +36,7 @@ export async function performPipelineLoad(
   userSubservice: UserSubservice,
   discordService: DiscordService | null,
   pagerdutyService: PagerDutyService | null,
-  rollbarService: RollbarService | null,
-  loadStarted?: () => Promise<void>
+  rollbarService: RollbarService | null
 ): Promise<PipelineLoadSummary> {
   const startTime = new Date();
   const pipelineId = pipelineSlot.definition.id;
@@ -110,20 +111,18 @@ export async function performPipelineLoad(
       `loading data for pipeline with id '${pipelineId}'` +
         ` of type '${pipelineSlot.definition.type}'`
     );
-    const loadPromise = pipeline.load();
-    pipelineSlot.loadPromise = loadPromise;
-    try {
-      // we `.stop()` the previous instance of this pipeline
-      // here, so that by the time the `AbortError` is thrown/caught,
-      // we're ready for it with the above `pipelineSlot.loadPromise`
-      // which can be awaited again, until the load either succeeds
-      // or fails with an error other than `AbortError`.
-      await loadStarted?.();
-    } catch (e) {
-      logger(LOG_TAG, "failed to run loadStarted callback", e);
-    }
-    const summary = await loadPromise;
-    pipelineSlot.loadPromise = undefined;
+
+    pipelineSlot.loading = true;
+
+    // in case a pipeline hangs, continue after 10 minutes.
+    const summary = await Promise.race([
+      pipeline.load(),
+      (async (): Promise<PipelineLoadSummary> => {
+        await sleep(PIPELINE_LOAD_TIMEOUT_MS);
+        throw new Error(`TIME_OUT: ${pipeline.id}`);
+      })()
+    ]);
+
     logger(
       LOG_TAG,
       `successfully loaded data for pipeline with id '${pipelineId}'` +
@@ -170,5 +169,7 @@ export async function performPipelineLoad(
       discordService
     );
     return summary;
+  } finally {
+    pipelineSlot.loading = false;
   }
 }

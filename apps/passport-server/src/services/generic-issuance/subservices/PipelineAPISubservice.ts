@@ -167,7 +167,7 @@ export class PipelineAPISubservice {
           (await this.localFileService?.hasCachedLoad(pipelineId)) ?? false,
         cachedBytes:
           (await this.localFileService?.getCachedLoadSize(pipelineId)) ?? 0,
-        loading: !!pipelineSlot.loadPromise,
+        loading: pipelineSlot.loading,
         latestAtoms,
         lastLoad,
 
