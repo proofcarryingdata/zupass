@@ -120,19 +120,27 @@ const ButtonsContainer = styled.div`
   transform: translateX(-50%);
 `;
 
-const getZappsHeight = (): number => {
+const getZapps = (eventId: string): [string, string][] => {
   const zapps = Object.entries(appConfig.embeddedZapps);
+  if (eventId === "5074edf5-f079-4099-b036-22223c0c6995") {
+    return zapps;
+  }
+  return [];
+};
+const getZappsHeight = (zapps: [string, string][]): number => {
   return zapps.length * ZAPP_BUTTON_HEIGHT + zapps.length * TICKET_VERTICAL_GAP;
 };
 
-const TicketsContainer = styled.div<{ $width: number }>`
+const TicketsContainer = styled.div<{ $width: number; eventId: string }>`
   width: ${({ $width }): number => $width}px;
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: ${getZappsHeight()
-    ? getZappsHeight() + 28 + TICKET_VERTICAL_GAP
-    : 28 + TICKET_VERTICAL_GAP}px;
+  gap: ${({ eventId }): number =>
+    getZappsHeight(getZapps(eventId))
+      ? getZappsHeight(getZapps(eventId)) + 28 + TICKET_VERTICAL_GAP
+      : 28 + TICKET_VERTICAL_GAP}px;
+  transition: gap 0.2s ease-in-out;
 `;
 
 const LoadingScreenContainer = styled.div`
@@ -415,6 +423,7 @@ export const NewHomeScreen = (): ReactElement => {
                   const eventDetails = getEventDetails(packs[0]);
                   return (
                     <TicketsContainer
+                      eventId={tickets[currentPos][0]}
                       $width={cardWidth}
                       key={packs.map((pack) => pack.eventTicket.id).join("-")}
                     >
@@ -468,7 +477,7 @@ export const NewHomeScreen = (): ReactElement => {
               </_SwipableViews>
               <ButtonsContainer>
                 <SyncIndicator />
-                {Object.keys(appConfig.embeddedZapps).length > 0 && (
+                {getZapps(tickets[currentPos]?.[0]).length > 0 && (
                   <ZappButtonsContainer>
                     {Object.entries(appConfig.embeddedZapps).map(
                       ([zappName, url]) => (
