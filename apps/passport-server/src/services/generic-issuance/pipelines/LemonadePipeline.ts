@@ -599,23 +599,26 @@ export class LemonadePipeline implements BasePipeline {
   private atomToQrCodeOverrideImageUrl(
     ticketAtom: LemonadeAtom
   ): string | undefined {
-    return this.getEventById(ticketAtom.lemonadeEventId).imageOptions
-      ?.qrCodeOverrideImageUrl;
+    const event = this.lemonadeAtomToEvent(ticketAtom);
+    return event.imageOptions?.qrCodeOverrideImageUrl;
   }
 
   private atomToImageUrl(ticketAtom: LemonadeAtom): string | undefined {
+    const event = this.lemonadeAtomToEvent(ticketAtom);
     return this.imageOptionsToImageUrl(
-      this.getEventById(ticketAtom.lemonadeEventId).imageOptions,
+      event.imageOptions,
       ticketAtom.checkinDate !== undefined
     );
   }
 
   private atomToEventLocation(atom: LemonadeAtom): string | undefined {
-    return this.getEventById(atom.lemonadeEventId).imageOptions?.eventLocation;
+    const event = this.lemonadeAtomToEvent(atom);
+    return event.imageOptions?.eventLocation;
   }
 
   private atomToEventStartDate(atom: LemonadeAtom): string | undefined {
-    return this.getEventById(atom.lemonadeEventId).imageOptions?.eventStartDate;
+    const event = this.lemonadeAtomToEvent(atom);
+    return event.imageOptions?.eventStartDate;
   }
 
   private async manualTicketToTicketData(
@@ -819,7 +822,6 @@ export class LemonadePipeline implements BasePipeline {
   ): Promise<EdDSATicketPCD[]> {
     return traced(LOG_NAME, "getTicketsForEmail", async () => {
       // Load atom-backed tickets
-
       const relevantTickets = await this.db.loadByEmail(this.id, email);
 
       // Load check-in data
@@ -868,7 +870,6 @@ export class LemonadePipeline implements BasePipeline {
   ): Promise<PollFeedResponseValue> {
     return traced(LOG_NAME, "issueLemonadeTicketPCDs", async (span) => {
       tracePipeline(this.definition);
-
       if (!req.pcd) {
         throw new Error("missing credential pcd");
       }
