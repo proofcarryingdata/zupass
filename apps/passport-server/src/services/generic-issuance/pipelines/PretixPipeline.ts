@@ -1034,6 +1034,9 @@ export class PretixPipeline implements BasePipeline {
       manualTicket.id
     );
 
+    // Commented-out fields below are optional, unneded for current use cases,
+    //  and omitted to keep the ticket POD below 16 entries (Merkle depth 5
+    // in GPC proofs).
     return {
       ticketId: manualTicket.id,
       eventId: manualTicket.eventId,
@@ -1046,10 +1049,10 @@ export class PretixPipeline implements BasePipeline {
       eventLocation: event.imageOptions?.eventLocation,
       isAddOn: product.isAddOnItem,
       isConsumed: checkIn ? true : false,
-      isRevoked: false,
+      // isRevoked: false,
       timestampSigned: Date.now(),
-      timestampConsumed: checkIn ? checkIn.timestamp.getTime() : 0,
-      ticketCategory: TicketCategory.Generic,
+      // timestampConsumed: checkIn ? checkIn.timestamp.getTime() : 0,
+      // ticketCategory: TicketCategory.Generic,
       eventName: event.name,
       ticketName: product.name,
       checkerEmail: undefined,
@@ -1289,17 +1292,20 @@ export class PretixPipeline implements BasePipeline {
       throw new Error(`Atom missing email: ${atom.id} in pipeline ${this.id}`);
     }
 
+    // Commented-out fields below are optional, unneded for current use cases,
+    //  and omitted to keep the ticket POD below 16 entries (Merkle depth 5
+    // in GPC proofs).
     return {
       attendeeName: atom.name,
       attendeeEmail: atom.email,
       eventName: this.atomToEventName(atom),
       ticketName: this.atomToTicketName(atom),
-      checkerEmail: undefined,
+      //checkerEmail: undefined,
       ticketSecret: atom.secret,
       ticketId: atom.id,
       eventId: atom.eventId,
       productId: atom.productId,
-      timestampConsumed: atom.timestampConsumed?.getTime() ?? 0,
+      //timestampConsumed: atom.timestampConsumed?.getTime() ?? 0,
       timestampSigned: Date.now(),
       owner: semaphoreV4Id,
       imageUrl: this.atomToImageUrl(atom),
@@ -1308,8 +1314,8 @@ export class PretixPipeline implements BasePipeline {
       eventLocation: this.atomToEventLocation(atom),
       isAddOn: !!atom.parentAtomId,
       isConsumed: atom.isConsumed,
-      isRevoked: false,
-      ticketCategory: TicketCategory.Generic,
+      //isRevoked: false,
+      //ticketCategory: TicketCategory.Generic,
       parentTicketId: atom.parentAtomId ?? undefined
     };
   }

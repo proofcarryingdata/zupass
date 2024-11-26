@@ -99,6 +99,50 @@ describe("PODTicketPCD should work", function () {
     expect(ticketPOD.signerPublicKey).to.eq(expectedPublicKey);
   });
 
+  it("should be able to create and verify a ticket with minimal entries", async function () {
+    const noOptionalFieldsTicketData: IPODTicketData = {
+      attendeeName: "test name",
+      attendeeEmail: "user@test.com",
+      eventName: "event",
+      ticketName: "ticket",
+      checkerEmail: "checker@test.com",
+      ticketId: "0450fd86-fa6f-430b-81ac-24b03a75be01",
+      eventId: "d451327c-9997-449a-a6fb-bea11e816533",
+      productId: "a7c633a4-618a-474c-bb33-523ba68e6314",
+      timestampSigned: Date.UTC(2024, 10, 11),
+      // Owner is optional, but implicitly one of the two types of
+      // ownership should be present.
+      owner: "9x0qSqXus/VG4OgfyHWvVEFIiaTa7rsE/kS0YsHNNQI",
+      isConsumed: false
+    };
+
+    const noOptionalFieldsTicket = await PODTicketPCDPackage.prove({
+      ticket: {
+        value: noOptionalFieldsTicketData,
+        argumentType: ArgumentTypeName.Object
+      },
+      privateKey: {
+        value: prvKey,
+        argumentType: ArgumentTypeName.String
+      },
+      id: {
+        value: COMPAT_TEST_PCD_ID,
+        argumentType: ArgumentTypeName.String
+      }
+    });
+
+    expect(await PODTicketPCDPackage.verify(noOptionalFieldsTicket)).to.be.true;
+    expect(noOptionalFieldsTicket.type).to.eq(PODTicketPCDTypeName);
+    expect(noOptionalFieldsTicket.id).to.eq(COMPAT_TEST_PCD_ID);
+
+    const noOptionalFieldsTicketPOD = ticketToPOD(noOptionalFieldsTicket);
+    expect(noOptionalFieldsTicketPOD.verifySignature()).to.be.true;
+    console.error("ART_DBG", noOptionalFieldsTicketPOD.content.asEntries());
+    expect(
+      Object.keys(noOptionalFieldsTicketPOD.content.asEntries())
+    ).to.have.length(12);
+  });
+
   it("should not be possible to verify a ticket that has been tampered with", async function () {
     const originalTicketData = ticket.claim.ticket;
     ticket.claim.ticket = {
