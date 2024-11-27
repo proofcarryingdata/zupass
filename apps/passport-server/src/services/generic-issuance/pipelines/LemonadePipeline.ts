@@ -485,9 +485,7 @@ export class LemonadePipeline implements BasePipeline {
       );
 
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        await sqlQueryWithPool(this.context.dbPool, (client) =>
-          this.triggerSemaphoreGroupUpdate(client)
-        );
+        this.triggerSemaphoreGroupUpdate();
       }
 
       return {
@@ -541,7 +539,7 @@ export class LemonadePipeline implements BasePipeline {
    * Marked as public so that it can be called from tests, but otherwise should
    * not be called from outside the class.
    */
-  public async triggerSemaphoreGroupUpdate(client: PoolClient): Promise<void> {
+  public async triggerSemaphoreGroupUpdate(): Promise<void> {
     return traced(LOG_NAME, "triggerSemaphoreGroupUpdate", async (_span) => {
       tracePipeline(this.definition);
       // Whenever an update is triggered, we want to make sure that the
@@ -554,9 +552,15 @@ export class LemonadePipeline implements BasePipeline {
       // queuing update requests.
       // By returning this promise, we allow the caller to await on the update
       // having been processed.
+
       return this.semaphoreUpdateQueue.add(async () => {
         const data = await this.semaphoreGroupData();
-        await this.semaphoreGroupProvider?.update(client, data);
+        await sqlQueryWithPool(this.context.dbPool, async (client) => {
+          if (!this.semaphoreGroupProvider) {
+            return;
+          }
+          return this.semaphoreGroupProvider.update(client, data);
+        });
       });
     });
   }
@@ -856,28 +860,30 @@ export class LemonadePipeline implements BasePipeline {
       span?.setAttribute("emails", emails.map((e) => e.email).join(","));
       span?.setAttribute("semaphore_id", semaphoreId);
 
-      // let didUpdate = false;
-      // for (const email of emails) {
-      //   // Consumer is validated, so save them in the consumer list
-      //   didUpdate =
-      //     didUpdate ||
-      //     (await this.consumerDB.save(
-      //       client,
-      //       this.id,
-      //       email.email,
-      //       semaphoreId,
-      //       new Date()
-      //     ));
-      // }
+      let didUpdate = false;
+      await sqlQueryWithPool(this.context.dbPool, async (client) => {
+        for (const email of emails) {
+          // Consumer is validated, so save them in the consumer list
+          didUpdate =
+            didUpdate ||
+            (await this.consumerDB.save(
+              client,
+              this.id,
+              email.email,
+              semaphoreId,
+              new Date()
+            ));
+        }
+      });
 
-      // if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-      //   // If the user's Semaphore commitment has changed, `didUpdate` will be
-      //   // true, and we need to update the Semaphore groups
-      //   if (didUpdate) {
-      //     span?.setAttribute("semaphore_groups_updated", true);
-      //     await this.triggerSemaphoreGroupUpdate(client);
-      //   }
-      // }
+      if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+        // If the user's Semaphore commitment has changed, `didUpdate` will be
+        // true, and we need to update the Semaphore groups
+        if (didUpdate) {
+          span?.setAttribute("semaphore_groups_updated", true);
+          await this.triggerSemaphoreGroupUpdate();
+        }
+      }
 
       const tickets = await sqlQueryWithPool(
         this.context.dbPool,
