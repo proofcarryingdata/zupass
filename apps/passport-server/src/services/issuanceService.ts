@@ -684,8 +684,19 @@ export class IssuanceService {
             isConsumed: false,
             isRevoked: false,
             ticketCategory: TicketCategory.Zuzalu,
-            imageUrl: urljoin(imageServerUrl, "images/zuzalu", "zuzalu.png"),
-            imageAltText: "Zuzalu logo"
+            imageUrl: urljoin(
+              imageServerUrl,
+              "images/zuzalu",
+              "zuzalu-landscape.webp"
+            ),
+            qrCodeOverrideImageUrl: urljoin(
+              imageServerUrl,
+              "images/zuzalu",
+              "zuzalu.png"
+            ),
+            imageAltText: "Zuzalu logo",
+            eventLocation: "Lustica Bay, Montenegro",
+            eventStartDate: "2023-03-11T00:00:00.000Z"
           })
         );
       }
@@ -761,9 +772,16 @@ export class IssuanceService {
               imageUrl: urljoin(
                 imageServerUrl,
                 "images/zuzalu",
+                "zuconnect-landscape.webp"
+              ),
+              qrCodeOverrideImageUrl: urljoin(
+                imageServerUrl,
+                "images/zuzalu",
                 "zuconnect.png"
               ),
-              imageAltText: "ZuConnect"
+              imageAltText: "ZuConnect",
+              eventLocation: "Istanbul, Turkey",
+              eventStartDate: "2023-10-29T00:00:00.000Z"
             })
           );
         }
