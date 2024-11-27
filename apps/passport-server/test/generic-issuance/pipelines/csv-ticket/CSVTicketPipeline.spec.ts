@@ -26,7 +26,7 @@ import { setupTestCSVTicketPipelineDefinition } from "./setupTestCSVTicketPipeli
 /**
  * Tests for {@link GenericIssuanceService}, in particular the {@link CSVTicketPipeline}.
  */
-describe.skip("generic issuance - CSVTicketPipeline", function () {
+describe("generic issuance - CSVTicketPipeline", function () {
   const nowDate = new Date();
   const now = Date.now();
 
