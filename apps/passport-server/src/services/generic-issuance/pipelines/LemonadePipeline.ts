@@ -13,6 +13,7 @@ import {
   BadgeConfig,
   CONTACT_EVENT_NAME,
   GenericIssuanceSendPipelineEmailResponseValue,
+  ImageOptions,
   LemonadePipelineDefinition,
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
@@ -586,6 +587,40 @@ export class LemonadePipeline implements BasePipeline {
     });
   }
 
+  private imageOptionsToImageUrl(
+    imageOptions: ImageOptions | undefined,
+    isCheckedIn: boolean
+  ): string | undefined {
+    if (!imageOptions) return undefined;
+    if (imageOptions.requireCheckedIn && !isCheckedIn) return undefined;
+    return imageOptions.imageUrl;
+  }
+
+  private atomToQrCodeOverrideImageUrl(
+    ticketAtom: LemonadeAtom
+  ): string | undefined {
+    const event = this.lemonadeAtomToEvent(ticketAtom);
+    return event.imageOptions?.qrCodeOverrideImageUrl;
+  }
+
+  private atomToImageUrl(ticketAtom: LemonadeAtom): string | undefined {
+    const event = this.lemonadeAtomToEvent(ticketAtom);
+    return this.imageOptionsToImageUrl(
+      event.imageOptions,
+      ticketAtom.checkinDate !== undefined
+    );
+  }
+
+  private atomToEventLocation(atom: LemonadeAtom): string | undefined {
+    const event = this.lemonadeAtomToEvent(atom);
+    return event.imageOptions?.eventLocation;
+  }
+
+  private atomToEventStartDate(atom: LemonadeAtom): string | undefined {
+    const event = this.lemonadeAtomToEvent(atom);
+    return event.imageOptions?.eventStartDate;
+  }
+
   private async manualTicketToTicketData(
     client: PoolClient,
     manualTicket: ManualTicket,
@@ -608,6 +643,10 @@ export class LemonadePipeline implements BasePipeline {
       attendeeName: manualTicket.attendeeName,
       attendeeSemaphoreId: sempahoreId,
       isConsumed: checkIn ? true : false,
+      imageUrl: this.imageOptionsToImageUrl(event.imageOptions, !!checkIn),
+      qrCodeOverrideImageUrl: event.imageOptions?.qrCodeOverrideImageUrl,
+      eventStartDate: event.imageOptions?.eventStartDate,
+      eventLocation: event.imageOptions?.eventLocation,
       isRevoked: false,
       timestampSigned: Date.now(),
       timestampConsumed: checkIn ? checkIn.timestamp.getTime() : 0,
@@ -783,7 +822,6 @@ export class LemonadePipeline implements BasePipeline {
   ): Promise<EdDSATicketPCD[]> {
     return traced(LOG_NAME, "getTicketsForEmail", async () => {
       // Load atom-backed tickets
-
       const relevantTickets = await this.db.loadByEmail(this.id, email);
 
       // Load check-in data
@@ -832,7 +870,6 @@ export class LemonadePipeline implements BasePipeline {
   ): Promise<PollFeedResponseValue> {
     return traced(LOG_NAME, "issueLemonadeTicketPCDs", async (span) => {
       tracePipeline(this.definition);
-
       if (!req.pcd) {
         throw new Error("missing credential pcd");
       }
@@ -1160,6 +1197,10 @@ export class LemonadePipeline implements BasePipeline {
       timestampConsumed:
         atom.checkinDate instanceof Date ? atom.checkinDate.getTime() : 0,
       timestampSigned: Date.now(),
+      imageUrl: this.atomToImageUrl(atom),
+      qrCodeOverrideImageUrl: this.atomToQrCodeOverrideImageUrl(atom),
+      eventStartDate: this.atomToEventStartDate(atom),
+      eventLocation: this.atomToEventLocation(atom),
       attendeeSemaphoreId: semaphoreId,
       isConsumed: atom.checkinDate instanceof Date,
       isRevoked: false, // Not clear what concept this maps to in Lemonade

@@ -1299,7 +1299,7 @@ export class PretixPipeline implements BasePipeline {
       ticketId: atom.id,
       eventId: atom.eventId,
       productId: atom.productId,
-      timestampConsumed: atom.timestampConsumed?.getTime() ?? 0,
+      timestampConsumed: atom?.timestampConsumed?.getTime() ?? 0,
       timestampSigned: Date.now(),
       owner: semaphoreV4Id,
       imageUrl: this.atomToImageUrl(atom),

@@ -49,10 +49,9 @@ function EdDSATicketPCDCardBody({
 
   // If ticket has an `eventStartDate` render the `qrCodeOverrideImageUrl`, if it exists
   // Else, render the `imageUrl`, if it existss
-  const imageToRender =
-    ticketData?.eventStartDate && idBasedVerifyURL !== undefined
-      ? ticketData.qrCodeOverrideImageUrl
-      : ticketData?.imageUrl;
+  const imageToRender = ticketData?.eventStartDate
+    ? ticketData.qrCodeOverrideImageUrl
+    : ticketData?.imageUrl;
 
   return (
     <NEW_UI__Container>
