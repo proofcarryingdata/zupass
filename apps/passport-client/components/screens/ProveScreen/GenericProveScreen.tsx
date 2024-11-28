@@ -25,6 +25,27 @@ const Header = styled.div`
 `;
 
 /**
+ * Throws an error that indicates that the current window does not have an
+ * opener, and that the user should try again using a different browser.
+ *
+ * If the user requests a proof to be returned via `postMessage`, then the
+ * current window should have an opener - the window that opened the Zupass
+ * popup. However, some browsers seem not to set the `opener` property, so
+ * we need to check for that and throw an error if it's not set.
+ *
+ * To date, this seems to occur in in-app browsers like Metamask. However, it
+ * has also been reported on Chrome, although we're not yet sure what browser
+ * settings/extensions may be causing it.
+ *
+ * See "onProveCallback" below for more context.
+ */
+function throwNoOpenerError(): never {
+  throw new Error(
+    "Zupass was unable to send your proof to the opening window. This may be because your browser settings do not allow this, or because your browser does not support messaging between tabs."
+  );
+}
+
+/**
  * Renders a UI in response to a request from Zupass to calculate
  * a particular PCD. For arguments which are filled in by the requester
  * of the PCD, displays those hardcoded values. For arguments that the
@@ -53,23 +74,36 @@ export function GenericProveScreen({
       multiplePCDs?: SerializedPCD[]
     ) => {
       if (pendingPCD) {
-        if (window.opener && req.postMessage) {
-          postPendingPCDMessage(window.opener, pendingPCD);
-          window.close();
+        if (req.postMessage) {
+          if (window.opener) {
+            postPendingPCDMessage(window.opener, pendingPCD);
+            window.close();
+          } else {
+            // Opener doesn't exist, so we can't send the proof.
+            throwNoOpenerError();
+          }
         }
         safeRedirectPending(req.returnUrl, pendingPCD);
       } else if (multiplePCDs !== undefined) {
-        if (window.opener && req.postMessage) {
-          postSerializedMultiPCDMessage(window.opener, multiplePCDs);
-          window.close();
+        if (req.postMessage) {
+          if (window.opener) {
+            postSerializedMultiPCDMessage(window.opener, multiplePCDs);
+            window.close();
+          } else {
+            throwNoOpenerError();
+          }
         }
         safeRedirect(req.returnUrl, undefined, multiplePCDs);
       } else {
-        if (window.opener && req.postMessage) {
-          if (serialized) {
-            postSerializedPCDMessage(window.opener, serialized);
+        if (req.postMessage) {
+          if (window.opener) {
+            if (serialized) {
+              postSerializedPCDMessage(window.opener, serialized);
+            }
+            window.close();
+          } else {
+            throwNoOpenerError();
           }
-          window.close();
         }
         safeRedirect(req.returnUrl, serialized);
       }
