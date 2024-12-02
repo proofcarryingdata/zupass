@@ -1203,27 +1203,32 @@ export class PretixPipeline implements BasePipeline {
         }
       });
 
-      // Is this still needed?
-      // const provider = this.autoIssuanceProvider;
-      // if (provider) {
-      //   const newManualTickets = (
-      //     await Promise.all(
-      //       emails.map(async (e) =>
-      //         provider.maybeIssueForUser(
-      //           e.email,
-      //           await this.getAllManualTickets(client),
-      //           await this.db.loadByEmail(this.id, e.email)
-      //         )
-      //       )
-      //     )
-      //   ).flat();
+      const provider = this.autoIssuanceProvider;
+      if (provider) {
+        const allManualTickets = await sqlQueryWithPool(
+          this.context.dbPool,
+          async (client) => await this.getAllManualTickets(client)
+        );
+        const newManualTickets = (
+          await Promise.all(
+            emails.map(async (e) =>
+              provider.maybeIssueForUser(
+                e.email,
+                allManualTickets,
+                await this.db.loadByEmail(this.id, e.email)
+              )
+            )
+          )
+        ).flat();
 
-      //   await Promise.allSettled(
-      //     newManualTickets.map((t) =>
-      //       this.manualTicketDB.save(client, this.id, t)
-      //     )
-      //   );
-      // }
+        await sqlQueryWithPool(this.context.dbPool, async (client) =>
+          Promise.allSettled(
+            newManualTickets.map((t) =>
+              this.manualTicketDB.save(client, this.id, t)
+            )
+          )
+        );
+      }
 
       const tickets = await sqlQueryWithPool(
         this.context.dbPool,
