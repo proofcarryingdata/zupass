@@ -6,6 +6,7 @@ import {
   PodboxTicketActionResponseValue,
   PretixPipelineDefinition,
   createCredentialPayload,
+  requestGenericIssuanceSemaphoreGroup,
   requestPodboxTicketAction
 } from "@pcd/passport-interface";
 import { ONE_DAY_MS, ONE_SECOND_MS } from "@pcd/util";
@@ -17,6 +18,7 @@ import * as MockDate from "mockdate";
 import { Pool, PoolClient } from "postgres-pool";
 import { stopApplication } from "../../../../src/application";
 import { PipelineCheckinDB } from "../../../../src/database/queries/pipelineCheckinDB";
+import { PipelineConsumerDB } from "../../../../src/database/queries/pipelineConsumerDB";
 import { PipelineDefinitionDB } from "../../../../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../../../../src/database/queries/pipelineUserDB";
 import { GenericIssuanceService } from "../../../../src/services/generic-issuance/GenericIssuanceService";
@@ -74,8 +76,8 @@ describe("generic issuance - PretixPipeline without semaphore v4 enabled", funct
     pretixBackend,
     ethLatAmPretixOrganizer,
     ethLatAmEvent,
-    ethLatAmPipeline
-    //  ethLatAmSemaphoreGroupIds
+    ethLatAmPipeline,
+    ethLatAmSemaphoreGroupIds
   } = setupTestPretixPipeline(false);
 
   const pipelineDefinitions = [ethLatAmPipeline];
@@ -205,7 +207,7 @@ describe("generic issuance - PretixPipeline without semaphore v4 enabled", funct
       expectToExist(pipeline);
       expect(pipeline.id).to.eq(ethLatAmPipeline.id);
       const ethLatAmTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
-      //  const ethLatAmIssuanceDateTime = new Date();
+      const ethLatAmIssuanceDateTime = new Date();
       const attendeeTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
         ethLatAmTicketFeedUrl,
@@ -405,121 +407,121 @@ describe("generic issuance - PretixPipeline without semaphore v4 enabled", funct
       } satisfies PodboxTicketActionResponseValue);
 
       // Verify that consumers were saved for each user who requested tickets
-      // const consumerDB = new PipelineConsumerDB();
-      // const consumers = await consumerDB.loadByEmails(
-      //   client,
-      //   ethLatAmPipeline.id,
-      //   [
-      //     EthLatAmManualAttendeeEmail,
-      //     EthLatAmManualBouncerEmail,
-      //     pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail,
-      //     pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
-      //   ]
-      // );
-      // expectLength(consumers, 4);
-      // expect(consumers).to.deep.include.members([
-      //   {
-      //     email: EthLatAmManualAttendeeEmail,
-      //     commitment: EthLatAmManualAttendeeIdentity.commitment.toString(),
-      //     timeCreated: ethLatAmIssuanceDateTime,
-      //     timeUpdated: ethLatAmIssuanceDateTime
-      //   },
-      //   {
-      //     email: EthLatAmManualBouncerEmail,
-      //     commitment: EthLatAmManualBouncerIdentity.commitment.toString(),
-      //     timeCreated: ethLatAmIssuanceDateTime,
-      //     timeUpdated: ethLatAmIssuanceDateTime
-      //   },
-      //   {
-      //     email: pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail,
-      //     commitment: EthLatAmAttendeeIdentity.commitment.toString(),
-      //     timeCreated: ethLatAmIssuanceDateTime,
-      //     timeUpdated: ethLatAmIssuanceDateTime
-      //   },
-      //   {
-      //     email: pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
-      //     commitment: EthLatAmBouncerIdentity.commitment.toString(),
-      //     timeCreated: ethLatAmIssuanceDateTime,
-      //     timeUpdated: ethLatAmIssuanceDateTime
-      //   }
-      // ]);
+      const consumerDB = new PipelineConsumerDB();
+      const consumers = await consumerDB.loadByEmails(
+        client,
+        ethLatAmPipeline.id,
+        [
+          EthLatAmManualAttendeeEmail,
+          EthLatAmManualBouncerEmail,
+          pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail,
+          pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+        ]
+      );
+      expectLength(consumers, 4);
+      expect(consumers).to.deep.include.members([
+        {
+          email: EthLatAmManualAttendeeEmail,
+          commitment: EthLatAmManualAttendeeIdentity.commitment.toString(),
+          timeCreated: ethLatAmIssuanceDateTime,
+          timeUpdated: ethLatAmIssuanceDateTime
+        },
+        {
+          email: EthLatAmManualBouncerEmail,
+          commitment: EthLatAmManualBouncerIdentity.commitment.toString(),
+          timeCreated: ethLatAmIssuanceDateTime,
+          timeUpdated: ethLatAmIssuanceDateTime
+        },
+        {
+          email: pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail,
+          commitment: EthLatAmAttendeeIdentity.commitment.toString(),
+          timeCreated: ethLatAmIssuanceDateTime,
+          timeUpdated: ethLatAmIssuanceDateTime
+        },
+        {
+          email: pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
+          commitment: EthLatAmBouncerIdentity.commitment.toString(),
+          timeCreated: ethLatAmIssuanceDateTime,
+          timeUpdated: ethLatAmIssuanceDateTime
+        }
+      ]);
 
       await checkPipelineInfoEndpoint(giBackend, pipeline);
     }
   );
 
-  // step(
-  //   "Pretix pipeline Semaphore groups contain correct members",
-  //   async function () {
-  //     expectToExist(giService);
-  //     const pipelines = await giService.getAllPipelineInstances();
-  //     expectToExist(pipelines);
-  //     expectLength(pipelines, 1);
-  //     const ethLatAmPipeline = pipelines.find(PretixPipeline.is);
-  //     expectToExist(ethLatAmPipeline);
+  step(
+    "Pretix pipeline Semaphore groups contain correct members",
+    async function () {
+      expectToExist(giService);
+      const pipelines = await giService.getAllPipelineInstances();
+      expectToExist(pipelines);
+      expectLength(pipelines, 1);
+      const ethLatAmPipeline = pipelines.find(PretixPipeline.is);
+      expectToExist(ethLatAmPipeline);
 
-  //     await giService.performPipelineLoad(ethLatAmPipeline.id);
+      await giService.performPipelineLoad(ethLatAmPipeline.id);
 
-  //     const semaphoreGroupAll = await requestGenericIssuanceSemaphoreGroup(
-  //       process.env.PASSPORT_SERVER_URL as string,
-  //       ethLatAmPipeline.id,
-  //       ethLatAmSemaphoreGroupIds.all
-  //     );
-  //     expectTrue(semaphoreGroupAll.success);
-  //     expectLength(semaphoreGroupAll.value.members, 4);
-  //     expect(semaphoreGroupAll.value.members).to.deep.include.members([
-  //       EthLatAmBouncerIdentity.commitment.toString(),
-  //       EthLatAmAttendeeIdentity.commitment.toString(),
-  //       EthLatAmManualAttendeeIdentity.commitment.toString(),
-  //       EthLatAmManualBouncerIdentity.commitment.toString()
-  //     ]);
+      const semaphoreGroupAll = await requestGenericIssuanceSemaphoreGroup(
+        process.env.PASSPORT_SERVER_URL as string,
+        ethLatAmPipeline.id,
+        ethLatAmSemaphoreGroupIds.all
+      );
+      expectTrue(semaphoreGroupAll.success);
+      expectLength(semaphoreGroupAll.value.members, 4);
+      expect(semaphoreGroupAll.value.members).to.deep.include.members([
+        EthLatAmBouncerIdentity.commitment.toString(),
+        EthLatAmAttendeeIdentity.commitment.toString(),
+        EthLatAmManualAttendeeIdentity.commitment.toString(),
+        EthLatAmManualBouncerIdentity.commitment.toString()
+      ]);
 
-  //     const semaphoreGroupBouncers = await requestGenericIssuanceSemaphoreGroup(
-  //       process.env.PASSPORT_SERVER_URL as string,
-  //       ethLatAmPipeline.id,
-  //       ethLatAmSemaphoreGroupIds.bouncers
-  //     );
+      const semaphoreGroupBouncers = await requestGenericIssuanceSemaphoreGroup(
+        process.env.PASSPORT_SERVER_URL as string,
+        ethLatAmPipeline.id,
+        ethLatAmSemaphoreGroupIds.bouncers
+      );
 
-  //     expectTrue(semaphoreGroupBouncers.success);
-  //     expectLength(semaphoreGroupBouncers.value.members, 2);
-  //     expect(semaphoreGroupBouncers.value.members).to.deep.include.members([
-  //       EthLatAmBouncerIdentity.commitment.toString(),
-  //       EthLatAmManualBouncerIdentity.commitment.toString()
-  //     ]);
+      expectTrue(semaphoreGroupBouncers.success);
+      expectLength(semaphoreGroupBouncers.value.members, 2);
+      expect(semaphoreGroupBouncers.value.members).to.deep.include.members([
+        EthLatAmBouncerIdentity.commitment.toString(),
+        EthLatAmManualBouncerIdentity.commitment.toString()
+      ]);
 
-  //     const semaphoreGroupAttendees =
-  //       await requestGenericIssuanceSemaphoreGroup(
-  //         process.env.PASSPORT_SERVER_URL as string,
-  //         ethLatAmPipeline.id,
-  //         ethLatAmSemaphoreGroupIds.attendees
-  //       );
+      const semaphoreGroupAttendees =
+        await requestGenericIssuanceSemaphoreGroup(
+          process.env.PASSPORT_SERVER_URL as string,
+          ethLatAmPipeline.id,
+          ethLatAmSemaphoreGroupIds.attendees
+        );
 
-  //     expectTrue(semaphoreGroupAttendees.success);
-  //     expectLength(semaphoreGroupAttendees.value.members, 2);
-  //     expect(semaphoreGroupAttendees.value.members).to.deep.include.members([
-  //       EthLatAmAttendeeIdentity.commitment.toString(),
-  //       EthLatAmManualAttendeeIdentity.commitment.toString()
-  //     ]);
+      expectTrue(semaphoreGroupAttendees.success);
+      expectLength(semaphoreGroupAttendees.value.members, 2);
+      expect(semaphoreGroupAttendees.value.members).to.deep.include.members([
+        EthLatAmAttendeeIdentity.commitment.toString(),
+        EthLatAmManualAttendeeIdentity.commitment.toString()
+      ]);
 
-  //     const semaphoreGroupAttendeesAndBouncers =
-  //       await requestGenericIssuanceSemaphoreGroup(
-  //         process.env.PASSPORT_SERVER_URL as string,
-  //         ethLatAmPipeline.id,
-  //         ethLatAmSemaphoreGroupIds.attendeesAndBouncers
-  //       );
+      const semaphoreGroupAttendeesAndBouncers =
+        await requestGenericIssuanceSemaphoreGroup(
+          process.env.PASSPORT_SERVER_URL as string,
+          ethLatAmPipeline.id,
+          ethLatAmSemaphoreGroupIds.attendeesAndBouncers
+        );
 
-  //     expectTrue(semaphoreGroupAttendeesAndBouncers.success);
-  //     expectLength(semaphoreGroupAttendeesAndBouncers.value.members, 4);
-  //     expect(
-  //       semaphoreGroupAttendeesAndBouncers.value.members
-  //     ).to.deep.include.members([
-  //       EthLatAmBouncerIdentity.commitment.toString(),
-  //       EthLatAmAttendeeIdentity.commitment.toString(),
-  //       EthLatAmManualAttendeeIdentity.commitment.toString(),
-  //       EthLatAmManualBouncerIdentity.commitment.toString()
-  //     ]);
-  //   }
-  // );
+      expectTrue(semaphoreGroupAttendeesAndBouncers.success);
+      expectLength(semaphoreGroupAttendeesAndBouncers.value.members, 4);
+      expect(
+        semaphoreGroupAttendeesAndBouncers.value.members
+      ).to.deep.include.members([
+        EthLatAmBouncerIdentity.commitment.toString(),
+        EthLatAmAttendeeIdentity.commitment.toString(),
+        EthLatAmManualAttendeeIdentity.commitment.toString(),
+        EthLatAmManualBouncerIdentity.commitment.toString()
+      ]);
+    }
+  );
 
   step("check-ins for deleted manual tickets are removed", async function () {
     expectToExist(giService);
