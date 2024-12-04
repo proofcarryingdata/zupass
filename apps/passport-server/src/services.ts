@@ -39,7 +39,10 @@ export async function startServices(
     rollbarService,
     discordService
   );
-  const credentialSubservice = await startCredentialSubservice(context.dbPool);
+  const credentialSubservice = await startCredentialSubservice(
+    context.dbPool,
+    multiprocessService
+  );
   const provingService = await startProvingService(rollbarService);
   const emailService = startEmailService(context, apis.emailAPI);
   const emailTokenService = startEmailTokenService();

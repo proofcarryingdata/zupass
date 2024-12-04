@@ -18,6 +18,7 @@ import "mocha";
 import { step } from "mocha-steps";
 import MockDate from "mockdate";
 import { CredentialSubservice } from "../../src/services/generic-issuance/subservices/CredentialSubservice";
+import { MultiProcessService } from "../../src/services/multiProcessService";
 import { overrideEnvironment, testingEnv } from "../util/env";
 import { startTestingApp } from "../util/startTestingApplication";
 import { expectToExist } from "../util/util";
@@ -50,7 +51,10 @@ describe("generic issuance - credential subservice", function () {
     });
 
     await startTestingApp({});
-    credentialSubservice = new CredentialSubservice(zupassPublicKey);
+    credentialSubservice = new CredentialSubservice(
+      zupassPublicKey,
+      new MultiProcessService()
+    );
   });
 
   this.afterAll(() => {
