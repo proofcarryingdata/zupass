@@ -41,7 +41,7 @@ const Header = styled.div`
  */
 function throwNoOpenerError(): never {
   throw new Error(
-    "Zupass was unable to send your proof to the opening window. This may be because your browser settings do not allow this, or because your browser does not support messaging between tabs."
+    "Zupass was unable to send your proof. Please retry this on a different browser or device."
   );
 }
 
