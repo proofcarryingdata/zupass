@@ -1179,105 +1179,124 @@ export class PretixPipeline implements BasePipeline {
       span?.setAttribute("email", emails.map((e) => e.email).join(","));
       span?.setAttribute("semaphore_id", semaphoreId);
 
-      //let didUpdate = false;
-
-      return sqlQueryWithPool(this.context.dbPool, async (client) => {
-        // for (const e of emails) {
-        //   didUpdate =
-        //     didUpdate ||
-        //     (await this.consumerDB.save(
-        //       client,
-        //       this.id,
-        //       e.email,
-        //       semaphoreId,
-        //       new Date()
-        //     ));
-        // }
-
-        // const provider = this.autoIssuanceProvider;
-        // if (provider) {
-        //   const newManualTickets = (
-        //     await Promise.all(
-        //       emails.map(async (e) =>
-        //         provider.maybeIssueForUser(
-        //           e.email,
-        //           await this.getAllManualTickets(client),
-        //           await this.db.loadByEmail(this.id, e.email)
-        //         )
-        //       )
-        //     )
-        //   ).flat();
-
-        //   await Promise.allSettled(
-        //     newManualTickets.map((t) =>
-        //       this.manualTicketDB.save(client, this.id, t)
-        //     )
-        //   );
-        // }
+      await sqlQueryWithPool(this.context.dbPool, async (client) => {
+        let didUpdate = false;
+        for (const e of emails) {
+          didUpdate =
+            didUpdate ||
+            (await this.consumerDB.save(
+              client,
+              this.id,
+              e.email,
+              semaphoreId,
+              new Date()
+            ));
+        }
 
         // If the user's Semaphore commitment has changed, `didUpdate` will be
         // true, and we need to update the Semaphore groups
-        // if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        //   if (didUpdate) {
-        //     span?.setAttribute("semaphore_groups_updated", true);
-        //     await this.triggerSemaphoreGroupUpdate(client);
-        //   }
-        // }
+        if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+          if (didUpdate) {
+            span?.setAttribute("semaphore_groups_updated", true);
+            await this.triggerSemaphoreGroupUpdate(client);
+          }
+        }
+      });
 
-        const tickets = (
+      const provider = this.autoIssuanceProvider;
+      if (provider) {
+        const allManualTickets = await sqlQueryWithPool(
+          this.context.dbPool,
+          async (client) => await this.getAllManualTickets(client)
+        );
+        const newManualTickets = (
           await Promise.all(
-            emails.map((e) =>
-              this.getEdDSATicketsForEmail(client, e.email, semaphoreId)
+            emails.map(async (e) =>
+              provider.maybeIssueForUser(
+                e.email,
+                allManualTickets,
+                await this.db.loadByEmail(this.id, e.email)
+              )
             )
           )
         ).flat();
 
-        span?.setAttribute("pcds_issued", tickets.length);
-
-        const actions: PCDAction[] = [];
-
-        if (await this.db.hasLoaded(this.id)) {
-          actions.push({
-            type: PCDActionType.DeleteFolder,
-            folder: this.definition.options.feedOptions.feedFolder,
-            recursive: true
-          });
-        }
-
-        const ticketPCDs = await Promise.all(
-          tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
-        );
-
-        if (this.definition.options.enablePODTickets) {
-          const podTickets = (
-            await Promise.all(
-              emails.map((e) =>
-                e.semaphoreV4Id
-                  ? this.getPODTicketsForEmail(client, e.email, e.semaphoreV4Id)
-                  : undefined
-              )
+        await sqlQueryWithPool(this.context.dbPool, async (client) =>
+          Promise.allSettled(
+            newManualTickets.map((t) =>
+              this.manualTicketDB.save(client, this.id, t)
             )
           )
-            .flat()
-            .filter((t) => t !== undefined) as PODTicketPCD[];
+        );
+      }
 
-          ticketPCDs.push(
-            ...(await Promise.all(
-              podTickets.map((t) => PODTicketPCDPackage.serialize(t))
-            ))
-          );
+      const tickets = await sqlQueryWithPool(
+        this.context.dbPool,
+        async (client) => {
+          return (
+            await Promise.all(
+              emails.map((e) =>
+                this.getEdDSATicketsForEmail(client, e.email, semaphoreId)
+              )
+            )
+          ).flat();
         }
+      );
 
+      span?.setAttribute("pcds_issued", tickets.length);
+
+      const actions: PCDAction[] = [];
+
+      if (await this.db.hasLoaded(this.id)) {
         actions.push({
-          type: PCDActionType.ReplaceInFolder,
+          type: PCDActionType.DeleteFolder,
           folder: this.definition.options.feedOptions.feedFolder,
-          pcds: ticketPCDs
+          recursive: true
         });
+      }
 
-        const result: PollFeedResponseValue = { actions };
+      const ticketPCDs = await Promise.all(
+        tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
+      );
 
-        return result;
+      if (this.definition.options.enablePODTickets) {
+        const podTickets = await sqlQueryWithPool(
+          this.context.dbPool,
+          async (client) => {
+            return (
+              await Promise.all(
+                emails.map((e) =>
+                  e.semaphoreV4Id
+                    ? this.getPODTicketsForEmail(
+                        client,
+                        e.email,
+                        e.semaphoreV4Id
+                      )
+                    : undefined
+                )
+              )
+            )
+              .flat()
+              .filter((t) => t !== undefined) as PODTicketPCD[];
+          }
+        );
+
+        ticketPCDs.push(
+          ...(await Promise.all(
+            podTickets.map((t) => PODTicketPCDPackage.serialize(t))
+          ))
+        );
+      }
+
+      actions.push({
+        type: PCDActionType.ReplaceInFolder,
+        folder: this.definition.options.feedOptions.feedFolder,
+        pcds: ticketPCDs
       });
+
+      const result: PollFeedResponseValue = { actions };
+
+      return result;
     });
   }
 
