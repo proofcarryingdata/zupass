@@ -38,7 +38,7 @@
     "@pcd/util": "0.9.0",
     "@semaphore-protocol/core": "^4.5.0",
     "@types/json-bigint": "^1.0.3",
-    "@zk-kit/eddsa-poseidon": "~1.0.4",
+    "@zk-kit/eddsa-poseidon": "^1.1.0",
     "@zk-kit/utils": "^1.2.1",
     "js-sha256": "^0.11.0",
     "json-bigint": "^1.0.0",
