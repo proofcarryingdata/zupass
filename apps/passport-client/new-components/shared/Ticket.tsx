@@ -1,4 +1,5 @@
 import { QRDisplay } from "@pcd/passport-ui";
+import { Property } from "csstype";
 import styled from "styled-components";
 import { Typography } from "./Typography";
 
@@ -30,19 +31,21 @@ interface TicketProps {
   name: string;
   type: "Speaker" | "General";
   email: string;
+  accentColor: Property.Color;
 }
-export const Ticket = ({ name, type, email }: TicketProps): JSX.Element => {
+export const Ticket = ({
+  name,
+  type,
+  email,
+  accentColor
+}: TicketProps): JSX.Element => {
   return (
     <TicketBody>
       <QRWrapper>
         <QRDisplay value="mock" saved={true} />;
       </QRWrapper>
       <TicketDetails>
-        <Typography
-          fontSize={18}
-          fontWeight={800}
-          color={"rgba(154, 74, 201, 1)"}
-        >
+        <Typography fontSize={18} fontWeight={800} color={accentColor}>
           {name.toUpperCase()}
         </Typography>
         <Typography fontSize={16} fontWeight={500}>
