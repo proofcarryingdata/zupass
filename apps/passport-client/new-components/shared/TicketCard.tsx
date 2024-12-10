@@ -5,12 +5,6 @@ import { Typography } from "./Typography";
 
 export const TicketCardHeight = 300;
 
-type CardColor = "purple" | "orange";
-const CARD_COLORS: Record<CardColor, Property.Color> = {
-  purple: "rgba(154, 74, 201, 1)",
-  orange: "rgba(255, 115, 0, 1)"
-};
-
 const TicketCardContainer = styled.div<{
   $borderColor: Property.Color;
   $width: number | string;
@@ -105,7 +99,7 @@ interface TicketCardProps {
   address?: string;
   ticketWidth?: number | string;
   ticketCount: number;
-  cardColor: CardColor;
+  cardColor: Property.Color;
   imgSource?: string;
 }
 export const TicketCard = forwardRef<HTMLDivElement, TicketCardProps>(
@@ -118,7 +112,7 @@ export const TicketCard = forwardRef<HTMLDivElement, TicketCardProps>(
       <TicketCardContainer
         $width={ticketWidth || 300}
         ref={ref}
-        $borderColor={CARD_COLORS[cardColor]}
+        $borderColor={cardColor}
       >
         <TicketCardImageContainer>
           {imageLoading && (
