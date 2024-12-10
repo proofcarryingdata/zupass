@@ -1,5 +1,19 @@
 # @pcd/gpcircuits
 
+## 0.4.0
+
+### Minor Changes
+
+- GPC v4 enhancements, PODValue types, more GPC configurations
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/gpcircuits@0.5.0
+  - @pcd/pod@0.5.0
+  - @pcd/semaphore-identity-v3-wrapper@0.1.0
+  - @pcd/util@0.9.0
+
 ## 0.3.0
 
 ### Minor Changes

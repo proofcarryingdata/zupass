@@ -26,16 +26,15 @@ import {
   TicketPreviewResultValue
 } from "@pcd/passport-interface";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
-import { sleep } from "@pcd/util";
+import { ZUPASS_SUPPORT_EMAIL, sleep } from "@pcd/util";
 import express from "express";
-import fs from "fs";
 import { sha256 } from "js-sha256";
 import Mustache from "mustache";
 import path from "path";
 import * as QRCode from "qrcode";
 import urljoin from "url-join";
 import { PipelineCheckinDB } from "../../database/queries/pipelineCheckinDB";
-import { namedSqlTransaction, sqlTransaction } from "../../database/sqlQuery";
+import { namedSqlTransaction, sqlQueryWithPool } from "../../database/sqlQuery";
 import {
   getAllGenericIssuanceHTTPQuery,
   getAllGenericIssuanceQuery,
@@ -46,6 +45,7 @@ import {
 import { PretixPipeline } from "../../services/generic-issuance/pipelines/PretixPipeline";
 import { createQueryUrl } from "../../services/telemetryService";
 import { ApplicationContext, GlobalServices } from "../../types";
+import { readFileWithCache } from "../../util/file";
 import { IS_PROD } from "../../util/isProd";
 import { logger } from "../../util/logger";
 import { checkExistsForRoute } from "../../util/util";
@@ -74,7 +74,7 @@ export function initGenericIssuanceRoutes(
    */
   app.post("/generic-issuance/api/self", async (req, res) => {
     checkExistsForRoute(genericIssuanceService);
-    const user = await sqlTransaction(context.dbPool, (client) =>
+    const user = await sqlQueryWithPool(context.dbPool, (client) =>
       genericIssuanceService.authSession(client, req)
     );
 
@@ -110,7 +110,7 @@ export function initGenericIssuanceRoutes(
 
     const checkinDb = new PipelineCheckinDB();
     const tickets = await pipeline.getAllTickets();
-    const checkins = await sqlTransaction(context.dbPool, (client) =>
+    const checkins = await sqlQueryWithPool(context.dbPool, (client) =>
       checkinDb.getByPipelineId(client, pragueId)
     );
 
@@ -499,7 +499,7 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/fetch-pretix-products",
     async (req: express.Request, res: express.Response) => {
       checkExistsForRoute(genericIssuanceService);
-      const user = await sqlTransaction(context.dbPool, (client) =>
+      const user = await sqlQueryWithPool(context.dbPool, (client) =>
         genericIssuanceService.authSession(client, req)
       );
       traceUser(user);
@@ -780,71 +780,102 @@ export function initGenericIssuanceRoutes(
 
         return (
           imageToRender ??
-          (ticket.ticketSecret
-            ? await QRCode.toDataURL(ticket.ticketSecret, {
+          (ticketData.ticketSecret
+            ? await QRCode.toDataURL(ticketData.ticketSecret, {
                 type: "image/webp",
                 scale: 10,
-                margin: 0
+                margin: 1,
+                color: {
+                  dark: "#000000",
+                  light: "#ffffff"
+                }
               })
             : "")
         );
       };
       const absPath = path.resolve("./resources/one-click-page/index.html");
-      const result = await genericIssuanceService.handleGetTicketPreview(
-        email,
-        code,
-        pipeline
-      );
-      if (!result.tickets.length) {
-        res.sendFile(absPath.replace("index", "error"));
-        return;
-      }
 
-      const main: TicketPreviewResultValue["tickets"] = [];
-      const addOns: TicketPreviewResultValue["tickets"] = [];
+      try {
+        const result = await genericIssuanceService.handleGetTicketPreview(
+          email,
+          code,
+          pipeline
+        );
 
-      for (const ticket of result.tickets) {
-        if (ticket.isAddOn) {
-          addOns.push(ticket);
-        } else {
-          main.push(ticket);
+        const main: TicketPreviewResultValue["tickets"] = [];
+        const addOns: TicketPreviewResultValue["tickets"] = [];
+
+        for (const ticket of result.tickets) {
+          if (ticket.isAddOn) {
+            addOns.push(ticket);
+          } else {
+            main.push(ticket);
+          }
         }
+
+        if (!main.length) {
+          throw new PCDHTTPError(
+            400,
+            `No ticket found with order code ${code} and email ${email}. Please contact support@zupass.org immediately.`
+          );
+        }
+
+        const file = await readFileWithCache(absPath);
+        const ticket = main[0];
+
+        // filter out add-ons
+        const ticketsCount = main.length;
+
+        const tickets = await Promise.all(
+          main.map(async (ticket) => {
+            // Find all add-ons that belong to this main ticket
+            const ticketAddons = addOns
+              .filter((addon) => addon.parentTicketId === ticket.ticketId)
+              .map(async (addon) => ({
+                image: await getTicketImage(addon),
+                name: addon.ticketName
+              }));
+
+            return {
+              attendeeName:
+                ticket.attendeeName !== ""
+                  ? ticket.attendeeName.toUpperCase()
+                  : ticket.eventName.toUpperCase(),
+              attendeeEmail: ticket.attendeeEmail,
+              ticketName: ticket.ticketName,
+              qr: await getTicketImage(ticket),
+              showAddons: ticketAddons.length > 0,
+              id: ticket.ticketId,
+              moreThanOneAddon: ticketAddons.length > 1,
+              addonsCount: ticketAddons.length,
+              addons: await Promise.all(ticketAddons)
+            };
+          })
+        );
+
+        const rendered = Mustache.render(file, {
+          tickets,
+          eventName: ticket?.eventName.toUpperCase(),
+          eventLocation: ticket?.eventLocation,
+          backgroundImage: ticket?.imageUrl,
+          count: ticketsCount,
+          isMoreThanOne: ticketsCount > 1,
+          zupassUrl: process.env.PASSPORT_CLIENT_URL,
+          startDate: ticket?.eventStartDate
+        });
+        res.send(rendered);
+      } catch {
+        const errorFilePath = path.resolve(
+          "./resources/one-click-page/error.html"
+        );
+        const file = await readFileWithCache(errorFilePath);
+        const rendered = Mustache.render(file, {
+          zupassSupport: ZUPASS_SUPPORT_EMAIL,
+          email: email,
+          orderCode: code
+        });
+        res.send(rendered);
       }
-      const file = fs.readFileSync(absPath).toString();
-
-      const ticket = main[0];
-
-      // filter out add-ons
-      const ticketsCount = result.tickets.filter((t) => !t.isAddOn).length;
-
-      const addOnsQrs = await Promise.all(
-        addOns.map(async (addon) => {
-          const image = await getTicketImage(addon);
-          const name = addon.ticketName.toUpperCase();
-          return { image, name };
-        })
-      );
-
-      const rendered = Mustache.render(file, {
-        eventName: ticket.eventName.toUpperCase(),
-        attendeeName:
-          ticket.attendeeName !== ""
-            ? ticket.attendeeName.toUpperCase()
-            : ticket.eventName.toUpperCase(),
-        attendeeEmail: ticket.attendeeEmail,
-        ticketName: ticket.ticketName,
-        eventLocation: ticket.eventLocation,
-        qr: await getTicketImage(ticket),
-        backgroundImage: ticket.imageUrl,
-        count: ticketsCount,
-        isMoreThanOne: ticketsCount > 1,
-        zupassUrl: process.env.PASSPORT_CLIENT_URL,
-        addons: addOnsQrs,
-        addonsCount: addOnsQrs.length,
-        moreThanOneAddon: addOnsQrs.length > 1,
-        startDate: ticket.eventStartDate
-      });
-      res.send(rendered);
     }
   );
 }

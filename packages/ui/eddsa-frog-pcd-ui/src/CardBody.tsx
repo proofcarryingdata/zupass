@@ -17,7 +17,10 @@ import { PCDUI } from "@pcd/pcd-types";
 import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-export const EdDSAFrogPCDUI: PCDUI<EdDSAFrogPCD> = {
+export const EdDSAFrogPCDUI: PCDUI<
+  EdDSAFrogPCD,
+  { deletePcd?: () => Promise<void> }
+> = {
   renderCardBody: EdDSAFrogCardBody,
   getHeader: Header
 };
@@ -57,7 +60,13 @@ function Header({ pcd }: { pcd: EdDSAFrogPCD }): JSX.Element {
   );
 }
 
-function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }): JSX.Element {
+function EdDSAFrogCardBody({
+  pcd,
+  deletePcd
+}: {
+  pcd: EdDSAFrogPCD;
+  deletePcd?: () => Promise<void>;
+}): JSX.Element {
   const frogData = useMemo(() => getEdDSAFrogData(pcd), [pcd]);
   const [showMore, setShowMore] = useState(false);
   const [showPCD, setShowPCD] = useState(false);
@@ -118,9 +127,19 @@ function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }): JSX.Element {
           />
         )}
       </FrogInfo>
-      <StyledLinkButton onClick={(): void => setShowMore(!showMore)}>
-        {showMore ? "Collapse" : "See more"}
-      </StyledLinkButton>
+      <div>
+        <StyledLinkButton onClick={(): void => setShowMore(!showMore)}>
+          {showMore ? "Collapse" : "See more"}
+        </StyledLinkButton>
+        {deletePcd && (
+          <StyledLinkButton
+            style={{ color: "gray", marginLeft: 15 }}
+            onClick={() => deletePcd()}
+          >
+            Delete
+          </StyledLinkButton>
+        )}
+      </div>
       {showMore && (
         <>
           <Description>{frogData.description}</Description>

@@ -262,7 +262,7 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
           <Button2 onClick={onCancelClick} variant="secondary">
             Cancel
           </Button2>
-          <div onClick={onOverwriteClick}>
+          <div onClick={onOverwriteClick} style={{ cursor: "pointer" }}>
             <Typography
               color={"#1E2C50"}
               fontSize={14}

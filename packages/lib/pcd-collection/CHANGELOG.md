@@ -1,5 +1,19 @@
 # @pcd/pcd-types
 
+## 0.15.0
+
+### Minor Changes
+
+- GPC v4 enhancements, PODValue types, more GPC configurations
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/emitter@0.9.0
+  - @pcd/passport-crypto@0.15.0
+  - @pcd/pcd-types@0.15.0
+  - @pcd/semaphore-identity-pcd@0.15.0
+
 ## 0.14.0
 
 ### Minor Changes

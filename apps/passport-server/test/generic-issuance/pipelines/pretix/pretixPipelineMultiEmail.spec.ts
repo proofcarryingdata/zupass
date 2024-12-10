@@ -2,14 +2,14 @@ import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { EmailPCD, EmailPCDPackage, EmailPCDTypeName } from "@pcd/email-pcd";
 import {
   EmailUpdateError,
+  ZUPASS_CREDENTIAL_REQUEST,
+  ZupassFeedIds,
   requestAddUserEmail,
   requestChangeUserEmail,
   requestPollFeed,
-  requestRemoveUserEmail,
-  ZUPASS_CREDENTIAL_REQUEST,
-  ZupassFeedIds
+  requestRemoveUserEmail
 } from "@pcd/passport-interface";
-import { isReplaceInFolderAction, PCDActionType } from "@pcd/pcd-collection";
+import { PCDActionType, isReplaceInFolderAction } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";

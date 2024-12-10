@@ -1,6 +1,6 @@
 {
   "name": "zuauth-example",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -10,17 +10,17 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@pcd/util": "0.8.0",
-    "@pcd/passport-interface": "^0.14.0",
-    "@pcd/zuauth": "1.7.0",
+    "@pcd/util": "0.9.0",
+    "@pcd/passport-interface": "^0.15.0",
+    "@pcd/zuauth": "1.8.0",
     "iron-session": "^8.0.2",
     "next": "^14.1.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.14.0",
-    "@pcd/tsconfig": "0.14.0",
+    "@pcd/eslint-config-custom": "0.15.0",
+    "@pcd/tsconfig": "0.15.0",
     "@types/cookie": "^0.6.0",
     "@types/node": "^20",
     "@types/react": "^18",

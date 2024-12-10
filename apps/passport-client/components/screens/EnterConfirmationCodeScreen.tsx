@@ -86,7 +86,7 @@ export function EnterConfirmationCodeScreen(): JSX.Element {
           <Spacer h={16} />
           {isReset && (
             <>
-              Once you reset your account, you'll lose access to all your PCDs!
+              Once you reset your account, you'll lose access to all your PODs!
             </>
           )}
         </TextCenter>

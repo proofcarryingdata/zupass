@@ -1,4 +1,3 @@
-import IframeResizer from "iframe-resizer-react";
 import { ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch, useEmbeddedScreenState } from "../../../src/appHooks";
@@ -8,22 +7,26 @@ import { EmbeddedScreen } from "../EmbeddedScreens/EmbeddedScreen";
 
 export function ZappScreen({ url }: { url: string }): ReactNode {
   const [searchParams] = useSearchParams();
-  const queryParam = searchParams.get("q");
   const urlWithOptionalParameter = new URL(url);
-  if (queryParam) {
-    urlWithOptionalParameter.searchParams.set("q", queryParam);
-  }
+
+  // Copy all search params to forward into Zapp except 'folder'
+  searchParams.forEach((value, key) => {
+    if (key !== "folder") {
+      urlWithOptionalParameter.searchParams.set(key, value);
+    }
+  });
 
   return (
     <>
       <ZappModal />
-      <IframeResizer
+      <iframe
         loading="eager"
         style={{
           width: "100%",
           height: "100%"
         }}
         src={urlWithOptionalParameter.toString()}
+        allow="camera;microphone;clipboard-read;clipboard-write"
         sandbox="allow-downloads allow-same-origin allow-scripts allow-popups allow-modals allow-forms allow-storage-access-by-user-activation allow-popups-to-escape-sandbox"
       />
     </>

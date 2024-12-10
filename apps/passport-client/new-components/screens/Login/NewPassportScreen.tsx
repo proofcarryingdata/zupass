@@ -111,10 +111,21 @@ const SendEmailVerification = ({
             });
           }
         } catch (e) {
-          setError(
-            `An error occurred loading account info: [${getErrorMessage(e)}
+          if (
+            e instanceof Error &&
+            (e.name === "QuotaExceededError" ||
+              e.message.includes("QuotaExceededError") ||
+              e.message.includes("storage quota"))
+          ) {
+            setError(
+              `Your browser does not have enough storage space for your account data. Try logging in using a desktop browser and deleting some data from your account.`
+            );
+          } else {
+            setError(
+              `An error occurred loading account info: [${getErrorMessage(e)}
             ].  If this persists, contact support@zupass.org.`
-          );
+            );
+          }
         }
         setLoadingAccount(false);
       } else {
@@ -190,7 +201,7 @@ const SendEmailVerification = ({
     } else if (loadingAccount) {
       loaderText = "LOADING ACCOUNT INFORMATION...";
     } else if (emailSending) {
-      loaderText = "CHECKING IF YOU ALREADY HAVE AN ACCOUNT...";
+      loaderText = "CHECKING IF YOU HAVE AN ACCOUNT...";
     }
     return (
       <AppContainer fullscreen={true} bg="gray">
@@ -200,6 +211,7 @@ const SendEmailVerification = ({
             fontSize={18}
             fontWeight={800}
             color="var(--text-tertiary)"
+            style={{ textAlign: "center" }}
           >
             {loaderText}
           </Typography>

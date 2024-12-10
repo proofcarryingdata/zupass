@@ -12,7 +12,7 @@ import {
   fetchKnownTicketTypesByGroup,
   setKnownTicketType
 } from "../database/queries/knownTicketTypes";
-import { namedSqlTransaction, sqlTransaction } from "../database/sqlQuery";
+import { sqlQueryWithPool } from "../database/sqlQuery";
 import { ApplicationContext, ServerMode } from "../types";
 import { logger } from "../util/logger";
 import { OrganizerSync } from "./devconnect/organizerSync";
@@ -107,7 +107,7 @@ export class DevconnectPretixSyncService {
    * (Re)load Pretix configuration, and set up organizers.
    */
   private async setupOrganizers(): Promise<void> {
-    const devconnectPretixConfig = await sqlTransaction(this.pool, (client) =>
+    const devconnectPretixConfig = await sqlQueryWithPool(this.pool, (client) =>
       getDevconnectPretixConfig(client)
     );
 
@@ -213,42 +213,38 @@ export class DevconnectPretixSyncService {
    * See also {@link setupKnownTicketTypes} in the issuance service.
    */
   public async setDevconnectTicketTypes(): Promise<void> {
-    return namedSqlTransaction(
-      this.pool,
-      "setDevconnectTicketTypes",
-      async (client) => {
-        const products = await fetchDevconnectProducts(client);
-        const savedProductIds = [];
+    return sqlQueryWithPool(this.pool, async (client) => {
+      const products = await fetchDevconnectProducts(client);
+      const savedProductIds = [];
 
-        for (const product of products) {
-          await setKnownTicketType(
-            client,
-            `sync-${product.product_id}`,
-            product.event_id,
-            product.product_id,
-            ZUPASS_TICKET_PUBLIC_KEY_NAME,
-            KnownPublicKeyType.EdDSA,
-            // This works since we're only using this sync service for Devconnect
-            KnownTicketGroup.Devconnect23,
-            "Devconnect '23"
-          );
-
-          savedProductIds.push(product.product_id);
-        }
-
-        // Check to see if there are any tickets in the DB which were not present
-        // in the sync, and delete them.
-        const existingTicketTypes = await fetchKnownTicketTypesByGroup(
+      for (const product of products) {
+        await setKnownTicketType(
           client,
-          KnownTicketGroup.Devconnect23
+          `sync-${product.product_id}`,
+          product.event_id,
+          product.product_id,
+          ZUPASS_TICKET_PUBLIC_KEY_NAME,
+          KnownPublicKeyType.EdDSA,
+          // This works since we're only using this sync service for Devconnect
+          KnownTicketGroup.Devconnect23,
+          "Devconnect '23"
         );
-        for (const existingType of existingTicketTypes) {
-          if (!savedProductIds.find((p) => p === existingType.product_id)) {
-            await deleteKnownTicketType(client, existingType.identifier);
-          }
+
+        savedProductIds.push(product.product_id);
+      }
+
+      // Check to see if there are any tickets in the DB which were not present
+      // in the sync, and delete them.
+      const existingTicketTypes = await fetchKnownTicketTypesByGroup(
+        client,
+        KnownTicketGroup.Devconnect23
+      );
+      for (const existingType of existingTicketTypes) {
+        if (!savedProductIds.find((p) => p === existingType.product_id)) {
+          await deleteKnownTicketType(client, existingType.identifier);
         }
       }
-    );
+    });
   }
 }
 

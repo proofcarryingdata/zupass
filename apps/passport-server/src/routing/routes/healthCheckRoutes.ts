@@ -32,6 +32,7 @@ export function initHealthcheckRoutes(
     async (req: Request, res: Response) => {
       res
         .status(200)
+        .type("text")
         .send(`Zupass Server - Cluster Test OK! PID: ${process.pid}`);
     }
   );
@@ -46,6 +47,7 @@ export function initHealthcheckRoutes(
     async (req: Request, res: Response) => {
       res
         .status(200)
+        .type("text")
         .send(
           `Zupass Server - Cluster Test OK! PID: ${
             process.pid
@@ -62,6 +64,7 @@ export function initHealthcheckRoutes(
     async (req: Request, res: Response) => {
       res
         .status(200)
+        .type("text")
         .send(
           `Zupass Server - Cluster Test OK! PID: ${
             process.pid

@@ -187,8 +187,8 @@ export async function upsertPipelineDefinition(
       // so that the `AbortError` that is thrown by the `stop()` method can be
       // handled properly upstream.
       if (existingSlot.instance && !existingSlot.instance.isStopped()) {
-        existingSlot.loadPromise = undefined;
         await existingSlot.instance?.stop();
+        existingSlot.loading = false;
       }
 
       if (validatedNewDefinition.options.disableCache) {
@@ -213,6 +213,7 @@ export async function upsertPipelineDefinition(
       }
     }
 
+    existingSlot.loading = true;
     existingSlot.owner = await userSubservice.getUserById(
       client,
       validatedNewDefinition.ownerUserId
@@ -223,7 +224,8 @@ export async function upsertPipelineDefinition(
   // which can take an arbitrary amount of time.
   const restartPromise = executorSubservice.restartPipeline(
     client,
-    validatedNewDefinition.id
+    validatedNewDefinition.id,
+    true
   );
 
   // To get accurate timestamps, we need to load the pipeline definition

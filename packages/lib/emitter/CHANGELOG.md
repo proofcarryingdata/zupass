@@ -1,5 +1,11 @@
 # @pcd/emitter
 
+## 0.9.0
+
+### Minor Changes
+
+- GPC v4 enhancements, PODValue types, more GPC configurations
+
 ## 0.8.0
 
 ### Minor Changes

@@ -1,5 +1,18 @@
 # @pcd/eddsa-ticket-pcd
 
+## 0.10.0
+
+### Minor Changes
+
+- GPC v4 enhancements, PODValue types, more GPC configurations
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.15.0
+  - @pcd/util@0.9.0
+  - @pcd/eddsa-pcd@0.10.0
+
 ## 0.9.0
 
 ### Minor Changes

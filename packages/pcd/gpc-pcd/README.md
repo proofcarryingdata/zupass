@@ -18,7 +18,7 @@
         <img alt="Downloads" src="https://img.shields.io/npm/dm/@pcd/gpc-pcd.svg?style=flat-square" />
     </a>
 <br>
-    <a href="https://zupass.org/pod-developers">
+    <a href="https://zupass.org/pod">
         <img alt="Developer Site" src="https://img.shields.io/badge/Developer_Site-green.svg?style=flat-square">
     </a>
     <a href="https://github.com/proofcarryingdata/zupass/blob/main/examples/pod-gpc-example/src/gpcExample.ts#L376">
@@ -34,25 +34,24 @@
 
 A PCD representating a ZK proof about one or more POD (Provable Object Data)
 objects using a GPC (General Purpose Circuit). For a full introduction, see the
-[Developer Site](https://zupass.org/pod-developers).
+[Developer Site](https://zupass.org/pod).
 
-**POD** is a format enabling any app to flexibly create cryptographic data and
-make zero-knowledge proofs about it. A POD could represent your ticket to an
-event, a secure message, a collectible badge, or an item in a role-playing game.
-Using PODs, developers can create ZK-enabled apps without the effort and risk of
-developing their own cryptography.
+**POD** libraries enable any app to create zero-knowledge proofs of cryptographic data. A POD could represent your ticket to an event, a secure
+message, a collectible badge, or an item in a role-playing game. Using PODs,
+developers can create ZK-enabled apps without the effort and risk of developing
+custom cryptography.
 
 ZK proofs about PODs use General Purpose Circuits (**GPC**) which can prove many
-different things about a POD without revealing it all. GPCs use human-readable
-configuration and pre-compiled circuits so no knowledge of circuit programming
-is required.
+different things about PODs without revealing all details. GPCs use
+human-readable configuration and pre-compiled circuits so no knowledge of
+circuit programming is required.
 
 See the [`GPCPCD`](https://docs.pcd.team/classes/_pcd_pod_pcd.PODPCD.html)
 class for more details on the data of a GPC PCD.
 
 ## Related Packages
 
-- For information about making POD objects in Zupass, see the
+- For information about POD objects in Zupass, see the
   [`@pcd/pod-pcd`](https://github.com/proofcarryingdata/zupass/tree/main/packages/pcd/pod-pcd)
   package.
 
@@ -63,20 +62,21 @@ class for more details on the data of a GPC PCD.
 - To find the binaries required to prove and verify, see the
   [`@pcd/proto-pod-gpc-artifacts`](https://github.com/proofcarryingdata/snark-artifacts/tree/pre-release/packages/proto-pod-gpc)
   package. Since these artifacts are large and numerous, you generally
-  won't want to depend on this package directly.
+  won't want to include this package directly into your app bundle.
+
+## Package Installation
+
+This package will work either in browser or in a Node.js server. Packaging for
+a browser requires polyfill for some Node modules, including `buffer` and `constants`.
+
+There is a known issue with a dependency `fastfile` which can be resolved by polyfilling `constants` as you can see in [this example](https://github.com/proofcarryingdata/zukyc/pull/3).
 
 ## Stability and Security
 
-POD and GPC libraries are experimental and subject to change. We encourage devs
-to try them out and use them for apps, but maybe don’t rely on them for the most
-sensitive use cases yet.
+POD and GPC libraries are in beta and subject to change. We encourage devs to try them out and use them for apps, but be aware that updates will come in future.
 
 GPC proofs are considered ephemeral (for now), primarily intended for
-transactional use cases. Saved proofs may not be verifiable with future
-versions of code. Library interfaces may also change. Any breaking changes will
-be reflected in the NPM versions using standard semantic versioning.
+transactional use cases. Saved proofs may not be verifiable with future versions
+of code.
 
-These libraries should not be considered secure enough for highly-sensitive use
-cases yet. The circuits are experimental and have not been audited. The
-proving/verification keys were generated in good faith by a single author, but
-are not the result of a distributed trusted setup ceremony.
+These libraries should not be considered secure enough for highly-sensitive use cases yet. The cryptography, circuits, and configuration compiler have not been audited. The proving/verification keys were generated in good faith by a single author, but are not the result of a distributed trusted setup ceremony.

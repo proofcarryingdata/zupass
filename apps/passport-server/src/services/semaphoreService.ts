@@ -17,7 +17,7 @@ import {
   fetchAllUsersWithZuzaluTickets,
   UserWithZuzaluTickets
 } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
-import { sqlTransaction } from "../database/sqlQuery";
+import { sqlQueryWithPool } from "../database/sqlQuery";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext, ServerMode } from "../types";
 import { logger } from "../util/logger";
@@ -57,7 +57,7 @@ export class SemaphoreService {
   public groupDevconnectOrganizers = (): NamedGroup => this.getNamedGroup("7");
 
   public constructor(config: ApplicationContext) {
-    this.dbPool = config.dbPool;
+    this.dbPool = config.internalPool;
     this.groups = SemaphoreService.createGroups();
   }
 
@@ -134,13 +134,13 @@ export class SemaphoreService {
 
       logger(`[SEMA] Reloading semaphore service...`);
 
-      await sqlTransaction(this.dbPool, (client) =>
+      await sqlQueryWithPool(this.dbPool, (client) =>
         this.reloadZuzaluGroups(client)
       );
-      await sqlTransaction(this.dbPool, (client) =>
+      await sqlQueryWithPool(this.dbPool, (client) =>
         this.reloadDevconnectGroups(client)
       );
-      await sqlTransaction(this.dbPool, (client) =>
+      await sqlQueryWithPool(this.dbPool, (client) =>
         this.saveHistoricSemaphoreGroups(client)
       );
 

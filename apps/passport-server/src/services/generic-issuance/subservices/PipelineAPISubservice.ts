@@ -20,7 +20,7 @@ import { str } from "@pcd/util";
 import _ from "lodash";
 import { PoolClient } from "postgres-pool";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
-import { sqlTransaction } from "../../../database/sqlQuery";
+import { sqlQueryWithPool } from "../../../database/sqlQuery";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
@@ -152,7 +152,7 @@ export class PipelineAPISubservice {
         pipelineHasSemaphoreGroups = true;
       }
 
-      const latestConsumers = await sqlTransaction(
+      const latestConsumers = await sqlQueryWithPool(
         this.context.dbPool,
         (client) => this.consumerDB.loadAll(client, pipelineInstance.id)
       );
@@ -167,7 +167,7 @@ export class PipelineAPISubservice {
           (await this.localFileService?.hasCachedLoad(pipelineId)) ?? false,
         cachedBytes:
           (await this.localFileService?.getCachedLoadSize(pipelineId)) ?? 0,
-        loading: !!pipelineSlot.loadPromise,
+        loading: pipelineSlot.loading,
         latestAtoms,
         lastLoad,
 

@@ -182,6 +182,14 @@ const SemaphoreGroupListSchema = z
     { message: "Semaphore group names must be unique" }
   );
 
+const ImageOptionsSchema = z.object({
+  imageUrl: z.string(),
+  requireCheckedIn: z.boolean(),
+  qrCodeOverrideImageUrl: z.string().optional(),
+  eventStartDate: z.string().optional(),
+  eventLocation: z.string().optional()
+});
+
 /**
  * Generic Issuance-specific ticket type configuration - roughly corresponds to a
  * 'Product' in Pretix-land.
@@ -206,7 +214,11 @@ const LemonadePipelineEventConfigSchema = z.object({
   /**
    * Roughly translates to Products in {@link EdDSATicketPCD}.
    */
-  ticketTypes: z.array(LemonadePipelineTicketTypeConfigSchema)
+  ticketTypes: z.array(LemonadePipelineTicketTypeConfigSchema),
+  /**
+   * Options to configure displaying an image instead of the QR code
+   */
+  imageOptions: ImageOptionsSchema.optional()
 });
 
 /**
@@ -274,14 +286,6 @@ const FeedIssuanceOptionsSchema = z.object({
 });
 
 export type FeedIssuanceOptions = z.infer<typeof FeedIssuanceOptionsSchema>;
-
-const ImageOptionsSchema = z.object({
-  imageUrl: z.string(),
-  requireCheckedIn: z.boolean(),
-  qrCodeOverrideImageUrl: z.string().optional(),
-  eventStartDate: z.string().optional(),
-  eventLocation: z.string().optional()
-});
 
 export type ImageOptions = z.infer<typeof ImageOptionsSchema>;
 
@@ -460,7 +464,13 @@ const PretixPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   semaphoreGroups: SemaphoreGroupListSchema,
   enablePODTickets: z.boolean().optional(),
   autoIssuance: z.array(AutoIssuanceOptionsSchema).optional(),
-  userPermissions: z.array(UserPermissionsOptionsSchema).optional()
+  userPermissions: z.array(UserPermissionsOptionsSchema).optional(),
+  /**
+   * The corresponding org url must be in the `PRETIX_BATCH_ENABLED_FOR`
+   * environment variable in order to enable batching for this pipeline,
+   * otherwise this field is a no-op.
+   */
+  batchFetch: z.boolean().optional()
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.

@@ -5,6 +5,7 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import {
   ISSUANCE_STRING,
+  PCDGetRequest,
   PendingPCD,
   ProveOptions,
   requestProveOnServer
@@ -29,14 +30,17 @@ import {
 import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
+import { Accordion } from "../../../new-components/shared/Accordion";
 import { Button2 } from "../../../new-components/shared/Button";
 import { NewLoader } from "../../../new-components/shared/NewLoader";
 import { Typography } from "../../../new-components/shared/Typography";
 import { appConfig } from "../../../src/appConfig";
 import {
+  useDispatch,
   usePCDCollection,
   useProveState,
-  useProveStateCount
+  useProveStateCount,
+  useSelf
 } from "../../../src/appHooks";
 import {
   getOOMErrorMessage,
@@ -68,8 +72,10 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
     pendingPCD: PendingPCD | undefined,
     multiplePCDs?: Array<SerializedPCD<PCDOf<T>>>
   ) => void;
+  originalReq?: PCDGetRequest;
   folder?: string;
 }): JSX.Element {
+  const dispatch = useDispatch();
   const pcds = usePCDCollection();
   const [args, setArgs] = useState<ArgsOf<T>>(
     JSON.parse(JSON.stringify(initialArgs))
@@ -81,6 +87,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   const [multiProofsQueued, setMultiProofsQueued] = useState(0);
   const proveState = useProveState();
   const proveStateCount = useProveStateCount();
+  const self = useSelf();
   useEffect(() => {
     if (options?.multi && !isZKEdDSAEventTicketPCDPackage(pcdPackage)) {
       setError("multi-proofs are only supported for ZKEdDSAEventTicketPCD");
@@ -237,13 +244,54 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
     <Container>
       {proveState !== undefined && !proveState && (
         <AbsoluteContainer>
-          <Typography color="var(--new-danger)">No tickets found</Typography>
-          <Typography />
-          <Typography color="var(--new-danger)">
-            Please ensure you have connected to an email address that has a
-            valid ticket for this event. Contact support@zupass.org for more
-            questions.
-          </Typography>
+          {self && (
+            <ErrorContainer>
+              <ErrorContent>
+                <Accordion
+                  title="CONNECTED EMAILS"
+                  // FIXME: Removing for now until we figure out sync issue
+                  // link={{
+                  //   title: "EDIT",
+                  //   onClick: () => {
+                  //     dispatch({
+                  //       type: "set-bottom-modal",
+                  //       modal: {
+                  //         modalType: "manage-emails",
+                  //         prevModal: {
+                  //           modalType: "prove",
+                  //           request: originalReq
+                  //         },
+                  //         dismissble: false
+                  //       }
+                  //     });
+                  //   }
+                  // }}
+                  displayOnly={true}
+                  children={self.emails.map((email) => {
+                    return {
+                      title: email,
+                      key: email
+                    };
+                  })}
+                />
+              </ErrorContent>
+              <Button2
+                onClick={async () => {
+                  if (
+                    window.confirm(
+                      "Are you sure you want to log out? You will be prompted to sign in with another email."
+                    )
+                  )
+                    await dispatch({
+                      type: "reset-passport",
+                      redirectTo: window.location.href
+                    });
+                }}
+              >
+                Switch account
+              </Button2>
+            </ErrorContainer>
+          )}
           {/* FIXME: Removing the back button here until we have a better resolution to TG webview */}
           {/* https://linear.app/0xparc-pcd/issue/0XP-1495/the-back-button-for-zktelegram-prove-page-doesnt-work  */}
           {/* <Button2
@@ -268,7 +316,6 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
           <Typography>Loading the proof</Typography>
         </AbsoluteContainer>
       )}
-
       <PCDArgs
         args={args}
         setArgs={setArgs}
@@ -294,19 +341,22 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
           {proving ? <NewLoader rows={2} columns={3} color="white" /> : "Prove"}
         </Button2>
 
-        <Button2
-          onClick={() => {
-            if (window.opener && window.opener !== window) {
-              // you are in a popup
-              window.close();
-            } else {
-              window.history.back();
-            }
-          }}
-          variant="secondary"
-        >
-          Back
-        </Button2>
+        {/* FIXME: Removing the back button here until we have a better resolution to TG webview */}
+        {/* https://linear.app/0xparc-pcd/issue/0XP-1495/the-back-button-for-zktelegram-prove-page-doesnt-work  */}
+        {/* <Button2
+            style={{ marginTop: "auto" }}
+            onClick={() => {
+              if (window.opener && window.opener !== window) {
+                // you are in a popup
+                window.close();
+              } else {
+                window.history.back();
+              }
+            }}
+            variant="secondary"
+          >
+            Back
+          </Button2> */}
       </ButtonsContainer>
     </Container>
   );
@@ -331,8 +381,24 @@ const AbsoluteContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
   height: 100%;
   width: 100%;
   z-index: 100;
   background: white;
+`;
+
+const ErrorContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+`;
+
+const ErrorContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 `;

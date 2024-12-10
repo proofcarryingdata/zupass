@@ -25,7 +25,7 @@ export const OUTDATED_BROWSER_ERROR_MESSAGE =
 
 export const OOM_ERROR_MESSAGE = "Out of memory";
 
-export const MAX_WIDTH_SCREEN = 420;
+export const MAX_WIDTH_SCREEN = 440;
 
 // Environment variable configure how we fetch GPC artifacts, however we
 // default to fetching from the Zupass server rather than jsdelivr.
@@ -45,3 +45,4 @@ export const GPC_ARTIFACTS_CONFIG =
 export const ZUPASS_GPC_ARTIFACT_BASE_PATH = `/artifacts/proto-pod-gpc`;
 export const ZUPASS_GPC_ARTIFACT_PATH =
   ZUPASS_GPC_ARTIFACT_BASE_PATH + `/${ARTIFACTS_NPM_VERSION}`;
+export const BANNER_HEIGHT = 0;

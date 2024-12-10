@@ -293,7 +293,7 @@ export class PipelineSubservice {
       await this.pipelineDB.deleteDefinition(client, pipelineId);
       await this.pipelineDB.saveLoadSummary(pipelineId, undefined);
       await this.pipelineAtomDB.clear(pipelineId);
-      await this.executorSubservice.restartPipeline(client, pipelineId);
+      await this.executorSubservice.restartPipeline(client, pipelineId, true);
       await this.localFileService?.clearPipelineCache(pipelineId);
     });
   }
@@ -308,7 +308,7 @@ export class PipelineSubservice {
     await this.localFileService?.clearPipelineCache(pipelineId);
     await this.pipelineDB.saveLoadSummary(pipelineId, undefined);
     await this.pipelineAtomDB.clear(pipelineId);
-    await this.executorSubservice.restartPipeline(client, pipelineId);
+    await this.executorSubservice.restartPipeline(client, pipelineId, true);
   }
 
   public async getPipelineEditHistory(
@@ -429,7 +429,7 @@ export class PipelineSubservice {
             return {
               extraInfo: {
                 ownerEmail: owner?.email,
-                loading: !!slot.loadPromise,
+                loading: slot.loading,
                 lastLoad: summary,
                 hasCachedLoad:
                   (await this.localFileService?.hasCachedLoad(

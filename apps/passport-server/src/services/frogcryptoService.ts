@@ -46,7 +46,7 @@ import {
   upsertFrogData
 } from "../database/queries/frogcrypto";
 import { fetchUserByV3Commitment } from "../database/queries/users";
-import { namedSqlTransaction } from "../database/sqlQuery";
+import { sqlQueryWithPool } from "../database/sqlQuery";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import {
@@ -78,33 +78,29 @@ export class FrogcryptoService {
       (feed: FrogCryptoFeed) =>
         async (req: PollFeedRequest): Promise<PollFeedResponseValue> => {
           try {
-            return namedSqlTransaction(
-              this.context.dbPool,
-              "pollFeed",
-              async (client) => {
-                if (feed.activeUntil <= Date.now() / 1000) {
-                  throw new PCDHTTPError(403, "Feed is not active");
-                }
-
-                if (req.pcd === undefined) {
-                  throw new PCDHTTPError(400, `Missing credential`);
-                }
-                await this.issuanceService.verifyCredential(req.pcd);
-
-                return {
-                  actions: [
-                    {
-                      pcds: await this.issuanceService.issueEdDSAFrogPCDs(
-                        req.pcd,
-                        await this.reserveFrogData(client, req.pcd, feed)
-                      ),
-                      folder: FrogCryptoFolderName,
-                      type: PCDActionType.AppendToFolder
-                    }
-                  ]
-                };
+            return sqlQueryWithPool(this.context.dbPool, async (client) => {
+              if (feed.activeUntil <= Date.now() / 1000) {
+                throw new PCDHTTPError(403, "Feed is not active");
               }
-            );
+
+              if (req.pcd === undefined) {
+                throw new PCDHTTPError(400, `Missing credential`);
+              }
+              await this.issuanceService.verifyCredential(req.pcd);
+
+              return {
+                actions: [
+                  {
+                    pcds: await this.issuanceService.issueEdDSAFrogPCDs(
+                      req.pcd,
+                      await this.reserveFrogData(client, req.pcd, feed)
+                    ),
+                    folder: FrogCryptoFolderName,
+                    type: PCDActionType.AppendToFolder
+                  }
+                ]
+              };
+            });
           } catch (e) {
             if (e instanceof PCDHTTPError) {
               throw e;

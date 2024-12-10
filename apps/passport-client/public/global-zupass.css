@@ -22,7 +22,7 @@ html {
   --text-tertiary: #8b94ac;
   --text-primary: #1e2c50;
 
-  --core-accent: #01685c;
+  --core-accent: #0077ff;
 
   --dot-bg: #ececec;
   --dot-color: #e4e4e4;
@@ -51,13 +51,22 @@ html {
     system-ui,
     sans-serif;
   line-height: 1.5;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
+  overflow: auto;
+  height: 100%;
+
   overflow-y: scroll;
-  -webkit-user-select: none; /* Safari */
-  -ms-user-select: none; /* IE 10 and IE 11 */
-  user-select: none; /* Standard syntax */
+  -webkit-user-select: none;
+  /* Safari */
+  -ms-user-select: none;
+  /* IE 10 and IE 11 */
+  user-select: none;
+  /* Standard syntax */
 }
 
 a,

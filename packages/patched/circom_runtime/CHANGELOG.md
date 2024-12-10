@@ -1,5 +1,11 @@
 # @pcd/circom_runtime
 
+## 0.5.0
+
+### Minor Changes
+
+- GPC v4 enhancements, PODValue types, more GPC configurations
+
 ## 0.4.0
 
 ### Minor Changes

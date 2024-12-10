@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import * as v from "valibot";
 import { useStateContext } from "../appHooks";
 import { StateContextValue } from "../dispatch";
+import { useSyncE2EEStorage } from "../useSyncE2EEStorage";
 import { ZupassRPCProcessor } from "./ZappServer";
 
 export enum ListenMode {
@@ -34,11 +35,21 @@ async function waitForAuthentication(
 
 async function waitForFirstSync(context: StateContextValue): Promise<void> {
   return new Promise<void>((resolve) => {
-    if (context.getState().completedFirstSync) {
+    if (
+      context.getState().downloadedPCDs &&
+      context.getState().pcds.getAllPCDsInFolder("Devcon SEA").length > 0
+    ) {
       resolve();
       return;
     }
     const unlisten = context.stateEmitter.listen((state) => {
+      if (
+        context.getState().downloadedPCDs &&
+        context.getState().pcds.getAllPCDsInFolder("Devcon SEA").length > 0
+      ) {
+        resolve();
+        return;
+      }
       if (state.completedFirstSync) {
         unlisten();
         resolve();
@@ -105,6 +116,7 @@ function isAlreadyAuthorized(
 
 export function useZappServer(mode: ListenMode): void {
   const context = useStateContext();
+  useSyncE2EEStorage();
 
   useEffect(() => {
     if (

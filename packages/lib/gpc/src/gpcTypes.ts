@@ -1,6 +1,6 @@
 import { POD, PODEntries, PODName, PODValue, PODValueTuple } from "@pcd/pod";
 import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
-import { Identity as IdentityV4 } from "@semaphore-protocol/identity";
+import { Identity as IdentityV4 } from "@semaphore-protocol/core";
 import type { Groth16Proof } from "snarkjs";
 
 /**

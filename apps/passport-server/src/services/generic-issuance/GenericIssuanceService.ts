@@ -65,9 +65,9 @@ import {
 import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
+import { LocalFileService } from "../LocalFileService";
 import { DiscordService } from "../discordService";
 import { EmailService } from "../emailService";
-import { LocalFileService } from "../LocalFileService";
 import { PagerDutyService } from "../pagerDutyService";
 import { PersistentCacheService } from "../persistentCacheService";
 import { InMemoryPipelineAtomDB } from "./InMemoryPipelineAtomDB";
@@ -438,13 +438,17 @@ export class GenericIssuanceService {
       );
     }
 
-    const tickets = await pipeline.getAllTickets();
+    const tickets = await pipeline.getAllTicketsForEmail(email);
 
-    const matchingTickets = tickets.atoms.filter(
-      (atom) => atom.email === email && atom.orderCode === orderCode
+    // Check that a valid atom exists with the given orderCode
+    const validAtom = tickets.atoms.find(
+      (atom) => atom.orderCode === orderCode
     );
+    if (!validAtom) {
+      return { tickets: [] } satisfies TicketPreviewResultValue;
+    }
 
-    const ticketDatas = matchingTickets.map(
+    const ticketDatas = tickets.atoms.map(
       (atom) => pipeline.atomToPODTicketData(atom, "1") // fake semaphore id as it's not needed for the ticket preview
     );
 

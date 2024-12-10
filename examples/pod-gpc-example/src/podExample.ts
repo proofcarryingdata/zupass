@@ -26,7 +26,7 @@ import {
   podValueToJSON
 } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
-import { Identity } from "@semaphore-protocol/identity";
+import { Identity } from "@semaphore-protocol/core";
 import { v4 as uuid } from "uuid";
 
 /**

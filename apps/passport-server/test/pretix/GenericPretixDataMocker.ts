@@ -616,7 +616,9 @@ export class GenericPretixDataMocker {
       subevent: subEventId,
       secret: this.randomPositionSecret(),
       checkins: [],
-      answers
+      variation: null,
+      answers,
+      addon_to: null
     };
   }
 

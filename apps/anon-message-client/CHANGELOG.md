@@ -1,5 +1,17 @@
 # sbc-client
 
+## 0.2.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-interface@0.15.0
+  - @pcd/pcd-types@0.15.0
+  - @pcd/util@0.9.0
+  - @pcd/eddsa-ticket-pcd@0.10.0
+  - @pcd/semaphore-identity-pcd@0.15.0
+  - @pcd/zk-eddsa-event-ticket-pcd@0.10.0
+
 ## 0.2.1
 
 ### Patch Changes

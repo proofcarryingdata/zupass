@@ -2,6 +2,8 @@ import styled from "styled-components";
 
 export const SwipeViewContainer = styled.div<{ isZapp?: boolean }>`
   position: relative;
-  width: min(100vw, 420px);
-  height: ${({ isZapp }): string => (isZapp ? "100vh" : "inherit")};
+  ${({ isZapp }): string => (isZapp ? "height:  100vh;" : "")};
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 `;

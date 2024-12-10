@@ -50,8 +50,7 @@ import { ConnectPopupScreen } from "../components/screens/ZappScreens/ConnectPop
 import {
   AppContainer,
   Background,
-  CenterColumn,
-  GlobalBackground
+  CenterColumn
 } from "../components/shared/AppContainer";
 import { useTsParticles } from "../components/shared/useTsParticles";
 import { NewHomeScreen } from "../new-components/screens/Home";
@@ -82,6 +81,21 @@ import { AppState, StateEmitter } from "../src/state";
 import { ListenMode, useZappServer } from "../src/zapp/useZappServer";
 
 enableLiveReload();
+
+// Delete local storage and reload if forceNewSession is set
+if (typeof window !== "undefined") {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("forceNewSession")) {
+    localStorage.clear();
+    const newParams = new URLSearchParams(window.location.search);
+    newParams.delete("forceNewSession");
+    const newSearch = newParams.toString();
+    const newPath = `${window.location.pathname}${
+      newSearch ? `?${newSearch}` : ""
+    }${window.location.hash}`;
+    window.location.replace(newPath);
+  }
+}
 
 function App(): JSX.Element {
   useBackgroundJobs();
@@ -208,7 +222,7 @@ function RouterImpl(): JSX.Element {
             element={<OneClickLoginScreen />}
           />  */}
           <Route
-            path="one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?"
+            path="one-click-preview/:email/:code/:targetFolder?/:pipelineId?/:serverUrl?"
             element={<NewHomeScreen />}
           />
           <Route
@@ -347,8 +361,7 @@ loadInitialState()
           environmentName: appConfig.rollbarEnvName
         }}
       >
-        <GlobalBackground color={"var(--bg-dark-primary)"} />
-        <Background>
+        <Background color={"var(--bg-dark-primary)"}>
           <CenterColumn defaultPadding={false}>
             <TextCenter>
               <Spacer h={64} />
