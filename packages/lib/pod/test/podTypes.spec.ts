@@ -35,8 +35,10 @@ describe("POD type values should be correct", () => {
   });
 
   it("POD_NULL_HASH should be nonzero", () => {
-    // We don't care what its value is, but some other libraries (e.g. LeanIMT)
-    // use 0 for special purposes, so we avoid it.
+    // We don't care what its value is, but some libraries or uses of Merkle
+    // trees may use 0 for special purposes (e.g. to indicate removal, or a
+    // missing value in an internal datastrcuture), so we avoid it to avoid
+    // ambiguity.
     expect(POD_NULL_HASH).to.not.eq(0n);
   });
 });
