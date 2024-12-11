@@ -50,7 +50,9 @@ export async function prove(args: WebAuthnPCDArgs): Promise<WebAuthnPCD> {
 export async function verify(pcd: WebAuthnPCD): Promise<boolean> {
   const { verified } = await verifyAuthenticationResponse({
     response: pcd.proof,
-    expectedChallenge: pcd.claim.challenge,
+    expectedChallenge: Buffer.from(pcd.claim.challenge)
+      .toString("base64")
+      .replace(/=+$/, ""),
     expectedOrigin: pcd.claim.origin,
     expectedRPID: pcd.claim.rpID,
     authenticator: {
