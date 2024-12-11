@@ -21,10 +21,10 @@ export async function prove(args: WebAuthnPCDArgs): Promise<WebAuthnPCD> {
     rpID: args.rpID,
     challenge: args.challenge,
     allowCredentials: [
-      {
-        id: args.authenticator.credentialID,
-        type: "public-key"
-      }
+      // {
+      //   id: args.authenticator.credentialID,
+      //   type: "public-key"
+      // }
     ]
   });
   const authenticationResponseJSON = await startAuthentication(
