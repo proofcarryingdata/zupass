@@ -65,6 +65,7 @@ export interface ITicketData {
   eventStartDate?: string;
   isAddOn?: boolean;
   parentTicketId?: string;
+  accentColor?: string;
 }
 
 /**

@@ -696,7 +696,8 @@ export class IssuanceService {
             ),
             imageAltText: "Zuzalu logo",
             eventLocation: "Lustica Bay, Montenegro",
-            eventStartDate: "2023-03-11T00:00:00.000Z"
+            eventStartDate: "2023-03-11T00:00:00.000Z",
+            accentColor: "#147C66"
           })
         );
       }
@@ -781,7 +782,8 @@ export class IssuanceService {
               ),
               imageAltText: "ZuConnect",
               eventLocation: "Istanbul, Turkey",
-              eventStartDate: "2023-10-29T00:00:00.000Z"
+              eventStartDate: "2023-10-29T00:00:00.000Z",
+              accentColor: "#DBA452"
             })
           );
         }
