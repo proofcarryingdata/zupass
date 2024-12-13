@@ -176,6 +176,12 @@ function RouterImpl(): JSX.Element {
     )
   );
 
+  const LazyClaimScreen = React.lazy(() =>
+    import("../components/screens/ClaimScreen").then((module) => ({
+      default: module.ClaimScreen
+    }))
+  );
+
   return (
     <HashRouter>
       <Routes>
@@ -256,6 +262,22 @@ function RouterImpl(): JSX.Element {
             element={<AuthenticateIFrameScreen />}
           />
           <Route path="embedded" element={<EmbeddedScreen />} />
+          <Route
+            path="claim"
+            element={
+              <React.Suspense
+                fallback={
+                  <AppContainer bg="gray" fullscreen>
+                    <LoaderContainer>
+                      <NewLoader />
+                    </LoaderContainer>
+                  </AppContainer>
+                }
+              >
+                <LazyClaimScreen />
+              </React.Suspense>
+            }
+          />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>
