@@ -13,16 +13,17 @@ import {
   QueryClientProvider,
   useQuery
 } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import * as v from "valibot";
 import styled from "../../../../packages/lib/passport-ui/src/StyledWrapper";
 import { BottomModal } from "../../new-components/shared/BottomModal";
 import { Button2 } from "../../new-components/shared/Button";
+import { NewModals } from "../../new-components/shared/Modals/NewModals";
 import { NewLoader } from "../../new-components/shared/NewLoader";
 import { Typography } from "../../new-components/shared/Typography";
 import { appConfig } from "../../src/appConfig";
-import { useCredentialManager, useDispatch } from "../../src/appHooks";
+import { useCredentialManager, useDispatch, useSelf } from "../../src/appHooks";
 import { Spacer } from "../core";
 import { PCDCard } from "../shared/PCDCard";
 
@@ -89,6 +90,8 @@ export function ClaimScreenInner({
 }): JSX.Element | null {
   const credentialManager = useCredentialManager();
   const dispatch = useDispatch();
+  const self = useSelf();
+  const initialEmails = useRef(self?.emails);
 
   // Poll the feed to get the actions for the current user.
   // This happens on load, and will send a feed credential to the server.
@@ -112,7 +115,7 @@ export function ClaimScreenInner({
 
   const [ticket, setTicket] = useState<PODTicketPCD | null>(null);
   const [folder, setFolder] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [ticketNotFound, setTicketNotFound] = useState(false);
   const [complete, setComplete] = useState(false);
 
   useEffect(() => {
@@ -139,13 +142,9 @@ export function ClaimScreenInner({
               setTicket(pcd);
             });
           } else {
-            setError("No ticket found");
+            setTicketNotFound(true);
           }
-        } else {
-          setError("No ticket found");
         }
-      } else {
-        setError("No ticket found");
       }
     }
   }, [feedActionsQuery.data]);
@@ -175,12 +174,58 @@ export function ClaimScreenInner({
         </Typography>
       </LoaderContainer>
     );
-  } else if (feedActionsQuery.error || error) {
+  } else if (feedActionsQuery.error || feedActionsQuery.data?.error) {
     content = (
-      <div>
+      <ClaimError>
         <p>Unable to load ticket. Please try again later.</p>
-        <p>Error: {feedActionsQuery.error?.message ?? error}</p>
-      </div>
+        <ErrorText>
+          Error:{" "}
+          {feedActionsQuery.error?.message ?? feedActionsQuery.data?.error}
+        </ErrorText>
+      </ClaimError>
+    );
+  } else if (ticketNotFound) {
+    content = (
+      <ClaimError>
+        <p>
+          No ticket found for your email address. Check with the event organizer
+          to ensure that your email is included.
+        </p>
+        <p>
+          Your email addresses are:
+          <EmailList>
+            {self?.emails.map((email) => (
+              <EmailListItem key={email}>{email}</EmailListItem>
+            ))}
+          </EmailList>
+          <Spacer h={16} />
+          <Button2
+            onClick={() => {
+              dispatch({
+                type: "set-bottom-modal",
+                modal: { modalType: "help-modal" }
+              });
+            }}
+          >
+            Manage my Emails
+          </Button2>
+          {!self?.emails.every(
+            (email) => initialEmails.current?.includes(email)
+          ) && (
+            <>
+              <Spacer h={16} />
+              <Button2
+                onClick={() => {
+                  window.location.reload();
+                }}
+              >
+                Reload and try again
+              </Button2>
+            </>
+          )}
+          <NewModals />
+        </p>
+      </ClaimError>
     );
   } else if (ticket && folder) {
     content = (
@@ -220,6 +265,10 @@ export function ClaimScreenInner({
   }
 
   return (
+    // This isn't really a modal, but this is what we do for the other screens
+    // in the new UX.
+    // At some point this should be given a more sensible name or be
+    // refactored.
     <BottomModal
       modalContainerStyle={{ padding: 24 }}
       isOpen={true}
@@ -243,4 +292,24 @@ const LoaderContainer = styled.div`
   align-items: center;
   justify-content: center;
   gap: 12px;
+`;
+
+const ClaimError = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+
+const ErrorText = styled.p`
+  font-size: 14px;
+`;
+
+const EmailList = styled.ul`
+  margin: 8px 0px;
+`;
+
+const EmailListItem = styled.li`
+  font-size: 14px;
+  list-style-type: square;
+  margin-left: 16px;
 `;
