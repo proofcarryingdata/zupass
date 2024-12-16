@@ -15,8 +15,8 @@ import {
 } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import styled from "styled-components";
 import * as v from "valibot";
-import styled from "../../../../packages/lib/passport-ui/src/StyledWrapper";
 import { BottomModal } from "../../new-components/shared/BottomModal";
 import { Button2 } from "../../new-components/shared/Button";
 import { NewModals } from "../../new-components/shared/Modals/NewModals";
