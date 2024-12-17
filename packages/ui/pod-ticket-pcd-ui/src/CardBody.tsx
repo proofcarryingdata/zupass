@@ -73,12 +73,17 @@ export function PODTicketCardBodyImpl({
               "Unknown"}
           </NEW_UI__AttendeeName>
           <NEW_UI__ExtraInfoContainer>
-            {ticketData?.attendeeEmail && (
-              <NEW_UI__ExtraInfo>{ticketData.attendeeEmail}</NEW_UI__ExtraInfo>
-            )}
-            {ticketData?.attendeeEmail && ticketData?.ticketName && (
-              <NEW_UI__ExtraInfo>•</NEW_UI__ExtraInfo>
-            )}
+            {ticketData?.attendeeEmail &&
+              ticketData?.attendeeEmail !== ticketData?.attendeeName && (
+                <>
+                  <NEW_UI__ExtraInfo>
+                    {ticketData.attendeeEmail}
+                  </NEW_UI__ExtraInfo>
+                  {ticketData?.ticketName && (
+                    <NEW_UI__ExtraInfo>•</NEW_UI__ExtraInfo>
+                  )}
+                </>
+              )}
             {ticketData?.ticketName && (
               <NEW_UI__ExtraInfo>{ticketData.ticketName}</NEW_UI__ExtraInfo>
             )}

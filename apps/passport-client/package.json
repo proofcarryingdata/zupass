@@ -72,6 +72,7 @@
     "@pcd/zk-eddsa-frog-pcd-ui": "0.6.0",
     "@rollbar/react": "^0.11.1",
     "@semaphore-protocol/identity": "^3.15.2",
+    "@tanstack/react-query": "^5.62.7",
     "@types/react-swipeable-views": "^0.13.5",
     "boring-avatars": "^1.10.1",
     "broadcast-channel": "^5.3.0",
