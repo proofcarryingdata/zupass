@@ -1,4 +1,9 @@
 import {
+  EdDSATicketPCD,
+  EdDSATicketPCDPackage,
+  EdDSATicketPCDTypeName
+} from "@pcd/eddsa-ticket-pcd";
+import {
   NetworkFeedApi,
   PODBOX_CREDENTIAL_REQUEST
 } from "@pcd/passport-interface";
@@ -114,8 +119,12 @@ export function ClaimScreenInner({
   });
 
   const [ticket, setTicket] = useState<PODTicketPCD | null>(null);
+  const [eddsaTicket, setEddsaTicket] = useState<
+    EdDSATicketPCD | undefined | null
+  >(null);
   const [folder, setFolder] = useState<string | null>(null);
   const [ticketNotFound, setTicketNotFound] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [complete, setComplete] = useState(false);
 
   useEffect(() => {
@@ -132,15 +141,47 @@ export function ClaimScreenInner({
           const folderName = actions[0].folder;
           setFolder(folderName);
 
-          // Extract the ticket from the actions. Filter out any non-PODTicketPCDs.
-          const pcds = actions
-            .flatMap((action) => action.pcds)
-            .filter((pcd) => pcd.type === PODTicketPCDTypeName);
-          if (pcds.length > 0) {
+          // Extract PCDs from the actions.
+          const pcds = actions.flatMap((action) => action.pcds);
+
+          // Filter out the PODTicketPCDs.
+          const podTicketPcds = pcds.filter(
+            (pcd) => pcd.type === PODTicketPCDTypeName
+          );
+
+          if (podTicketPcds.length > 0) {
             // Deserialize the first PODTicketPCD.
-            PODTicketPCDPackage.deserialize(pcds[0].pcd).then((pcd) => {
-              setTicket(pcd);
-            });
+            PODTicketPCDPackage.deserialize(podTicketPcds[0].pcd)
+              .then((pcd) => {
+                setTicket(pcd);
+
+                // Find the EdDSATicketPCD that matches the PODTicketPCD, if
+                // one exists.
+                Promise.all(
+                  pcds
+                    .filter((pcd) => pcd.type === EdDSATicketPCDTypeName)
+                    .map((pcd) => EdDSATicketPCDPackage.deserialize(pcd.pcd))
+                ).then((tickets) => {
+                  // Will set to 'undefined' if no matching EdDSATicketPCD is
+                  // found.
+                  setEddsaTicket(
+                    tickets.find(
+                      (ticket) =>
+                        ticket.claim.ticket.ticketId ===
+                        pcd.claim.ticket.ticketId
+                    )
+                  );
+                });
+              })
+              .catch(() => {
+                // If this happens then either the PODTicketPCD or
+                // EdDSATicketPCD failed to deserialize. This is highly
+                // unlikely to happen, but if it does then we should show an
+                // error. Reaching this point would indicate that the feed
+                // contains invalid PCDs, which might be a temporary issue on
+                // the server side.
+                setError("Ticket feed contains invalid data.");
+              });
           } else {
             setTicketNotFound(true);
           }
@@ -174,13 +215,15 @@ export function ClaimScreenInner({
         </Typography>
       </LoaderContainer>
     );
-  } else if (feedActionsQuery.error || feedActionsQuery.data?.error) {
+  } else if (feedActionsQuery.error || feedActionsQuery.data?.error || error) {
     content = (
       <ClaimError>
         <p>Unable to load ticket. Please try again later.</p>
         <ErrorText>
           Error:{" "}
-          {feedActionsQuery.error?.message ?? feedActionsQuery.data?.error}
+          {feedActionsQuery.error?.message ??
+            feedActionsQuery.data?.error ??
+            error}
         </ErrorText>
       </ClaimError>
     );
@@ -251,9 +294,16 @@ export function ClaimScreenInner({
           onClick={async () => {
             await dispatch({
               type: "add-pcds",
-              pcds: [await PODTicketPCDPackage.serialize(ticket)],
+              pcds: [
+                // There may not be an EdDSATicketPCD; if so, add only the POD
+                // ticket.
+                ...(eddsaTicket
+                  ? [await EdDSATicketPCDPackage.serialize(eddsaTicket)]
+                  : []),
+                await PODTicketPCDPackage.serialize(ticket)
+              ],
               folder: folder,
-              upsert: true
+              upsert: false
             });
             setComplete(true);
           }}
