@@ -724,7 +724,8 @@ const CSVTicketPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   feedOptions: FeedIssuanceOptionsSchema,
   pcdTypes: z.array(z.enum(["EdDSATicketPCD", "PODTicketPCD"])).min(1),
   issueToUnmatchedEmail: z.boolean().optional(),
-  semaphoreGroupName: z.string().optional()
+  semaphoreGroupName: z.string().optional(),
+  imageOptions: ImageOptionsSchema.optional()
 });
 
 export type CSVTicketPipelineOptions = z.infer<

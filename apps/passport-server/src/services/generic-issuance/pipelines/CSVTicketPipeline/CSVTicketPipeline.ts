@@ -321,7 +321,13 @@ export class CSVTicketPipeline implements BasePipeline {
       timestampConsumed: 0,
       timestampSigned: new Date().getTime(),
       isConsumed: false,
-      isRevoked: false
+      isRevoked: false,
+      imageUrl: this.definition.options.imageOptions?.imageUrl,
+      qrCodeOverrideImageUrl:
+        atom.imageUrl ||
+        this.definition.options.imageOptions?.qrCodeOverrideImageUrl,
+      eventLocation: this.definition.options.imageOptions?.eventLocation,
+      eventStartDate: this.definition.options.imageOptions?.eventStartDate
     };
 
     const pcd = await EdDSATicketPCDPackage.prove({
@@ -368,7 +374,13 @@ export class CSVTicketPipeline implements BasePipeline {
       timestampConsumed: 0,
       timestampSigned: new Date().getTime(),
       isConsumed: false,
-      isRevoked: false
+      isRevoked: false,
+      imageUrl: this.definition.options.imageOptions?.imageUrl,
+      qrCodeOverrideImageUrl:
+        atom.imageUrl ||
+        this.definition.options.imageOptions?.qrCodeOverrideImageUrl,
+      eventLocation: this.definition.options.imageOptions?.eventLocation,
+      eventStartDate: this.definition.options.imageOptions?.eventStartDate
     };
 
     const pcd = await PODTicketPCDPackage.prove({
