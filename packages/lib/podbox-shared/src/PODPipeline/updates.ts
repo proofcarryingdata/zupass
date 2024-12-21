@@ -38,7 +38,8 @@ function stringifyCSV(
 /**
  * Parses the CSV string into a 2D array of strings.
  *
- * @param options The options to use for parsing.
+ * @param csv the input
+ * @param columns the columns used for parsing
  * @returns The parsed CSV data.
  */
 export function parseCSV(

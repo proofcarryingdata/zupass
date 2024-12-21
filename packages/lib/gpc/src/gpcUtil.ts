@@ -311,7 +311,7 @@ function canonicalizeTupleConfig(
 
 /**
  * Checks that the input matches the proper format for an entry name, virtual or
- * ortherwise, as given by {@link POD_NAME_REGEX} and {@link
+ * ortherwise, as given by {@link @pcd/pod!POD_NAME_REGEX} and {@link
  * POD_VIRTUAL_NAME_REGEX}.
  *
  * @param name the string to check

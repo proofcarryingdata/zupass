@@ -6,7 +6,7 @@ import { traced } from "../../../telemetryService";
 /**
  * Given a CSV row uploaded by a user to a {@link CSVPipeline},
  * generates an {@link MessagePCD} containing {@link }signed
- * {@code process.env.GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY}
+ * `process.env.GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY`
  *
  *
  * - `title`: gets displayed in the title of the PCD

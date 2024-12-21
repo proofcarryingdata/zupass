@@ -8,7 +8,8 @@ import type { IPODTicketData } from "./schema";
 export const PODTicketPCDTypeName = "pod-ticket-pcd";
 
 /**
- * Copied from {@link TicketCategory} in {@link EdDSATicketPCD}.
+ * Copied from {@link @pcd/eddsa-ticket-pcd!TicketCategory} in
+ * {@link @pcd/eddsa-ticket-pcd!EdDSATicketPCD}.
  */
 export enum TicketCategory {
   ZuConnect = 0,
@@ -23,8 +24,9 @@ export enum TicketCategory {
  */
 export type PODTicketPCDArgs = {
   /**
-   * The EdDSA private key is a 32-byte value used to sign the message.
-   * {@link newEdDSAPrivateKey} is recommended for generating highly secure private keys.
+   * The signer's EdDSA private key.  This is a 32-byte value used to sign the
+   * message.  See {@link @pcd/pod!decodePrivateKey} in `@pcd/pod` if you need
+   * to manipulate or convert this value.
    */
   privateKey: StringArgument;
 

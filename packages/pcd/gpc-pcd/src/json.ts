@@ -32,8 +32,6 @@ export function fixedPODEntriesFromJSON(
  * safely serialized using `JSON.stringify`.
  *
  * @param fixedPODEntries the prescribed values to serialize
- * @param space pretty-printing configuration, as defined by the corresponding
- *   argument to JSON.stringify.
  * @returns a string representation
  */
 export function fixedPODEntriesToJSON(

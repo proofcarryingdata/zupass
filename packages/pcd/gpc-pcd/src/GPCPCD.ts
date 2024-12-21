@@ -100,7 +100,7 @@ export type PODPCDArgValidatorParams = {
   /**
    * JSON-formatted proof configuration used to narrow down the selection of
    * POD PCDs. This should coincide with the proof config supplied in the
-   * `GPCPCDArgs`. May be parsed using {@link proofConfigFromJSON}.
+   * `GPCPCDArgs`. May be parsed using {@link @pcd/gpc!proofConfigFromJSON}.
    */
   proofConfig?: JSONProofConfig;
 
@@ -109,7 +109,7 @@ export type PODPCDArgValidatorParams = {
    * to those satisfying the list membership check specified in the proof
    * config. This should coincide with the membership lists supplied in
    * the `GPCPCDArgs` (if any).  May be parsed using
-   * {@link podMembershipListsFromJSON}
+   * {@link @pcd/gpc!podMembershipListsFromJSON}
    */
   membershipLists?: JSONPODMembershipLists;
 
@@ -139,7 +139,7 @@ export type GPCPCDArgs = {
    * See {@link GPCProofConfig} for more information.
    *
    * This is formatted in a JSON-compatible format which can be parsed
-   * using {@link proofConfigFromJSON}.
+   * using {@link @pcd/gpc!proofConfigFromJSON}.
    */
   proofConfig: ObjectArgument<JSONProofConfig>;
 
@@ -166,7 +166,7 @@ export type GPCPCDArgs = {
    * of this value and owner identity.  This can be used to avoid duplicate
    * actions by the same user, without revealing the user's identity.
    *
-   * You can use {@link podValueToJSON} to produce this format.
+   * You can use {@link @pcd/pod!podValueToJSON} to produce this format.
    */
   externalNullifier: ObjectArgument<JSONPODValue>;
 
@@ -174,7 +174,7 @@ export type GPCPCDArgs = {
    * Optional membership lists, if needed by the proof configuration. This is
    * always revealed.
    *
-   * You can use {@link podMembershipListsToJSON} to produce this format.
+   * You can use {@link @pcd/gpc!podMembershipListsToJSON} to produce this format.
    */
   membershipLists: ObjectArgument<JSONPODMembershipLists>;
 
@@ -183,7 +183,7 @@ export type GPCPCDArgs = {
    * the proof and cryptographically verified.  This can be used to avoid reuse
    * of the same proof.
    *
-   * You can use {@link podValueToJSON} to produce this format.
+   * You can use {@link @pcd/pod!podValueToJSON} to produce this format.
    */
   watermark: ObjectArgument<JSONPODValue>;
 
@@ -204,9 +204,8 @@ export type GPCPCDArgs = {
  */
 export interface GPCPCDClaim {
   /**
-   * The entries of this POD, in sorted order as they are Merklized.
-   * See the {@link pod} accessor on {@link GPCPCD} if you need to manipulate
-   * these entries as a POD object.
+   * The configuration used to generate this proof, including the identifier
+   * of the specific circuit used.
    */
   config: GPCBoundConfig;
 

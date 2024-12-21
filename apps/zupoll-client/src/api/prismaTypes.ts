@@ -39,7 +39,7 @@ export type Poll = {
   createdAt: Date;
   body: string;
   /**
-   * Either a string or a {@code JSON.stringify}'d {@link ObjectOption}
+   * Either a string or a `JSON.stringify`'d {@link ObjectOption}
    */
   options: string[];
   expiry: Date;
