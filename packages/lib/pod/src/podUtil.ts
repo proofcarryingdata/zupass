@@ -34,7 +34,7 @@ export function getPODValueForCircuit(podValue: PODValue): bigint | undefined {
  * of a numeric type.
  *
  * @param podValue the value to convert
- * @param nameForErrorMessages the name of this value, which is used only for
+ * @param nameForErrorMesages the name of this value, which is used only for
  *   error messages (not checked for legality).
  * @returns the numeric value, or undefined if this value cannot be represented
  *   in a circuit
@@ -106,7 +106,7 @@ export function printPODValue(podValue: PODValue | undefined): string {
  * but also handles the case where the whole value is undefined (but not
  * undefined values inside of a tuple).
  *
- * @param podValue the POD value (or undefined) to print
+ * @param value the POD value (or undefined) to print
  * @returns a human-readable string
  * @throws if the POD value is malformed
  */
@@ -215,7 +215,7 @@ export function decodeBytesRaw(
  * @param encodingPattern a regex which matches valid encodings of bytes with
  *   an expected fixed size.  This pattern is expected to have groups
  *   separately matching each of the supported encodings.  See
- *   {@link PRIVATE_KEY_REGEX} for an example.
+ *   {@link @pcd/pod!PRIVATE_KEY_REGEX} for an example.
  * @param encodingGroups a description of the match groups in the regex,
  *   in the order they should be checked.
  * @param errorMessage human-readable message for error thrown if decoding

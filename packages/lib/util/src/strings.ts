@@ -47,7 +47,7 @@ export function flattenObject(
 }
 
 /**
- * Shorthand for {@code JSON.stringify}
+ * Shorthand for `JSON.stringify`
  */
 export function str(val: unknown): string {
   return JSON.stringify(val, null, 2);

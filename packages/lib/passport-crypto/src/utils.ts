@@ -70,7 +70,7 @@ export function base64ToArrayBuffer(base64: string): Uint8Array {
 
 /**
  * Converts an ArrayBuffer into a base64 string
- * @param buffer
+ * @param arrayBuffer - a buffer of bytes
  */
 export function arrayBufferToBase64(arrayBuffer: ArrayBuffer): string {
   return to_base64(Buffer.from(arrayBuffer), base64_variants.ORIGINAL);

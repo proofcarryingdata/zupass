@@ -9,8 +9,19 @@ export type CircuitSignal = `${number}` | bigint;
  * Paths to circuit artifacts (files) required for proving and verifying.
  */
 export type CircuitArtifactPaths = {
+  /**
+   * path to wasm file for witness generation.
+   */
   wasmPath: string;
+
+  /**
+   * path to JSON file containing the proving key.
+   */
   pkeyPath: string;
+
+  /**
+   * path to JSON file containing the verification key.
+   */
   vkeyPath: string;
 };
 

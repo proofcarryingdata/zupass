@@ -148,7 +148,7 @@ export function gpcCheckProvable(
 /**
  * Performs only the preparatory steps of {@link gpcProve}, returning all of
  * the circuit-related info needed to generate a proof using the
- * {@link @pcd/gpcircuits} package, or another user-supplied proving stack.
+ * {@link "@pcd/gpcircuits"} package, or another user-supplied proving stack.
  *
  * Inputs will be fully validated for structural soundness in the same way as
  * when generating a proof.  See {@link gpcProve} for more details on inputs
@@ -192,7 +192,7 @@ export function gpcPreProve(
 
 /**
  * Performs only the post-processing steps of {@link gpcProve}, taking in a
- * proof already genereated using the {@link @pcd/gpcircuits} package, or
+ * proof already genereated using the {@link "@pcd/gpcircuits"} package, or
  * another user-supplied proving stack.  The circuit-specific outputs are
  * processed into the {@link GPCRevealedClaims} to produce the normal output
  * of {@link gpcProve}.
@@ -296,7 +296,7 @@ export async function gpcProve(
 /**
  * Performs only the preparatory steps of {@link gpcVerify}, returning all of
  * the circuit-related info needed to verify a proof using the
- * {@link @pcd/gpcircuits} package, or another user-supplied verification stack.
+ * {@link "@pcd/gpcircuits"} package, or another user-supplied verification stack.
  *
  * Inputs will be fully validated for structural soundness, but not
  * cryptographically.  See {@link gpcVerify} for more details on inputs and
