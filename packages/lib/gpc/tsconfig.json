@@ -1,25 +1,15 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
   "compilerOptions": {
-    "lib": [
-      "dom"
-    ],
+    "lib": ["dom"],
     "outDir": "dist",
     "declarationDir": "dist/types",
     // Include all source files, including tests
     "rootDir": "."
   },
   // Some artifact-including packages need to import a JSON file
-  "include": [
-    "src",
-    "test",
-    "artifacts/*.json"
-  ],
-  "exclude": [
-    "dist",
-    "build",
-    "node_modules"
-  ],
+  "include": ["src", "test", "artifacts/*.json", "scripts"],
+  "exclude": ["dist", "build", "node_modules"],
   // DO NOT MODIFY MANUALLY BEYOND THIS POINT
   // References are automatically maintained by `yarn fix-references`
   "references": [
