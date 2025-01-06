@@ -419,8 +419,9 @@ export const NewHomeScreen = (): ReactElement => {
                   setCurrentPos(e);
                 }}
               >
-                {tickets.map(([eventId, packs], i) => {
+                {tickets.map(([eventId, packs]) => {
                   const eventDetails = getEventDetails(packs[0]);
+
                   return (
                     <TicketsContainer
                       eventId={tickets[currentPos][0]}
@@ -433,7 +434,7 @@ export const NewHomeScreen = (): ReactElement => {
                         title={eventDetails.eventName}
                         imgSource={eventDetails.imageUrl}
                         ticketCount={packs.length}
-                        cardColor={i % 2 === 0 ? "purple" : "orange"}
+                        cardColor={eventDetails.accentColor ?? "#9a4ac9"}
                       />
                       <TicketCardsContainer>
                         {packs.map((pack) => {

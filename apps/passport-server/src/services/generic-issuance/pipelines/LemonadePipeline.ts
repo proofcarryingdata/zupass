@@ -615,6 +615,11 @@ export class LemonadePipeline implements BasePipeline {
     );
   }
 
+  private atomToAccentColor(atom: LemonadeAtom): string | undefined {
+    const event = this.lemonadeAtomToEvent(atom);
+    return event.imageOptions?.accentColor;
+  }
+
   private atomToEventLocation(atom: LemonadeAtom): string | undefined {
     const event = this.lemonadeAtomToEvent(atom);
     return event.imageOptions?.eventLocation;
@@ -651,6 +656,7 @@ export class LemonadePipeline implements BasePipeline {
       qrCodeOverrideImageUrl: event.imageOptions?.qrCodeOverrideImageUrl,
       eventStartDate: event.imageOptions?.eventStartDate,
       eventLocation: event.imageOptions?.eventLocation,
+      accentColor: event.imageOptions?.accentColor,
       isRevoked: false,
       timestampSigned: Date.now(),
       timestampConsumed: checkIn ? checkIn.timestamp.getTime() : 0,
@@ -1207,6 +1213,7 @@ export class LemonadePipeline implements BasePipeline {
       qrCodeOverrideImageUrl: this.atomToQrCodeOverrideImageUrl(atom),
       eventStartDate: this.atomToEventStartDate(atom),
       eventLocation: this.atomToEventLocation(atom),
+      accentColor: this.atomToAccentColor(atom),
       attendeeSemaphoreId: semaphoreId,
       isConsumed: atom.checkinDate instanceof Date,
       isRevoked: false, // Not clear what concept this maps to in Lemonade

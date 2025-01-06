@@ -71,7 +71,7 @@ function EdDSATicketPCDCardBody({
           />
         )}
         <NEW_UI__InfoContainer>
-          <NEW_UI__AttendeeName>
+          <NEW_UI__AttendeeName color={ticketData?.accentColor}>
             {ticketData?.attendeeName.toUpperCase() ||
               ticketData?.eventName.toUpperCase() ||
               "Unknown"}
@@ -171,8 +171,8 @@ const NEW_UI__InfoContainer = styled.div`
   justify-content: center;
   align-items: flex-start;
 `;
-const NEW_UI__AttendeeName = styled.div`
-  color: #9a4ac9;
+const NEW_UI__AttendeeName = styled.div<{ color?: string }>`
+  color: ${({ color }): string => color || "#9a4ac9"};
   font-size: 20px;
   font-style: normal;
   font-weight: 800;

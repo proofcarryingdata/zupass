@@ -1008,6 +1008,7 @@ export class PretixPipeline implements BasePipeline {
       qrCodeOverrideImageUrl: event.imageOptions?.qrCodeOverrideImageUrl,
       eventStartDate: event.imageOptions?.eventStartDate,
       eventLocation: event.imageOptions?.eventLocation,
+      accentColor: event.imageOptions?.accentColor,
       isAddOn: product.isAddOnItem,
       isConsumed: checkIn ? true : false,
       isRevoked: false,
@@ -1044,6 +1045,7 @@ export class PretixPipeline implements BasePipeline {
       qrCodeOverrideImageUrl: event.imageOptions?.qrCodeOverrideImageUrl,
       eventStartDate: event.imageOptions?.eventStartDate,
       eventLocation: event.imageOptions?.eventLocation,
+      accentColor: event.imageOptions?.accentColor,
       isAddOn: product.isAddOnItem,
       isConsumed: checkIn ? true : false,
       isRevoked: false,
@@ -1325,6 +1327,7 @@ export class PretixPipeline implements BasePipeline {
       qrCodeOverrideImageUrl: this.atomToQrCodeOverrideImageUrl(atom),
       eventStartDate: this.atomToEventStartDate(atom),
       eventLocation: this.atomToEventLocation(atom),
+      accentColor: this.atomToAccentColor(atom),
       isAddOn: !!atom.parentAtomId,
       isConsumed: atom.isConsumed,
       isRevoked: false,
@@ -1361,6 +1364,7 @@ export class PretixPipeline implements BasePipeline {
       qrCodeOverrideImageUrl: this.atomToQrCodeOverrideImageUrl(atom),
       eventStartDate: this.atomToEventStartDate(atom),
       eventLocation: this.atomToEventLocation(atom),
+      accentColor: this.atomToAccentColor(atom),
       isAddOn: !!atom.parentAtomId,
       isConsumed: atom.isConsumed,
       isRevoked: false,
@@ -2261,6 +2265,11 @@ export class PretixPipeline implements BasePipeline {
         return { success: true };
       }
     );
+  }
+
+  private atomToAccentColor(atom: PretixAtom): string | undefined {
+    const event = this.getEventById(atom.eventId);
+    return event.imageOptions?.accentColor;
   }
 
   private atomToEventName(atom: PretixAtom): string {
