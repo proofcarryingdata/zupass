@@ -199,6 +199,10 @@ export function useLoadedIssuedPCDs(): boolean {
   return useSelector<boolean>((s) => !!s.loadedIssuedPCDs, []);
 }
 
+export function useExtraSubscriptionFetchRequested(): boolean {
+  return useSelector<boolean>((s) => !!s.extraSubscriptionFetchRequested, []);
+}
+
 export function useIsDownloaded(): boolean {
   return useSelector<boolean>((s) => !!s.downloadedPCDs, []);
 }
@@ -231,7 +235,6 @@ export function useUserShouldAgreeNewPrivacyNotice(): void {
 export function useIsSyncSettled(): boolean {
   const isDownloaded = useIsDownloaded();
   const loadedIssued = useLoadedIssuedPCDs();
-
   return isDownloaded && loadedIssued;
 }
 
@@ -410,6 +413,7 @@ export const useAutoLoginFromOneClick = (): { loading: boolean } => {
   const [oneClickRedirect, setOneClickRedirect] = useState(
     localStorage.getItem(ONE_CLICK_REDIRECT_KEY)
   );
+  const [redirectHash] = useState(location.hash);
 
   useEffect(() => {
     if (attemptedLogin.current) return;
@@ -425,7 +429,10 @@ export const useAutoLoginFromOneClick = (): { loading: boolean } => {
         if (self?.emails?.includes(email))
           throw new Error("User is already logged in");
 
-        location.hash = `#${oneClickRedirect}`;
+        const base = `#${oneClickRedirect.trim()}`;
+        window.location.hash = redirectHash
+          ? `${base}?redirectHash=${encodeURIComponent(redirectHash.trim())}`
+          : base;
       } catch (error) {
         console.error("Unable to auto-login", error);
       } finally {
@@ -435,7 +442,7 @@ export const useAutoLoginFromOneClick = (): { loading: boolean } => {
     };
 
     attemptAutoLogin();
-  }, [dispatch, self, oneClickRedirect]);
+  }, [dispatch, self, oneClickRedirect, redirectHash]);
 
   return { loading: !!oneClickRedirect };
 };

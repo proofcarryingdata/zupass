@@ -29,7 +29,10 @@ export const HelpModal = (): JSX.Element => {
             onClick: () => {
               dispatch({
                 type: "set-bottom-modal",
-                modal: { modalType: "manage-emails", goBackToSupport: true }
+                modal: {
+                  modalType: "manage-emails",
+                  prevModal: { modalType: "help-modal" }
+                }
               });
             }
           }}

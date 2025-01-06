@@ -1,5 +1,11 @@
 # @pcd/passport-crypto
 
+## 0.15.0
+
+### Minor Changes
+
+- GPC v4 enhancements, PODValue types, more GPC configurations
+
 ## 0.14.0
 
 ### Minor Changes

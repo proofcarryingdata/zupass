@@ -43,7 +43,8 @@ export const TicketDataSchema = z.object({
   ticketSecret: z.string().optional(),
   eventLocation: z.string().optional(),
   eventStartDate: z.string().optional(),
-  isAddOn: z.boolean().optional()
+  isAddOn: z.boolean().optional(),
+  parentTicketId: z.string().uuid().optional() // the "parent" ticket that this is an add-on to
 });
 
 export type IPODTicketData = z.infer<typeof TicketDataSchema>;

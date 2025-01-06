@@ -26,6 +26,7 @@ export function ZappScreen({ url }: { url: string }): ReactNode {
           height: "100%"
         }}
         src={urlWithOptionalParameter.toString()}
+        allow="camera;microphone;clipboard-read;clipboard-write"
         sandbox="allow-downloads allow-same-origin allow-scripts allow-popups allow-modals allow-forms allow-storage-access-by-user-activation allow-popups-to-escape-sandbox"
       />
     </>

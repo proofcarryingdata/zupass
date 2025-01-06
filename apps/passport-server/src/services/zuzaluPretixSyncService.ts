@@ -11,7 +11,7 @@ import { deleteZuzaluTicket } from "../database/queries/zuzalu_pretix_tickets/de
 import { fetchAllZuzaluPretixTickets } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { updateZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/updateZuzaluPretixTicket";
-import { namedSqlTransaction } from "../database/sqlQuery";
+import { sqlQueryWithPool } from "../database/sqlQuery";
 import { ApplicationContext, ServerMode } from "../types";
 import { logger } from "../util/logger";
 import {
@@ -119,7 +119,7 @@ export class ZuzaluPretixSyncService {
       const { dbPool } = this.context;
 
       try {
-        await namedSqlTransaction(dbPool, "saveTickets", (client) =>
+        await sqlQueryWithPool(dbPool, (client) =>
           this.saveTickets(client, tickets)
         );
       } catch (e) {

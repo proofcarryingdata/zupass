@@ -3,18 +3,14 @@ import {
   PipelineLoadSummary
 } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
-import { sleep, str } from "@pcd/util";
+import { str } from "@pcd/util";
 import _ from "lodash";
 import { PoolClient } from "postgres-pool";
 import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineDefinitionDB } from "../../../database/queries/pipelineDefinitionDB";
-import {
-  namedSqlTransaction,
-  sqlTransaction
-} from "../../../database/sqlQuery";
+import { sqlQueryWithPool } from "../../../database/sqlQuery";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
-import { isAbortError } from "../../../util/util";
 import { DiscordService } from "../../discordService";
 import {
   LocalFileService,
@@ -48,10 +44,10 @@ export class PipelineExecutorSubservice {
    * 2. save that data, represented by {@link PipelineAtom}, and a corresponding
    *    {@link PipelineLoadSummary}, which contains information about that particular
    *    data load.
-   * 3. wait {@link PIPELINE_REFRESH_INTERVAL_MS} milliseconds
+   * 3. wait until the time is at least {@link PIPELINE_REFRESH_INTERVAL_MS} milliseconds after the last load started
    * 4. go back to step one
    */
-  private static readonly PIPELINE_REFRESH_INTERVAL_MS = 60_000;
+  private static readonly PIPELINE_REFRESH_INTERVAL_MS = 60_000; // 1 minute
 
   /**
    * Podbox maintains an instance of a {@link PipelineSlot} for each pipeline
@@ -67,6 +63,8 @@ export class PipelineExecutorSubservice {
   private discordService: DiscordService | null;
   private rollbarService: RollbarService | null;
   private nextLoadTimeout: NodeJS.Timeout | undefined;
+  private lastLoadStartedTimestamp: number | undefined;
+  private lastLoadCompletedTimestamp: number | undefined;
   private db: IPipelineAtomDB;
   private pipelineDB: IPipelineDefinitionDB;
   private localFileService: LocalFileService | null;
@@ -99,7 +97,7 @@ export class PipelineExecutorSubservice {
    * schedules a load loop which loads data for each {@link Pipeline} once per minute.
    */
   public async start(startLoadLoop?: boolean): Promise<void> {
-    await sqlTransaction(this.context.dbPool, (client) =>
+    await sqlQueryWithPool(this.context.internalPool, (client) =>
       this.loadAndInstantiatePipelines(client)
     );
 
@@ -189,7 +187,8 @@ export class PipelineExecutorSubservice {
           owner: await this.userSubservice.getUserById(
             client,
             definition.ownerUserId
-          )
+          ),
+          loading: false
         };
         this.pipelineSlots.push(pipelineSlot);
       } else {
@@ -202,13 +201,10 @@ export class PipelineExecutorSubservice {
       tracePipeline(pipelineSlot.definition);
       traceUser(pipelineSlot.owner);
 
-      const existingInstance = pipelineSlot.instance;
-      const stopPipeline = async (): Promise<void> => {
-        if (existingInstance && !existingInstance.isStopped()) {
-          span?.setAttribute("stopping", true);
-          await existingInstance.stop();
-        }
-      };
+      if (pipelineSlot.instance && !pipelineSlot.instance.isStopped()) {
+        span?.setAttribute("stopping", true);
+        await pipelineSlot.instance.stop();
+      }
 
       pipelineSlot.instance = await instantiatePipeline(
         this.context,
@@ -219,9 +215,9 @@ export class PipelineExecutorSubservice {
       pipelineSlot.definition = definition;
 
       if (dontLoad !== true) {
-        await this.performPipelineLoad(pipelineSlot, stopPipeline);
-      } else {
-        await stopPipeline();
+        this.performPipelineLoad(pipelineSlot).catch((e) => {
+          logger(LOG_TAG, "failed to perform pipeline load", e);
+        });
       }
     });
   }
@@ -252,6 +248,7 @@ export class PipelineExecutorSubservice {
         this.pipelineSlots.map(async (entry) => {
           if (entry.instance && !entry.instance.isStopped()) {
             await entry.instance.stop();
+            entry.loading = false;
           }
         })
       );
@@ -267,7 +264,8 @@ export class PipelineExecutorSubservice {
             owner: await this.userSubservice.getUserById(
               client,
               pipelineDefinition.ownerUserId
-            )
+            ),
+            loading: false
           });
 
           // attempt to instantiate a {@link Pipeline}
@@ -311,8 +309,7 @@ export class PipelineExecutorSubservice {
    * If load result caching is enabled globally and for this pipeline, takes care of that too.
    */
   public async performPipelineLoad(
-    pipelineSlot: PipelineSlot,
-    loadStarted?: () => Promise<void>
+    pipelineSlot: PipelineSlot
   ): Promise<PipelineLoadSummary> {
     return traced<PipelineLoadSummary>(
       SERVICE_NAME,
@@ -355,14 +352,13 @@ export class PipelineExecutorSubservice {
         }
 
         let runInfo = await performPipelineLoad(
-          this.context.dbPool,
+          this.context.internalPool,
           pipelineSlot,
           this.pipelineSubservice,
           this.userSubservice,
           this.discordService,
           this.pagerdutyService,
-          this.rollbarService,
-          loadStarted
+          this.rollbarService
         );
 
         if (cachedLoadFromDisk) {
@@ -425,6 +421,8 @@ export class PipelineExecutorSubservice {
    */
   private async performAllPipelineLoads(): Promise<void> {
     return traced(SERVICE_NAME, "performAllPipelineLoads", async (span) => {
+      this.lastLoadStartedTimestamp = Date.now();
+
       const pipelineIds = str(this.pipelineSlots.map((p) => p.definition.id));
       logger(
         LOG_TAG,
@@ -434,44 +432,13 @@ export class PipelineExecutorSubservice {
 
       await Promise.allSettled(
         this.pipelineSlots.map(async (slot: PipelineSlot): Promise<void> => {
-          try {
-            if (slot.loadPromise) {
-              await slot.loadPromise;
-            } else {
-              await this.performPipelineLoad(slot);
-            }
-          } catch (e) {
-            // an abort means a podbox user either deleted or edited (and thus restarted)
-            // this pipeline. in the case that it was deleted, `slot.loadPromise` will be
-            // set to `undefined`. In the case that it was edited, Podbox will restart the
-            // pipeline, and set `slot.loadPromise` to a new promise representing the
-            // pipeline's load operation.
-            if (isAbortError(e)) {
-              while (slot.loadPromise) {
-                try {
-                  await slot.loadPromise;
-                  slot.loadPromise = undefined;
-                  break;
-                } catch (e) {
-                  if (isAbortError(e)) {
-                    await sleep(50);
-                  }
-                }
-              }
-              // no load promise means we're done here
-              return;
-            }
-
-            logger(
-              LOG_TAG,
-              `failed to perform pipeline load for pipeline ${slot.definition.id}`,
-              e
-            );
-          }
+          await this.performPipelineLoad(slot);
         })
       );
 
       logger(LOG_TAG, "finished performing all pipeline loads");
+
+      this.lastLoadCompletedTimestamp = Date.now();
     });
   }
 
@@ -495,30 +462,36 @@ export class PipelineExecutorSubservice {
     // and re-instantiate the pipeline. do NOT call the pipeline's 'load'
     // function - that will be done the next time `startPipelineLoadLoop`
     // is called.
-    await namedSqlTransaction(
-      this.context.dbPool,
-      "startPipelineLoadLoop",
-      async (client) => {
-        await this.loadAndInstantiatePipelines(client);
-        await Promise.allSettled(
-          this.pipelineSlots
-            .slice()
-            .map((s) => this.restartPipeline(client, s.definition.id, true))
-        );
-      }
+    await sqlQueryWithPool(this.context.internalPool, async (client) => {
+      await this.loadAndInstantiatePipelines(client);
+      await Promise.allSettled(
+        this.pipelineSlots
+          .slice()
+          .map((s) => this.restartPipeline(client, s.definition.id, true))
+      );
+    });
+
+    // we schedule the next load to happen `PIPELINE_REFRESH_INTERVAL_MS` after
+    // the last load *started*. Thus, we cap the amount of pipeline reloads to be
+    // one per `PIPELINE_REFRESH_INTERVAL_MS`.
+    const nextLoadTimestamp =
+      (this.lastLoadStartedTimestamp ?? Date.now()) +
+      PipelineExecutorSubservice.PIPELINE_REFRESH_INTERVAL_MS;
+
+    const msUntilNextLoadTimestamp = Math.max(
+      nextLoadTimestamp - Date.now(),
+      1000
     );
 
     logger(
       LOG_TAG,
       "scheduling next pipeline refresh for",
-      Math.floor(
-        PipelineExecutorSubservice.PIPELINE_REFRESH_INTERVAL_MS / 1000
-      ),
+      Math.floor(msUntilNextLoadTimestamp / 1000),
       "s from now"
     );
 
     this.nextLoadTimeout = setTimeout(() => {
       this.startPipelineLoadLoop();
-    }, PipelineExecutorSubservice.PIPELINE_REFRESH_INTERVAL_MS);
+    }, msUntilNextLoadTimestamp);
   }
 }

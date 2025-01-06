@@ -13,7 +13,7 @@ import _ from "lodash";
 import { PoolClient } from "postgres-pool";
 import { IPipelineConsumerDB } from "../../database/queries/pipelineConsumerDB";
 import { IPipelineSemaphoreHistoryDB } from "../../database/queries/pipelineSemaphoreHistoryDB";
-import { sqlTransaction } from "../../database/sqlQuery";
+import { sqlQueryWithPool } from "../../database/sqlQuery";
 import { ApplicationContext } from "../../types";
 import { traced } from "../telemetryService";
 import { makeGenericIssuanceSemaphoreGroupUrl } from "./capabilities/SemaphoreGroupCapability";
@@ -146,7 +146,7 @@ export class SemaphoreGroupProvider {
     return traced(LOG_NAME, "start", async (span) => {
       span?.setAttribute("pipeline_id", this.pipelineId);
 
-      await sqlTransaction(this.context.dbPool, async (client) => {
+      await sqlQueryWithPool(this.context.dbPool, async (client) => {
         // This should be called during pipeline startup.
         // If an exception throws, it will stop the pipeline from starting.
         const latestGroups =

@@ -6,7 +6,7 @@ import {
   getCacheValue,
   setCacheValue
 } from "../database/queries/cache";
-import { namedSqlTransaction } from "../database/sqlQuery";
+import { sqlQueryWithPool } from "../database/sqlQuery";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
 
@@ -61,7 +61,7 @@ export class PersistentCacheService {
   public async setValue(key: string, value: string): Promise<void> {
     return traced("Cache", "setValue", async (span) => {
       span?.setAttribute("cache_key", key);
-      await namedSqlTransaction(this.pool, "setValue", (client) =>
+      await sqlQueryWithPool(this.pool, async (client) =>
         setCacheValue(client, key, value)
       );
     });
@@ -70,7 +70,7 @@ export class PersistentCacheService {
   public async getValue(key: string): Promise<CacheEntry | undefined> {
     return traced("Cache", "getValue", async (span) => {
       span?.setAttribute("cache_key", key);
-      return await namedSqlTransaction(this.pool, "getValue", (client) => {
+      return await sqlQueryWithPool(this.pool, async (client) => {
         const value = getCacheValue(client, key);
         span?.setAttribute("hit", !!value);
         return value;
@@ -79,18 +79,14 @@ export class PersistentCacheService {
   }
 
   private async tryExpireOldEntries(): Promise<void> {
-    return namedSqlTransaction(
-      this.pool,
-      "tryExpireOldEntries",
-      async (client): Promise<void> => {
-        try {
-          return this.expireOldEntries(client);
-        } catch (e) {
-          logger("failed to expire old cache entries", e);
-          this.rollbarService?.reportError(e);
-        }
+    return sqlQueryWithPool(this.pool, async (client): Promise<void> => {
+      try {
+        return this.expireOldEntries(client);
+      } catch (e) {
+        logger("failed to expire old cache entries", e);
+        this.rollbarService?.reportError(e);
       }
-    );
+    });
   }
 
   private async expireOldEntries(client: PoolClient): Promise<void> {

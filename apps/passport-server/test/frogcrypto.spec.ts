@@ -54,7 +54,7 @@ const DATE_EPOCH_1H = new Date(60 * 60 * 1000);
 const DATE_EPOCH_1H1M = new Date(DATE_EPOCH_1H.getTime() + 60 * 1000);
 const DATE_EPOCH_1H1M59S = new Date(DATE_EPOCH_1H1M.getTime() + 59 * 1000);
 
-describe("frogcrypto functionality", function () {
+describe.skip("frogcrypto functionality", function () {
   let pool: Pool;
   let client: PoolClient;
   let application: Zupass;

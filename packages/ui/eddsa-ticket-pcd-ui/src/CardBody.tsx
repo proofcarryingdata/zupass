@@ -7,8 +7,7 @@ import {
 import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
 import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
-import { toCanvas } from "html-to-image";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { TicketQR } from "./TicketQR";
 
 type NEW_UI__AddOns = {
@@ -29,8 +28,6 @@ export interface EdDSATicketPCDCardProps {
   hidePadding?: boolean;
   // when clicked on the the addons sections, if there is any, do something
   addOns?: NEW_UI__AddOns;
-  // defined by if the image has QR code displayed and by this flag.
-  showDownloadButton?: boolean;
 }
 
 export const EdDSATicketPCDUI: PCDUI<EdDSATicketPCD, EdDSATicketPCDCardProps> =
@@ -43,21 +40,18 @@ function EdDSATicketPCDCardBody({
   pcd,
   verifyURL,
   idBasedVerifyURL,
-  addOns,
-  showDownloadButton
+  addOns
 }: {
   pcd: EdDSATicketPCD;
 } & EdDSATicketPCDCardProps): JSX.Element {
   const ticketImageRef = useRef<HTMLDivElement>(null);
   const ticketData = getEdDSATicketData(pcd);
-  const [downloading, setDownloading] = useState(false);
 
   // If ticket has an `eventStartDate` render the `qrCodeOverrideImageUrl`, if it exists
   // Else, render the `imageUrl`, if it existss
-  const imageToRender =
-    ticketData?.eventStartDate && idBasedVerifyURL !== undefined
-      ? ticketData.qrCodeOverrideImageUrl
-      : ticketData?.imageUrl;
+  const imageToRender = ticketData?.eventStartDate
+    ? ticketData.qrCodeOverrideImageUrl
+    : ticketData?.imageUrl;
 
   return (
     <NEW_UI__Container>
@@ -96,32 +90,19 @@ function EdDSATicketPCDCardBody({
         </NEW_UI__InfoContainer>
       </NEW_UI__TicketImageContainer>
       <div>
-        {!imageToRender && showDownloadButton && (
-          <NEW_UI__ExtraSection
-            onClick={async () => {
-              if (downloading) return;
-              setDownloading(true);
-              const ticketElement = ticketImageRef.current;
-              if (!ticketElement) return;
-              await shareOrDownloadImage(
-                ticketElement,
-                (ticketData?.eventName || "event-ticket-data") + ".jpeg"
-              );
-              setDownloading(false);
-            }}
-          >
-            <NEW_UI__ExtraSectionText $disabled={downloading}>
-              Download ticket
-            </NEW_UI__ExtraSectionText>
-            <DownloadIcon />
-          </NEW_UI__ExtraSection>
-        )}
         {addOns && (
           <NEW_UI__ExtraSection onClick={addOns.onClick}>
             <NEW_UI__ExtraSectionText>{addOns.text}</NEW_UI__ExtraSectionText>
             <QRIcon />
           </NEW_UI__ExtraSection>
         )}
+        <NEW_UI__ExtraSection
+          style={{ justifyContent: "center", cursor: "default" }}
+        >
+          <ExtraSectionSecondaryText>
+            QR POD • ZK powered by ZUPASS
+          </ExtraSectionSecondaryText>
+        </NEW_UI__ExtraSection>
       </div>
     </NEW_UI__Container>
   );
@@ -166,7 +147,7 @@ const NEW_UI__Container = styled.div`
   font-family: Rubik;
   border-radius: 16px;
   border: 2px solid var(--text-white, #fff);
-  background: var(--bg-white-transparent, rgba(255, 255, 255, 0.8));
+  background: #fff;
 
   /* shadow-sm */
   box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
@@ -238,19 +219,17 @@ const NEW_UI__ExtraSectionText = styled.div<{ $disabled?: boolean }>`
   line-height: 135%;
 `;
 
-const DownloadIcon = (): JSX.Element => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 16 16"
-    fill="var(--text-tertiary)"
-    className="size-4"
-    width={20}
-    height={20}
-  >
-    <path d="M6.22 8.72a.75.75 0 0 0 1.06 1.06l5.22-5.22v1.69a.75.75 0 0 0 1.5 0v-3.5a.75.75 0 0 0-.75-.75h-3.5a.75.75 0 0 0 0 1.5h1.69L6.22 8.72Z" />
-    <path d="M3.5 6.75c0-.69.56-1.25 1.25-1.25H7A.75.75 0 0 0 7 4H4.75A2.75 2.75 0 0 0 2 6.75v4.5A2.75 2.75 0 0 0 4.75 14h4.5A2.75 2.75 0 0 0 12 11.25V9a.75.75 0 0 0-1.5 0v2.25c0 .69-.56 1.25-1.25 1.25h-4.5c-.69 0-1.25-.56-1.25-1.25v-4.5Z" />
-  </svg>
-);
+const ExtraSectionSecondaryText = styled.div`
+  color: var(--text-tertiary);
+  text-align: center;
+
+  /* text-xs (12px)/regular-rubik */
+  font-family: Rubik;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 135%; /* 16.2px */
+`;
 
 const QRIcon = (): JSX.Element => (
   <svg
@@ -281,44 +260,3 @@ const QRIcon = (): JSX.Element => (
     <path d="M8.5 9.417a.917.917 0 1 1 1.833 0 .917.917 0 0 1-1.833 0ZM8.5 13.083a.917.917 0 1 1 1.833 0 .917.917 0 0 1-1.833 0ZM13.083 8.5a.917.917 0 1 0 0 1.833.917.917 0 0 0 0-1.833ZM12.166 13.084a.917.917 0 1 1 1.833 0 .917.917 0 0 1-1.833 0ZM11.25 10.333a.917.917 0 1 0 0 1.833.917.917 0 0 0 0-1.833Z" />
   </svg>
 );
-
-const shareOrDownloadImage = async (
-  ticketElement: HTMLElement | null,
-  fileName: string
-): Promise<void> => {
-  if (!ticketElement) return;
-
-  const canvas: HTMLCanvasElement = await toCanvas(ticketElement);
-  const blob: Blob | null = await new Promise((resolve) =>
-    canvas.toBlob(resolve, "image/jpeg")
-  );
-  if (!blob) return; // Ensure the blob exists before proceeding
-
-  const downloadImage = (blob: Blob, fileName: string): void => {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = fileName;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-  const file = new File([blob], fileName, { type: "image/jpeg" });
-  if (navigator.share && navigator.canShare({ files: [file] })) {
-    try {
-      await navigator.share({
-        files: [file]
-      });
-    } catch (e) {
-      console.error("Error sharing image", e);
-      // Ignore errors related to the user aborting the share or a share already in progress
-      if (
-        e instanceof Error &&
-        ["AbortError", "InvalidStateError"].includes(e.name)
-      )
-        return;
-      downloadImage(blob, fileName);
-    }
-  } else {
-    downloadImage(blob, fileName);
-  }
-};

@@ -120,6 +120,9 @@
     "DEVCON_TICKET_QUERY_ORIGINS",
     "GENERATED_CHUNKS",
     "DATABASE_PORT",
+    "TELEGRAM_CHAT_TO_PRODUCT_IDS",
+    "IGNORE_NON_PRIORITY_FEEDS",
+    "PRIORITY_FEED_PROVIDER_URLS",
     "//// add env vars above this line ////"
   ],
   "globalEnv": [
@@ -242,6 +245,8 @@
     "LOCAL_FILE_SERVICE_ENABLED",
     "SELF_HOSTED_PODBOX_MODE",
     "GENERIC_ISSUANCE_TEST_MODE",
+    "PRETIX_BATCH_ENABLED_FOR",
+    "DB_POOL_SIZE",
     "//// add env vars above this line ////"
   ]
 }

@@ -44,7 +44,7 @@ const buttonStyle = css`
   font-size: 18px;
 
   &:hover {
-    background: hsl(169, 98%, 21%);
+    background: var(--core-accent);
   }
   &:active:not([disabled]) {
     opacity: 0.9;

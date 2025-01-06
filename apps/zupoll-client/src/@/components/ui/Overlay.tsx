@@ -25,7 +25,6 @@ const ModalBg = styled.div`
   bottom: 0;
   right: 0;
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
   z-index: 999;
 `;
 
@@ -36,7 +35,6 @@ const ModalWrap = styled.div`
   top: 4rem;
   left: 0;
   width: 100%;
-  max-width: 420px;
   margin: 4rem auto 0 auto;
   min-height: 480px;
   padding: 0.75rem;

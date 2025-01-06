@@ -1,6 +1,6 @@
 import { ReactNode, useCallback } from "react";
 import { Toaster } from "react-hot-toast";
-import styled, { createGlobalStyle } from "styled-components";
+import styled from "styled-components";
 import { ErrorBottomModal } from "../../new-components/shared/Modals/ErrorBottomModal";
 import {
   useAppError,
@@ -8,7 +8,7 @@ import {
   useIOSOrientationFix,
   useUserShouldAgreeNewPrivacyNotice
 } from "../../src/appHooks";
-import { MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
+import { BANNER_HEIGHT, MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
 import { ScreenLoader } from "./ScreenLoader";
 
 // Wrapper for all screens.
@@ -45,9 +45,8 @@ export function AppContainer({
   const col = getBackground();
   return (
     <Container $fullscreen={!!fullscreen}>
-      <GlobalBackground color={col} />
-      <Background>
-        <CenterColumn defaultPadding={!noPadding}>
+      <Background color={col}>
+        <CenterColumn defaultPadding={!noPadding} $fullscreen={!!fullscreen}>
           {children && (
             <Toaster
               toastOptions={{
@@ -67,28 +66,27 @@ export function AppContainer({
     </Container>
   );
 }
-
-export const GlobalBackground = createGlobalStyle<{ color: string }>`
-  html {
-    background: ${(p): string => p.color};
-  }
-`;
-
-export const Background = styled.div`
+export const Background = styled.div<{ color: string }>`
   width: 100%;
   min-height: 100%;
+  background: ${(p): string => p.color};
 `;
 
-export const CenterColumn = styled.div<{ defaultPadding: boolean }>`
+export const CenterColumn = styled.div<{
+  defaultPadding: boolean;
+  $fullscreen?: boolean;
+}>`
   display: flex;
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
   min-height: 100%;
-  max-width: ${MAX_WIDTH_SCREEN}px;
   margin: 0 auto;
   position: relative;
+  ${({ $fullscreen }): string =>
+    !$fullscreen ? `max-width: ${MAX_WIDTH_SCREEN}px` : ""};
   ${({ defaultPadding }): string => (defaultPadding ? "padding: 16px;" : "")}
+  padding-top: ${BANNER_HEIGHT}px;
 `;
 
 const Container = styled.div<{ $fullscreen: boolean }>`

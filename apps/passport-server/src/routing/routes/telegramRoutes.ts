@@ -1,6 +1,6 @@
 import { AnonWebAppPayload, PayloadType } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
-import { namedSqlTransaction, sqlTransaction } from "../../database/sqlQuery";
+import { sqlQueryWithPool } from "../../database/sqlQuery";
 import { startTelegramService } from "../../services/telegramService";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
@@ -66,17 +66,14 @@ export function initTelegramRoutes(
         if (!telegramService) {
           throw new Error("Telegram service not initialized");
         }
-        await namedSqlTransaction(
-          context.dbPool,
-          "/telegram/verify",
-          (client) =>
-            telegramService.handleVerification(
-              client,
-              proof,
-              parseInt(telegram_user_id),
-              telegram_chat_id,
-              telegram_username
-            )
+        await sqlQueryWithPool(context.dbPool, (client) =>
+          telegramService.handleVerification(
+            client,
+            proof,
+            parseInt(telegram_user_id),
+            telegram_chat_id,
+            telegram_username
+          )
         );
         logger(
           `[TELEGRAM] Redirecting to telegram for user id ${telegram_user_id}` +
@@ -214,7 +211,7 @@ export function initTelegramRoutes(
         }
 
         case PayloadType.ReactData: {
-          const proofUrl = await sqlTransaction(context.dbPool, (client) =>
+          const proofUrl = await sqlQueryWithPool(context.dbPool, (client) =>
             telegramService.handleRequestReactProofLink(client, anonPayload)
           );
           res.redirect(proofUrl);
@@ -248,21 +245,17 @@ export function initTelegramRoutes(
             "nullifierHash field needs to be a string and be non-empty"
           );
         }
-        await namedSqlTransaction(
-          context.dbPool,
-          "/telegram/anonget/:nullifier",
-          async (client) => {
-            const messages = await telegramService.handleGetAnonMessages(
-              client,
-              nullifierHash
-            );
-            const totalKarma = await telegramService.handleGetAnonTotalKarma(
-              client,
-              nullifierHash
-            );
-            res.json({ messages, totalKarma });
-          }
-        );
+        await sqlQueryWithPool(context.dbPool, async (client) => {
+          const messages = await telegramService.handleGetAnonMessages(
+            client,
+            nullifierHash
+          );
+          const totalKarma = await telegramService.handleGetAnonTotalKarma(
+            client,
+            nullifierHash
+          );
+          res.json({ messages, totalKarma });
+        });
       } catch (e) {
         logger("[TELEGRAM] failed to get posts", e);
       }
@@ -280,17 +273,14 @@ export function initTelegramRoutes(
         throw new Error("Telegram service not initialized");
       }
 
-      await namedSqlTransaction(
-        context.dbPool,
-        "/telegram/anonreact",
-        (client) =>
-          telegramService.handleReactAnonymousMessage(
-            client,
-            proof,
-            chatId,
-            anonMessageId,
-            reaction
-          )
+      await sqlQueryWithPool(context.dbPool, (client) =>
+        telegramService.handleReactAnonymousMessage(
+          client,
+          proof,
+          chatId,
+          anonMessageId,
+          reaction
+        )
       );
 
       res.setHeader("Content-Type", "text/html");

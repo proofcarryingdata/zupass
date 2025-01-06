@@ -10,7 +10,9 @@ export interface DBConfiguration extends ClientConfig {
   port: number;
 }
 
-export function getDatabaseConfiguration(): PoolOptionsExplicit & SslSettings {
+export function getDatabaseConfiguration(
+  overwriteMaxConnections?: number
+): PoolOptionsExplicit & SslSettings {
   if (process.env.DATABASE_USERNAME === undefined) {
     throw new Error("Missing environment variable: DATABASE_USERNAME");
   }
@@ -33,6 +35,19 @@ export function getDatabaseConfiguration(): PoolOptionsExplicit & SslSettings {
     throw new Error("Missing or incorrect env variable: DATABASE_SSL");
   }
 
+  let poolSize = 32;
+  if (process.env.DB_POOL_SIZE !== undefined) {
+    poolSize = parseInt(process.env.DB_POOL_SIZE, 10);
+    if (isNaN(poolSize)) {
+      poolSize = 32;
+    }
+    poolSize = Math.min(Math.max(poolSize, 32), 500);
+  }
+
+  if (overwriteMaxConnections !== undefined) {
+    poolSize = overwriteMaxConnections;
+  }
+
   // defaults here: https://github.com/postgres-pool/postgres-pool/blob/9d623823dc365b5edea3303cab6ae519bfaa94f7/src/index.ts#L264C10-L290
   // docs here: https://github.com/postgres-pool/postgres-pool/blob/9d623823dc365b5edea3303cab6ae519bfaa94f7/src/index.ts#L29-L130
   return {
@@ -50,7 +65,7 @@ export function getDatabaseConfiguration(): PoolOptionsExplicit & SslSettings {
     // Pool configuration
     connectionTimeoutMillis: 16_000,
     idleTimeoutMillis: 8_000,
-    poolSize: 32, // max connection # on render is 97
+    poolSize: poolSize, // max connection # on render is 97
     waitForAvailableConnectionTimeoutMillis: 30_000,
     databaseStartupTimeoutMillis: 30_000,
     readOnlyTransactionReconnectTimeoutMillis: 30_000,

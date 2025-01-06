@@ -1,5 +1,21 @@
 # @pcd/zk-eddsa-frog-pcd
 
+## 0.7.0
+
+### Minor Changes
+
+- GPC v4 enhancements, PODValue types, more GPC configurations
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.15.0
+  - @pcd/util@0.9.0
+  - @pcd/eddsa-frog-pcd@0.7.0
+  - @pcd/eddsa-pcd@0.10.0
+  - @pcd/semaphore-identity-pcd@0.15.0
+  - @pcd/semaphore-signature-pcd@0.15.0
+
 ## 0.6.0
 
 ### Minor Changes

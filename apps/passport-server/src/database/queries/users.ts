@@ -84,6 +84,18 @@ export async function deleteUserByUUID(
   client: PoolClient,
   uuid: string
 ): Promise<void> {
+  const user = await fetchUserByUUID(client, uuid);
+
+  if (!user) {
+    throw new Error(`user '${uuid}' not found`);
+  }
+
+  await sqlQuery(
+    client,
+    `DELETE FROM telegram_bot_conversations WHERE semaphore_id = $1`,
+    [user.commitment]
+  );
+
   await sqlQuery(client, `DELETE FROM users WHERE uuid = $1`, [uuid]);
 }
 

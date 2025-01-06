@@ -21,11 +21,12 @@ import {
   usePCDCollection,
   useZappOrigin
 } from "../../../src/appHooks";
+import { BANNER_HEIGHT } from "../../../src/sharedConstants";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { getGPCArtifactsURL } from "../../../src/util";
 import { getPODsForCollections } from "../../../src/zapp/collections";
 import { AppContainer } from "../../shared/AppContainer";
-import Select from "../../shared/Select";
+import { NativeSelect } from "../../shared/NativeSelect";
 import { displayPODValue } from "../../shared/uiUtil";
 
 export function EmbeddedGPCProofScreen({
@@ -190,9 +191,10 @@ function ProvePODInfo({
     })
     .filter(
       ([_, entry]) =>
-        !!entry.isMemberOf ||
-        !!entry.isNotMemberOf ||
-        !!(entry.type === "int" && entry.inRange)
+        entry.type !== "null" &&
+        (!!entry.isMemberOf ||
+          !!entry.isNotMemberOf ||
+          !!(entry.type === "int" && entry.inRange))
     );
   const defaultOption = {
     value: "",
@@ -221,7 +223,7 @@ function ProvePODInfo({
         >
           {name.toUpperCase()}
         </Typography>
-        <Select
+        <NativeSelect
           defaultValue={defaultOption}
           onChange={(ev) => {
             onChange(pods.find((pod) => pod.signature === ev?.value));
@@ -283,7 +285,7 @@ function ProvePODInfo({
                   {entriesWithConstraints.map(([entryName, entry]) => {
                     return (
                       <ConstraintItem key={`${name}-${entryName}-constraints`}>
-                        {entry.isMemberOf && (
+                        {entry.type !== "null" && entry.isMemberOf && (
                           <Typography color="var(--core-accent)" family="Rubik">
                             <EntryName>{entryName}</EntryName> is member of
                             list:{" "}
@@ -294,7 +296,7 @@ function ProvePODInfo({
                             </Reveal>
                           </Typography>
                         )}
-                        {entry.isNotMemberOf && (
+                        {entry.type !== "null" && entry.isNotMemberOf && (
                           <Typography color="var(--core-accent)" family="Rubik">
                             <EntryName>{entryName}</EntryName> is not member of
                             list:{" "}
@@ -462,7 +464,7 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  height: 100vh;
+  height: calc(100vh - ${BANNER_HEIGHT}px);
   padding: 24px 24px 20px 24px;
   width: 100%;
   gap: 16px;

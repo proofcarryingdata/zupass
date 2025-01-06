@@ -35,11 +35,21 @@ async function waitForAuthentication(
 
 async function waitForFirstSync(context: StateContextValue): Promise<void> {
   return new Promise<void>((resolve) => {
-    if (context.getState().completedFirstSync) {
+    if (
+      context.getState().downloadedPCDs &&
+      context.getState().pcds.getAllPCDsInFolder("Devcon SEA").length > 0
+    ) {
       resolve();
       return;
     }
     const unlisten = context.stateEmitter.listen((state) => {
+      if (
+        context.getState().downloadedPCDs &&
+        context.getState().pcds.getAllPCDsInFolder("Devcon SEA").length > 0
+      ) {
+        resolve();
+        return;
+      }
       if (state.completedFirstSync) {
         unlisten();
         resolve();

@@ -40,10 +40,13 @@ export async function startApplication(
   logger(`[INIT] Starting application in mode ${mode}`);
 
   const dbPool = await getDB();
+  const internalPool = await getDB(10);
+
   const honeyClient = getHoneycombAPI();
 
   const context: ApplicationContext = {
     dbPool,
+    internalPool,
     honeyClient,
     resourcesDir: path.join(process.cwd(), "resources"),
     publicResourcesDir: path.join(process.cwd(), "public"),
@@ -87,6 +90,7 @@ export async function stopApplication(app?: Zupass): Promise<void> {
   await stopServices(app.services);
   await stopHttpServer(app);
   await app.context.dbPool.end();
+  await app.context.internalPool.end();
 }
 
 async function getOverridenApis(

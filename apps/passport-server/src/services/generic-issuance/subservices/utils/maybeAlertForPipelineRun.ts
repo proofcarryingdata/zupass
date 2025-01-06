@@ -86,7 +86,7 @@ export async function maybeAlertForPipelineRun(
     );
   }
 
-  const alertReason = alertReasons.join("\n\n");
+  const alertReason = alertReasons.join("\n\n").substring(0, 800);
 
   // in the if - send alert beginnings
   if (shouldAlert) {

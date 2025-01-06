@@ -27,7 +27,6 @@ import {
   ticketToPOD
 } from "@pcd/pod-ticket-pcd";
 import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
-import { v4 as uuidv4 } from "uuid";
 import { appConfig } from "../appConfig";
 import { StateContextValue } from "../dispatch";
 import { EmbeddedScreenType } from "../embedded";
@@ -164,7 +163,7 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
     ) {
       throw new MissingPermissionError("INSERT_POD", "pod.insert");
     }
-    const id = uuidv4();
+    const id = `pod-${podData.signature}`;
     const podPCD = new PODPCD(
       id,
       POD.load(podData.entries, podData.signature, podData.signerPublicKey)

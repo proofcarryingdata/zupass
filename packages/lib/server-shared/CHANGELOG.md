@@ -1,5 +1,11 @@
 # @pcd/server-shared
 
+## 0.4.0
+
+### Minor Changes
+
+- GPC v4 enhancements, PODValue types, more GPC configurations
+
 ## 0.3.0
 
 ### Minor Changes

@@ -22,7 +22,14 @@ export const closeWebviewHtml = `
   `;
 
 export const errorHtmlWithDetails = (error: Error): string => {
-  const errorMessage = error ? error.message.replace(/\n/g, "<br>") : "";
+  // Reformat linebreaks in error messages as <br>.  Also replace any <> to
+  // avoid including of HTML (accidental, or XSS risks).
+  const errorMessage = error
+    ? error.message
+        .replace(/\n/g, "<br>")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+    : "";
   const errorStack =
     error instanceof Error && error.stack
       ? error.stack.replace(/\n/g, "<br>")

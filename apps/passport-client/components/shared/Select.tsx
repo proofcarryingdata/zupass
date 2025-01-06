@@ -5,13 +5,20 @@ import styled from "styled-components";
 export default function Select<Option = unknown>(
   props: React.ComponentProps<typeof ReactSelect<Option>>
 ): JSX.Element {
+  const options = props.options || [];
+
   // preventing select to trigger on click outside on modal
   return (
     <div
       onMouseDown={(e) => e.stopPropagation()}
       onMouseUp={(e) => e.stopPropagation()}
     >
-      <StyledSelect classNamePrefix="Select" isSearchable {...props} />
+      <StyledSelect
+        classNamePrefix="Select"
+        isSearchable
+        isDisabled={options.length === 1}
+        {...props}
+      />
     </div>
   );
 }
@@ -57,13 +64,11 @@ const StyledSelect: StateManagedSelect = styled(ReactSelect)`
     border: 1px solid rgba(0, 0, 0, 0.05);
     background: #fff;
     max-height: 15vh;
-
     overflow: scroll;
   }
 
   .Select__option {
     background-color: #fff;
-
     color: var(--text-primary);
     font:
       14px Barlow,

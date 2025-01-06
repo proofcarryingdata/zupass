@@ -41,7 +41,7 @@ import {
   softDeletePretixItemInfo,
   updatePretixItemsInfo
 } from "../../database/queries/pretixItemInfo";
-import { namedSqlTransaction, sqlTransaction } from "../../database/sqlQuery";
+import { sqlQueryWithPool } from "../../database/sqlQuery";
 import {
   mostRecentCheckinEvent,
   pretixTicketsDifferent
@@ -481,7 +481,7 @@ export class OrganizerSync {
     checkinListId: string
   ): Promise<void> {
     return traced(NAME, "syncEventInfos", async (span) => {
-      await namedSqlTransaction(this.pool, "syncEventInfos", async (client) => {
+      await sqlQueryWithPool(this.pool, async (client) => {
         span?.setAttribute("org_url", organizer.orgURL);
         span?.setAttribute("event_slug", event.eventID);
         span?.setAttribute("event_name", eventInfo.name?.en);
@@ -535,7 +535,7 @@ export class OrganizerSync {
     itemsFromAPI: DevconnectPretixItem[]
   ): Promise<void> {
     return traced(NAME, "syncItemInfos", async (span) => {
-      await namedSqlTransaction(this.pool, "syncItemInfos", async (client) => {
+      await sqlQueryWithPool(this.pool, async (client) => {
         span?.setAttribute("org_url", organizer.orgURL);
         span?.setAttribute("event_slug", event.eventID);
         span?.setAttribute(
@@ -751,7 +751,7 @@ export class OrganizerSync {
     pretixOrders: DevconnectPretixOrder[]
   ): Promise<void> {
     return traced(NAME, "syncTickets", async (span) => {
-      await namedSqlTransaction(this.pool, "syncTickets", async (client) => {
+      await sqlQueryWithPool(this.pool, async (client) => {
         span?.setAttribute("org_url", organizer.orgURL);
         span?.setAttribute("event_slug", event.eventID);
 
@@ -986,7 +986,7 @@ export class OrganizerSync {
    */
   private async pushCheckins(): Promise<void> {
     // Get the tickets which have been checked in but not yet synced
-    const ticketsToSync = await sqlTransaction(this.pool, (client) =>
+    const ticketsToSync = await sqlQueryWithPool(this.pool, async (client) =>
       fetchDevconnectTicketsAwaitingSync(client, this.organizer.orgURL)
     );
 
@@ -1002,7 +1002,7 @@ export class OrganizerSync {
         checkinTimestamp.toISOString()
       );
 
-      await sqlTransaction(this.pool, (client) =>
+      await sqlQueryWithPool(this.pool, (client) =>
         updateDevconnectPretixTicket(client, {
           ...ticket,
           pretix_checkin_timestamp: checkinTimestamp

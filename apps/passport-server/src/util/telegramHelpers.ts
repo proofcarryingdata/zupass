@@ -52,7 +52,7 @@ import {
   insertTelegramEvent,
   insertTelegramForward
 } from "../database/queries/telegram/insertTelegramConversation";
-import { namedSqlTransaction, sqlTransaction } from "../database/sqlQuery";
+import { sqlQueryWithPool } from "../database/sqlQuery";
 import { traced } from "../services/telemetryService";
 import { generateFrogProofUrl } from "./frogTelegramHelpers";
 import { logger } from "./logger";
@@ -352,7 +352,8 @@ const generateProofUrl = async (
   telegramChatId: string,
   validEventIds: string[],
   eventNames: string[],
-  telegramUsername?: string
+  telegramUsername?: string,
+  productId?: string
 ): Promise<string> => {
   if (eventNames.find((e) => e.endsWith(FROG_SLUG))) {
     logger(`[TELEGRAM] found frog event`, eventNames);
@@ -367,7 +368,8 @@ const generateProofUrl = async (
     telegramUserId,
     telegramChatId,
     validEventIds,
-    telegramUsername
+    telegramUsername,
+    productId
   );
 };
 
@@ -375,7 +377,8 @@ const generateTicketProofUrl = async (
   telegramUserId: number,
   telegramChatId: string,
   validEventIds: string[],
-  telegramUsername?: string
+  telegramUsername?: string,
+  productId?: string
 ): Promise<string> => {
   return traced("telegram", "generateTicketProofUrl", async (span) => {
     span?.setAttribute("userId", telegramUserId.toString());
@@ -384,7 +387,7 @@ const generateTicketProofUrl = async (
     const fieldsToReveal: EdDSATicketFieldsToReveal = {
       revealTicketId: false,
       revealEventId: false,
-      revealProductId: false,
+      revealProductId: !!productId,
       revealTimestampConsumed: false,
       revealTimestampSigned: false,
       revealAttendeeSemaphoreId: true,
@@ -401,8 +404,8 @@ const generateTicketProofUrl = async (
         displayName: "Your Ticket",
         description: "",
         validatorParams: {
-          eventIds: validEventIds,
-          productIds: [],
+          eventIds: productId ? [] : validEventIds,
+          productIds: productId ? [productId] : [],
           // TODO: surface which event ticket we are looking for
           notFoundMessage: "You don't have a ticket to this event."
         },
@@ -482,7 +485,7 @@ export const generateReactProofUrl = async (
     const fieldsToReveal: EdDSATicketFieldsToReveal = {
       revealTicketId: false,
       revealEventId: false,
-      revealProductId: false,
+      revealProductId: true,
       revealTimestampConsumed: false,
       revealTimestampSigned: false,
       revealAttendeeSemaphoreId: false,
@@ -619,7 +622,7 @@ export const eventsToLink = async (
       .text(
         `Yes, ${event.isLinkedToCurrentChat ? "remove" : "add"}`,
         async (ctx) => {
-          await sqlTransaction(ctx.session.dbPool, async (client) => {
+          await sqlQueryWithPool(ctx.session.dbPool, async (client) => {
             let replyText = "";
             if (!(await senderIsAdmin(ctx))) return;
 
@@ -642,7 +645,7 @@ export const eventsToLink = async (
   }
   // Otherwise, display all events to add or remove.
   else {
-    const events = await sqlTransaction(ctx.session.dbPool, (client) =>
+    const events = await sqlQueryWithPool(ctx.session.dbPool, (client) =>
       fetchEventsWithTelegramChats(client, true, chatId)
     );
 
@@ -685,7 +688,7 @@ export const chatsToJoin = async (
     }
     span?.setAttribute("userId", userId?.toString());
 
-    const chatsWithMembership = await sqlTransaction(
+    const chatsWithMembership = await sqlQueryWithPool(
       ctx.session.dbPool,
       (client) => getChatsWithMembershipStatus(client, ctx, userId)
     );
@@ -740,12 +743,14 @@ export const chatsToJoinV2 = async (
       if (ctx.session.chatToJoin) {
         const chat = ctx.session.chatToJoin;
         const telegramUsername = ctx.from?.username;
+        const productId = getProductIdFromTelegramChat(chat.telegramChatID);
         const proofUrl = await generateProofUrl(
           userId,
           chat.telegramChatID,
           chat.ticketEventIds,
           chat.eventNames,
-          telegramUsername
+          telegramUsername,
+          productId
         );
 
         if (chat.isChatMember) {
@@ -766,7 +771,7 @@ export const chatsToJoinV2 = async (
           });
         }
       } else {
-        const chatsWithMembership = await sqlTransaction(
+        const chatsWithMembership = await sqlQueryWithPool(
           ctx.session.dbPool,
           (client) => getChatsWithMembershipStatus(client, ctx, userId)
         );
@@ -829,7 +834,7 @@ export const chatsToPostIn = async (
         const chat = ctx.session.selectedChat;
 
         // Fetch anon topics for the selected chat
-        const { topics, telegramEvents } = await sqlTransaction(
+        const { topics, telegramEvents } = await sqlQueryWithPool(
           ctx.session.dbPool,
           async (client) => {
             const topics = await fetchTelegramAnonTopicsByChatId(
@@ -891,7 +896,7 @@ export const chatsToPostIn = async (
       // Otherwise, give the user a list of chats that they are members of.
       else {
         // Only show chats a user is in
-        const chatsWithMembership = await sqlTransaction(
+        const chatsWithMembership = await sqlQueryWithPool(
           ctx.session.dbPool,
           async (client) =>
             (await getChatsWithMembershipStatus(client, ctx, userId)).filter(
@@ -966,7 +971,7 @@ export const chatsToForwardTo = async (
       return;
     }
 
-    await namedSqlTransaction(db, "chatsToForwardTo", async (client) => {
+    await sqlQueryWithPool(db, async (client) => {
       const userId = ctx.from?.id;
       if (!userId) {
         range.text(`User not found. Try again...`);
@@ -1190,3 +1195,17 @@ export function getDisplayEmojis(messageTimestamp?: Date): string[] {
     return ["👍", "👎️", "🐸"];
   }
 }
+
+export const getProductIdFromTelegramChat = (
+  chatId: string | number
+): string | undefined => {
+  try {
+    const chatToProductIds = JSON.parse(
+      process.env.TELEGRAM_CHAT_TO_PRODUCT_IDS || "{}"
+    );
+    return chatToProductIds[String(chatId)];
+  } catch (error) {
+    logger("[TELEGRAM] Error parsing TELEGRAM_CHAT_TO_PRODUCT_IDS:", error);
+    return undefined;
+  }
+};

@@ -1,7 +1,7 @@
 import { emptyStrToUndefined } from "@pcd/util";
 
 /**
- * Settings for calling {@link gpcArtifactDownloadURL} as parsed from an
+ * Settings for calling {@link @pcd/gpc!gpcArtifactDownloadURL} as parsed from an
  * environment variable by {@link parseGPCArtifactsConfig}.
  */
 export type GPCArtifactsConfigEnv = {
@@ -15,7 +15,7 @@ export type GPCArtifactsConfigEnv = {
  * environment variable, or provides default values if not set.
  *
  * @param envConfig environment variable value for override
- * @returns config variables suitable for calling {@link gpcArtifactDownloadURL}.
+ * @returns config variables suitable for calling {@link @pcd/gpc!gpcArtifactDownloadURL}.
  * @throws if the input string isn't in the correct JSON format
  */
 export function parseGPCArtifactsConfig(

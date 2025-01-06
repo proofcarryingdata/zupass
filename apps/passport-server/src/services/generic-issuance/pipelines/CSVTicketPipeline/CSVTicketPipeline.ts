@@ -33,7 +33,7 @@ import {
 } from "../../../../database/queries/pipelineAtomDB";
 import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../../database/queries/pipelineSemaphoreHistoryDB";
-import { sqlTransaction } from "../../../../database/sqlQuery";
+import { sqlQueryWithPool } from "../../../../database/sqlQuery";
 import { ApplicationContext } from "../../../../types";
 import { logger } from "../../../../util/logger";
 import { PersistentCacheService } from "../../../persistentCacheService";
@@ -133,7 +133,7 @@ export class CSVTicketPipeline implements BasePipeline {
         getSerializedLatestGroup: async (
           groupId: string
         ): Promise<SerializedSemaphoreGroup | undefined> => {
-          return sqlTransaction(
+          return sqlQueryWithPool(
             this.context.dbPool,
             async (client) =>
               this.semaphoreGroupProvider?.getSerializedLatestGroup(
@@ -145,7 +145,7 @@ export class CSVTicketPipeline implements BasePipeline {
         getLatestGroupRoot: async (
           groupId: string
         ): Promise<string | undefined> => {
-          return sqlTransaction(
+          return sqlQueryWithPool(
             this.context.dbPool,
             async (client) =>
               this.semaphoreGroupProvider?.getLatestGroupRoot(client, groupId)
@@ -155,7 +155,7 @@ export class CSVTicketPipeline implements BasePipeline {
           groupId: string,
           rootHash: string
         ): Promise<SerializedSemaphoreGroup | undefined> => {
-          return sqlTransaction(
+          return sqlQueryWithPool(
             this.context.dbPool,
             async (client) =>
               this.semaphoreGroupProvider?.getSerializedHistoricalGroup(
@@ -216,29 +216,29 @@ export class CSVTicketPipeline implements BasePipeline {
           requesterSemaphoreId = semaphoreId;
           requesterSemaphoreV4Id = semaphoreV4Id;
           // Consumer is validated, so save them in the consumer list
-          let didUpdate = false;
-          await sqlTransaction(this.context.dbPool, async (client) => {
-            for (const email of emails) {
-              didUpdate =
-                didUpdate ||
-                (await this.consumerDB.save(
-                  client,
-                  this.id,
-                  email.email,
-                  semaphoreId,
-                  new Date()
-                ));
-            }
+          // let didUpdate = false;
+          // await sqlTransaction(this.context.dbPool, async (client) => {
+          //   for (const email of emails) {
+          //     didUpdate =
+          //       didUpdate ||
+          //       (await this.consumerDB.save(
+          //         client,
+          //         this.id,
+          //         email.email,
+          //         semaphoreId,
+          //         new Date()
+          //       ));
+          //   }
 
-            if (this.definition.options.semaphoreGroupName) {
-              // If the user's Semaphore commitment has changed, `didUpdate` will be
-              // true, and we need to update the Semaphore groups
-              if (didUpdate) {
-                span?.setAttribute("semaphore_groups_updated", true);
-                await this.triggerSemaphoreGroupUpdate(client);
-              }
-            }
-          });
+          //   if (this.definition.options.semaphoreGroupName) {
+          //     // If the user's Semaphore commitment has changed, `didUpdate` will be
+          //     // true, and we need to update the Semaphore groups
+          //     if (didUpdate) {
+          //       span?.setAttribute("semaphore_groups_updated", true);
+          //       await this.triggerSemaphoreGroupUpdate(client);
+          //     }
+          //   }
+          // });
         } catch (e) {
           logger(LOG_TAG, "credential PCD not verified for req", req);
         }

@@ -38,7 +38,7 @@ import {
   SemaphoreIdentityPCDPackage,
   v4PublicKey
 } from "@pcd/semaphore-identity-pcd";
-import { Identity } from "@semaphore-protocol/identity";
+import { Identity } from "@semaphore-protocol/core";
 import _ from "lodash";
 import * as path from "path";
 import { v4 as uuid } from "uuid";

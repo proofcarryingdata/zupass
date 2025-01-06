@@ -117,6 +117,8 @@ const STABLE_CACHE_RESOURCES = new Set([
   "/images/social.webp",
   "/images/star.webp",
   "/images/wristband.webp",
+  "/images/devcon/devcon-portrait.webp",
+  "/images/devcon/devcon-landscape.webp",
   "fonts/Rubik-Black.ttf",
   "fonts/Rubik-BlackItalic.ttf",
   "fonts/Rubik-Bold.ttf",

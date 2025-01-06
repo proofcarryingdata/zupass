@@ -11,6 +11,18 @@ export function getErrorMessage(e: unknown | Error): string {
 }
 
 /**
+ * If the value is an `Error`, this returns the value. Otherwise, it creates a
+ * new `Error` with the stringified value as the message.
+ */
+export function toError(e: unknown | Error): Error {
+  if (e instanceof Error) {
+    return e;
+  }
+
+  return new Error(e + "");
+}
+
+/**
  * Check if a parameter is defined. If not, it throws an error.
  * @param parameter Parameter to be checked.
  * @param parameterName Name of the parameter.

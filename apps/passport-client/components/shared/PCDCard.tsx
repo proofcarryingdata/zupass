@@ -1,3 +1,5 @@
+import { isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
+import { EdDSAFrogPCDUI } from "@pcd/eddsa-frog-pcd-ui";
 import {
   EdDSATicketPCD,
   TicketCategory,
@@ -8,6 +10,8 @@ import {
   TicketQR as EddsaTicketQR
 } from "@pcd/eddsa-ticket-pcd-ui";
 import { PCD, PCDUI } from "@pcd/pcd-types";
+import { isPODPCD } from "@pcd/pod-pcd";
+import { PODPCDUI } from "@pcd/pod-pcd-ui";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import {
   PODTicketPCDUI,
@@ -243,9 +247,8 @@ const TicketWrapper = forwardRef<
     pcd: EdDSATicketPCD;
     hidePadding?: boolean;
     addOns?: AddOnsProps;
-    showDownloadButton?: boolean;
   }
->(({ pcd, hidePadding, addOns, showDownloadButton }, ref) => {
+>(({ pcd, hidePadding, addOns }, ref) => {
   const Card = EdDSATicketPCDUI.renderCardBody;
   const identityPCD = useUserIdentityPCD();
   const ticketCategory = pcd.claim.ticket.ticketCategory;
@@ -296,7 +299,6 @@ const TicketWrapper = forwardRef<
         verifyURL={verifyURL}
         idBasedVerifyURL={idBasedVerifyURL}
         addOns={addOns}
-        showDownloadButton={showDownloadButton}
       />
     </div>
   ) : null;
@@ -310,11 +312,11 @@ type CardBodyProps = {
   isMainIdentity: boolean;
   hidePadding?: boolean;
   addOns?: AddOnsProps;
-  showDownloadButton?: boolean;
+  deletePodPcd?: () => Promise<void>;
 };
 
 export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
-  ({ pcd, isMainIdentity, hidePadding, addOns, showDownloadButton }, ref) => {
+  ({ pcd, isMainIdentity, hidePadding, addOns, deletePodPcd }, ref) => {
     const pcdCollection = usePCDCollection();
 
     if (isMainIdentity) {
@@ -322,14 +324,7 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
     }
     if (pcdCollection.hasPackage(pcd.type)) {
       if (isEdDSATicketPCD(pcd)) {
-        return (
-          <TicketWrapper
-            showDownloadButton={showDownloadButton}
-            ref={ref}
-            pcd={pcd}
-            hidePadding={hidePadding}
-          />
-        );
+        return <TicketWrapper ref={ref} pcd={pcd} hidePadding={hidePadding} />;
       }
       if (isPODTicketPCD(pcd)) {
         const Component = PODTicketPCDUI.renderCardBody;
@@ -339,7 +334,6 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
             id={pcd.claim.ticket.eventId + pcd.claim.ticket.attendeeEmail}
           >
             <Component
-              showDownoladButton={showDownloadButton}
               ticketData={pcd.claim.ticket}
               addOns={addOns}
               pcd={pcd}
@@ -347,6 +341,14 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
             />
           </div>
         );
+      }
+      if (isPODPCD(pcd)) {
+        const Component = PODPCDUI.renderCardBody;
+        return <Component pcd={pcd} deletePcd={deletePodPcd} />;
+      }
+      if (isEdDSAFrogPCD(pcd)) {
+        const Component = EdDSAFrogPCDUI.renderCardBody;
+        return <Component pcd={pcd} deletePcd={deletePodPcd} />;
       }
       const ui = getUI(pcd.type);
       if (ui) {

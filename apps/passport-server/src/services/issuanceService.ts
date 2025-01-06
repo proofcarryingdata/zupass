@@ -64,7 +64,7 @@ import {
 import { fetchUserByV3Commitment } from "../database/queries/users";
 import { fetchZuconnectTicketsByEmail } from "../database/queries/zuconnect/fetchZuconnectTickets";
 import { fetchAllUsersWithZuzaluTickets } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
-import { namedSqlTransaction, sqlTransaction } from "../database/sqlQuery";
+import { sqlQueryWithPool } from "../database/sqlQuery";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -115,7 +115,7 @@ export class IssuanceService {
       string,
       Promise<VerifiedCredential>
     >({
-      max: 1000
+      max: 20000
     });
 
     this.feedHost = new FeedHost(
@@ -168,37 +168,31 @@ export class IssuanceService {
             const actions: PCDAction[] = [];
 
             try {
-              await namedSqlTransaction(
-                this.context.dbPool,
-                "issueEmailPCDs",
-                async (client) => {
-                  if (req.pcd === undefined) {
-                    throw new Error(`Missing credential`);
-                  }
-                  const verifiedCredential = await this.verifyCredential(
-                    req.pcd
-                  );
-                  const pcds = await this.issueEmailPCDs(
-                    client,
-                    verifiedCredential
-                  );
-
-                  // Clear out the folder
-                  actions.push({
-                    type: PCDActionType.DeleteFolder,
-                    folder: "Email",
-                    recursive: false
-                  });
-
-                  actions.push({
-                    type: PCDActionType.ReplaceInFolder,
-                    folder: "Email",
-                    pcds: await Promise.all(
-                      pcds.map((pcd) => EmailPCDPackage.serialize(pcd))
-                    )
-                  });
+              await sqlQueryWithPool(this.context.dbPool, async (client) => {
+                if (req.pcd === undefined) {
+                  throw new Error(`Missing credential`);
                 }
-              );
+                const verifiedCredential = await this.verifyCredential(req.pcd);
+                const pcds = await this.issueEmailPCDs(
+                  client,
+                  verifiedCredential
+                );
+
+                // Clear out the folder
+                actions.push({
+                  type: PCDActionType.DeleteFolder,
+                  folder: "Email",
+                  recursive: false
+                });
+
+                actions.push({
+                  type: PCDActionType.ReplaceInFolder,
+                  folder: "Email",
+                  pcds: await Promise.all(
+                    pcds.map((pcd) => EmailPCDPackage.serialize(pcd))
+                  )
+                });
+              });
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
               this.rollbarService?.reportError(e);
@@ -215,38 +209,32 @@ export class IssuanceService {
             const actions: PCDAction[] = [];
 
             try {
-              await namedSqlTransaction(
-                this.context.dbPool,
-                "issueZuzaluTicketPCDs",
-                async (client) => {
-                  if (req.pcd === undefined) {
-                    throw new Error(`Missing credential`);
-                  }
-
-                  const verifiedCredential = await this.verifyCredential(
-                    req.pcd
-                  );
-                  const pcds = await this.issueZuzaluTicketPCDs(
-                    client,
-                    verifiedCredential
-                  );
-
-                  // Clear out the folder
-                  actions.push({
-                    type: PCDActionType.DeleteFolder,
-                    folder: "Zuzalu '23",
-                    recursive: false
-                  });
-
-                  actions.push({
-                    type: PCDActionType.ReplaceInFolder,
-                    folder: "Zuzalu '23",
-                    pcds: await Promise.all(
-                      pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-                    )
-                  });
+              await sqlQueryWithPool(this.context.dbPool, async (client) => {
+                if (req.pcd === undefined) {
+                  throw new Error(`Missing credential`);
                 }
-              );
+
+                const verifiedCredential = await this.verifyCredential(req.pcd);
+                const pcds = await this.issueZuzaluTicketPCDs(
+                  client,
+                  verifiedCredential
+                );
+
+                // Clear out the folder
+                actions.push({
+                  type: PCDActionType.DeleteFolder,
+                  folder: "Zuzalu '23",
+                  recursive: false
+                });
+
+                actions.push({
+                  type: PCDActionType.ReplaceInFolder,
+                  folder: "Zuzalu '23",
+                  pcds: await Promise.all(
+                    pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+                  )
+                });
+              });
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
               this.rollbarService?.reportError(e);
@@ -263,44 +251,38 @@ export class IssuanceService {
             const actions: PCDAction[] = [];
 
             try {
-              await namedSqlTransaction(
-                this.context.dbPool,
-                "issueZuconnectTicketPCDs",
-                async (client) => {
-                  if (req.pcd === undefined) {
-                    throw new Error(`Missing credential`);
-                  }
-                  const verifiedCredential = await this.verifyCredential(
-                    req.pcd
-                  );
-                  const pcds = await this.issueZuconnectTicketPCDs(
-                    client,
-                    verifiedCredential
-                  );
-
-                  // Clear out the old folder
-                  actions.push({
-                    type: PCDActionType.DeleteFolder,
-                    folder: "Zuconnect",
-                    recursive: false
-                  });
-
-                  // Clear out the folder
-                  actions.push({
-                    type: PCDActionType.DeleteFolder,
-                    folder: "ZuConnect",
-                    recursive: false
-                  });
-
-                  actions.push({
-                    type: PCDActionType.ReplaceInFolder,
-                    folder: "ZuConnect",
-                    pcds: await Promise.all(
-                      pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-                    )
-                  });
+              await sqlQueryWithPool(this.context.dbPool, async (client) => {
+                if (req.pcd === undefined) {
+                  throw new Error(`Missing credential`);
                 }
-              );
+                const verifiedCredential = await this.verifyCredential(req.pcd);
+                const pcds = await this.issueZuconnectTicketPCDs(
+                  client,
+                  verifiedCredential
+                );
+
+                // Clear out the old folder
+                actions.push({
+                  type: PCDActionType.DeleteFolder,
+                  folder: "Zuconnect",
+                  recursive: false
+                });
+
+                // Clear out the folder
+                actions.push({
+                  type: PCDActionType.DeleteFolder,
+                  folder: "ZuConnect",
+                  recursive: false
+                });
+
+                actions.push({
+                  type: PCDActionType.ReplaceInFolder,
+                  folder: "ZuConnect",
+                  pcds: await Promise.all(
+                    pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+                  )
+                });
+              });
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
               this.rollbarService?.reportError(e);
@@ -702,8 +684,19 @@ export class IssuanceService {
             isConsumed: false,
             isRevoked: false,
             ticketCategory: TicketCategory.Zuzalu,
-            imageUrl: urljoin(imageServerUrl, "images/zuzalu", "zuzalu.png"),
-            imageAltText: "Zuzalu logo"
+            imageUrl: urljoin(
+              imageServerUrl,
+              "images/zuzalu",
+              "zuzalu-landscape.webp"
+            ),
+            qrCodeOverrideImageUrl: urljoin(
+              imageServerUrl,
+              "images/zuzalu",
+              "zuzalu.png"
+            ),
+            imageAltText: "Zuzalu logo",
+            eventLocation: "Lustica Bay, Montenegro",
+            eventStartDate: "2023-03-11T00:00:00.000Z"
           })
         );
       }
@@ -779,9 +772,16 @@ export class IssuanceService {
               imageUrl: urljoin(
                 imageServerUrl,
                 "images/zuzalu",
+                "zuconnect-landscape.webp"
+              ),
+              qrCodeOverrideImageUrl: urljoin(
+                imageServerUrl,
+                "images/zuzalu",
                 "zuconnect.png"
               ),
-              imageAltText: "ZuConnect"
+              imageAltText: "ZuConnect",
+              eventLocation: "Istanbul, Turkey",
+              eventStartDate: "2023-10-29T00:00:00.000Z"
             })
           );
         }
@@ -975,7 +975,7 @@ export async function startIssuanceService(
     return null;
   }
 
-  await sqlTransaction(context.dbPool, async (client) =>
+  await sqlQueryWithPool(context.dbPool, async (client) =>
     setupKnownTicketTypes(client, await getEdDSAPublicKey(zupassEddsaKey))
   );
 

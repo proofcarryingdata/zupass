@@ -1,6 +1,6 @@
 {
   "name": "@pcd/message-pcd",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -32,9 +32,9 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/eddsa-pcd": "0.9.0",
-    "@pcd/pcd-types": "0.14.0",
-    "@pcd/semaphore-signature-pcd": "0.14.0",
+    "@pcd/eddsa-pcd": "0.10.0",
+    "@pcd/pcd-types": "0.15.0",
+    "@pcd/semaphore-signature-pcd": "0.15.0",
     "@trufflesuite/bigint-buffer": "^1.1.10",
     "chai": "^4.3.7",
     "json-bigint": "^1.0.0",
@@ -43,8 +43,8 @@
   },
   "devDependencies": {
     "@types/chai-as-promised": "^7.1.5",
-    "@pcd/eslint-config-custom": "0.14.0",
-    "@pcd/tsconfig": "0.14.0",
+    "@pcd/eslint-config-custom": "0.15.0",
+    "@pcd/tsconfig": "0.15.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/uuid": "^9.0.0",

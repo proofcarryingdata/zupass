@@ -14,6 +14,7 @@ import {
   getSortedRowModel,
   useReactTable
 } from "@tanstack/react-table";
+import prettyMilliseconds from "pretty-ms";
 import { ReactNode, useCallback, useMemo, useState } from "react";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { PodLink } from "../../components/Core";
@@ -50,7 +51,7 @@ export type PipelineRow = {
   id: string;
   loadTraceLink: string;
   allTraceLink: string;
-  lastLoad?: string;
+  lastLoadDetails?: string;
   name?: string;
   displayName: string;
   pipeline: PipelineDefinition;
@@ -88,7 +89,16 @@ export function PipelineTable({
         id: entry.pipeline.id,
         loadTraceLink: getLoadTraceHoneycombLinkForPipeline(entry.pipeline.id),
         allTraceLink: getAllHoneycombLinkForPipeline(entry.pipeline.id),
-        lastLoad: entry.extraInfo.lastLoad?.lastRunEndTimestamp,
+        lastLoadDetails: entry.extraInfo.lastLoad
+          ? timeAgoStr(entry.extraInfo.lastLoad.lastRunEndTimestamp) +
+            " ago in " +
+            prettyMilliseconds(
+              new Date(entry.extraInfo.lastLoad.lastRunEndTimestamp).getTime() -
+                new Date(
+                  entry.extraInfo.lastLoad.lastRunStartTimestamp
+                ).getTime()
+            )
+          : "n/a",
         name: entry.pipeline.options?.name,
         displayName: pipelineDisplayNameStr(entry.pipeline),
         pipeline: entry.pipeline
@@ -169,9 +179,9 @@ export function PipelineTable({
         )
       }),
 
-      columnHelper.accessor("lastLoad", {
+      columnHelper.accessor("lastLoadDetails", {
         header: "Last Load",
-        cell: (props) => timeAgoStr(props.row.original.lastLoad)
+        cell: (props) => props.row.original.lastLoadDetails
       }),
 
       isAdminView

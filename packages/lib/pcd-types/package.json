@@ -1,6 +1,6 @@
 {
   "name": "@pcd/pcd-types",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "license": "MIT",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -26,8 +26,8 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.14.0",
-    "@pcd/tsconfig": "0.14.0",
+    "@pcd/eslint-config-custom": "0.15.0",
+    "@pcd/tsconfig": "0.15.0",
     "@types/react": "^18.0.22",
     "eslint": "^8.57.0",
     "fix-esm-import-path": "^1.10.0",

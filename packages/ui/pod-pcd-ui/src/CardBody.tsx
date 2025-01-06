@@ -1,13 +1,19 @@
 import { ErrorContainer, SlidingTabs, styled, VIcon } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
-import { getImageUrlEntry, PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
+import {
+  getDescriptionEntry,
+  getImageUrlEntry,
+  getTitleEntry,
+  PODPCD,
+  PODPCDPackage
+} from "@pcd/pod-pcd";
 import { getErrorMessage } from "@pcd/util";
 import { useMemo, useState } from "react";
 import { CollectablePODPCDCardBody } from "./renderers/CollectablePODPCDCardBody";
 import { DefaultPODPCDCardBody } from "./renderers/DefaultPODPCDCardBody";
 import { Container } from "./shared";
 
-export const PODPCDUI: PCDUI<PODPCD> = {
+export const PODPCDUI: PCDUI<PODPCD, { deletePcd?: () => Promise<void> }> = {
   renderCardBody: PODPCDCardBody
 };
 
@@ -29,13 +35,25 @@ enum PODDisplayFormat {
 /**
  * This component renders the body of a 'Card' that Zupass uses to display PCDs to the user.
  */
-function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
+function PODPCDCardBody({
+  pcd,
+  deletePcd
+}: {
+  pcd: PODPCD;
+  deletePcd?: () => Promise<void>;
+}): JSX.Element {
   const [sigStatus, setSigStatus] = useState<number>(0);
   const [error, setError] = useState<string | undefined>();
 
   const hasCollectableContent = useMemo(() => {
     const imageUrlEntry = getImageUrlEntry(pcd);
-    return imageUrlEntry?.type === "string" && imageUrlEntry.value !== "";
+    const titleEntry = getTitleEntry(pcd);
+    const descriptionEntry = getDescriptionEntry(pcd);
+    return (
+      (imageUrlEntry?.type === "string" && imageUrlEntry.value !== "") ||
+      (titleEntry?.type === "string" && titleEntry.value !== "") ||
+      (descriptionEntry?.type === "string" && descriptionEntry.value !== "")
+    );
   }, [pcd]);
 
   const availableDisplayFormat = getPreferredDisplayFormat(pcd);
@@ -76,9 +94,15 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
             style={{
               color: isValidSig ? "#5B952C" : undefined,
               textDecoration: isValidSig ? "none" : undefined
+              // TODO: remove cursor pointer when we have a valid signature
             }}
           >
-            <span style={{ paddingRight: 8 }}>
+            <Text
+              style={{
+                paddingRight: isValidSig ? 2 : 8,
+                color: isValidSig ? "#5B952C" : "var(--core-accent)"
+              }}
+            >
               {sigStatus === 0
                 ? "Check signature"
                 : isValidSig
@@ -86,12 +110,29 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
                 : error !== undefined
                 ? "Signature error!"
                 : "Bad signature!"}
-            </span>
-            {isValidSig && <VIcon />}
+            </Text>
+            {isValidSig && (
+              <span style={{ paddingRight: 8 }}>
+                <VIcon />
+              </span>
+            )}
             {error === undefined ? null : (
               <ErrorContainer>{error}</ErrorContainer>
             )}
           </a>
+
+          {deletePcd && (
+            <Text
+              style={{
+                paddingRight: 12,
+                color: "var(--text-tertiary)",
+                cursor: "pointer"
+              }}
+              onClick={deletePcd}
+            >
+              Delete
+            </Text>
+          )}
         </div>
         {hasCollectableContent && (
           <SlidingTabs
@@ -111,10 +152,25 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
             ]}
           />
         )}
+        <ExtraSectionSecondaryText>
+          POD • ZK powered by ZUPASS
+        </ExtraSectionSecondaryText>
       </CardWrapper>
     </Container>
   );
 }
+
+const ExtraSectionSecondaryText = styled.div`
+  color: var(--text-tertiary);
+  text-align: center;
+
+  /* text-xs (12px)/regular-rubik */
+  font-family: Rubik;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 135%; /* 16.2px */
+`;
 
 function getFormatDisplayName(displayFormat: PODDisplayFormat): string {
   switch (displayFormat) {
@@ -156,3 +212,11 @@ async function verifySignature(pcd: PODPCD): Promise<{
     return { isValid: false, errorMessage: getErrorMessage(e) };
   }
 }
+
+const Text = styled.span`
+  font-family: Rubik;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 135%; /* 18.9px */
+`;

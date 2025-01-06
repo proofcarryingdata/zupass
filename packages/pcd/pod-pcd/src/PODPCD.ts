@@ -25,14 +25,15 @@ export type PODPCDInitArgs = unknown;
  */
 export type PODPCDArgs = {
   /**
-   * A {@link ITicketData} object containing ticket information that is encoded into this PCD.
+   * A {@link JSONPODEntries} object containing the entries (name/value pairs)
+   * to include in the new POD.
    */
   entries: ObjectArgument<JSONPODEntries>;
 
   /**
    * The signer's EdDSA private key.  This is a 32-byte value used to sign the
-   * message.  {@link newEdDSAPrivateKey} is recommended for generating highly
-   * secure private keys.
+   * message.  See {@link @pcd/pod!decodePrivateKey} in `@pcd/pod` if you need
+   * to manipulate or convert this value.
    */
   privateKey: StringArgument;
 
@@ -55,15 +56,15 @@ export type PODPCDArgs = {
 export interface PODPCDClaim {
   /**
    * The entries of this POD, in sorted order as they are Merklized.
-   * See the {@link pod} accessor on {@link PODPCD} if you need to manipulate
-   * these entries as a POD object.
+   * See the {@link PODPCD.pod} accessor on {@link PODPCD} if you need to
+   * manipulate these entries as a POD object.
    */
   entries: PODEntries;
 
   /**
    * The EdDSA public key of the signer of this pod, in a packed string form.
-   * See {@link decodePublicKey} in `@pcd/pod` if you need to manipulate or
-   * convert this value.
+   * See {@link @pcd/pod!decodePublicKey} in `@pcd/pod` if you need to
+   * manipulate or convert this value.
    */
   signerPublicKey: string;
 }
@@ -75,7 +76,7 @@ export interface PODPCDClaim {
 export interface PODPCDProof {
   /**
    * The EdDSA signature of this POD's content ID, in a packed string form.
-   * See {@link decodeSignature} in `@pcd/pod` if you need to manipulate
+   * See {@link @pcd/pod!decodeSignature} in `@pcd/pod` if you need to manipulate
    * or convert this value.
    */
   signature: string;
