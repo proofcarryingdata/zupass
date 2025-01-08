@@ -327,7 +327,8 @@ export class CSVTicketPipeline implements BasePipeline {
         atom.imageUrl ||
         this.definition.options.imageOptions?.qrCodeOverrideImageUrl,
       eventLocation: this.definition.options.imageOptions?.eventLocation,
-      eventStartDate: this.definition.options.imageOptions?.eventStartDate
+      eventStartDate: this.definition.options.imageOptions?.eventStartDate,
+      accentColor: this.definition.options.imageOptions?.accentColor
     };
 
     const pcd = await EdDSATicketPCDPackage.prove({
@@ -380,7 +381,8 @@ export class CSVTicketPipeline implements BasePipeline {
         atom.imageUrl ||
         this.definition.options.imageOptions?.qrCodeOverrideImageUrl,
       eventLocation: this.definition.options.imageOptions?.eventLocation,
-      eventStartDate: this.definition.options.imageOptions?.eventStartDate
+      eventStartDate: this.definition.options.imageOptions?.eventStartDate,
+      accentColor: this.definition.options.imageOptions?.accentColor
     };
 
     const pcd = await PODTicketPCDPackage.prove({
