@@ -142,7 +142,7 @@ export function encodePublicKey(
 }
 
 /**
- * Decodes a public key packed by {@encodePublicKey}.  The input must be
+ * Decodes a public key packed by {@link encodePublicKey}.  The input must be
  * 32 bytes, represented as hex or Base64.  Base64 padding is optional.
  *
  * @param publicKey the public key string to decode

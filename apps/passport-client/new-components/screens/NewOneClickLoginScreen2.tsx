@@ -200,9 +200,7 @@ export const NewOneClickLoginScreen2 = (): JSX.Element | null => {
           address={ticketPreviews[0].eventName}
           imgSource={ticketPreviews[0].imageUrl}
           ticketCount={ticketPreviews.length}
-          cardColor={
-            ticketPreviews[0].eventName.length % 2 ? "purple" : "orange"
-          }
+          cardColor={"rgba(154, 74, 201, 1)"}
         />
         <Button2 onClick={handleOneClickLogin}>
           <Typography color="var(--text-white)" fontSize={18} fontWeight={500}>

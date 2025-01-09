@@ -22,8 +22,8 @@ import {
  * safe to serialize directly using `JSON.stringify`.
  *
  * This is identical to the TypeScript type except that `bigint` and
- * {@link PODValue} elements are replaced by JSON-compatible representations
- * defined by {@link JSONBigInt} and {@link JSONPODValue} respectively.
+ * {@link @pcd/pod!PODValue} elements are replaced by JSON-compatible representations
+ * defined by {@link @pcd/pod!JSONBigInt} and {@link JSONPODValue} respectively.
  *
  * Use {@link proofConfigToJSON} and {@link proofConfigFromJSON} to convert
  * between JSON and TypeScript represenations.
@@ -49,7 +49,7 @@ export function proofConfigToJSON(config: GPCProofConfig): JSONProofConfig {
  * potentially received directly from `JSON.parse`.  See {@link JSONProofConfig}
  * for information about the format.
  *
- * @param config the JSON representation
+ * @param jsonConfig the JSON representation
  * @returns a config object
  * @throws if the config is invalid
  */
@@ -66,8 +66,9 @@ export function proofConfigFromJSON(
  * safe to serialize directly using `JSON.stringify`.
  *
  * This is identical to the TypeScript type except that `bigint` and
- * {@link PODValue} elements are replaced by JSON-compatible representations
- * defined by {@link JSONBigInt} and {@link JSONPODValue} respectively.
+ * {@link @pcd/pod!PODValue} elements are replaced by JSON-compatible
+ * representations defined by {@link @pcd/pod!JSONBigInt} and
+ * {@link @pcd/pod!JSONPODValue} respectively.
  *
  * Use {@link boundConfigToJSON} and {@link boundConfigFromJSON} to convert
  * between JSON and TypeScript represenations.
@@ -93,7 +94,7 @@ export function boundConfigToJSON(config: GPCBoundConfig): JSONBoundConfig {
  * potentially received directly from `JSON.parse`.  See {@link JSONProofConfig}
  * for information about the format.
  *
- * @param config the JSON representation
+ * @param jsonConfig the JSON representation
  * @returns a config object
  * @throws if the config is invalid
  */
@@ -110,8 +111,8 @@ export function boundConfigFromJSON(
  * safe to serialize directly using `JSON.stringify`.
  *
  * This is identical to the TypeScript type except that `bigint` and
- * {@link PODValue} elements are replaced by JSON-compatible representations
- * defined by {@link JSONBigInt} and {@link JSONPODValue} respectively.
+ * {@link @pcd/pod!PODValue} elements are replaced by JSON-compatible representations
+ * defined by {@link @pcd/pod!JSONBigInt} and {@link JSONPODValue} respectively.
  *
  * Use {@link boundConfigToJSON} and {@link boundConfigFromJSON} to convert
  * between JSON and TypeScript represenations.
@@ -123,7 +124,7 @@ export type JSONRevealedClaims = ValibotRevealedClaims.JSONType;
  * which can be serialized directly using `JSON.stringify`.  See
  * {@link JSONRevealedClaims} for information about the format.
  *
- * @param config the config object to convert
+ * @param claims the claims object to convert
  * @returns a JSON representation
  * @throws if the config is invalid
  */
@@ -139,7 +140,7 @@ export function revealedClaimsToJSON(
  * potentially received directly from `JSON.parse`.  See
  * {@link JSONRevealedClaims} for information about the format.
  *
- * @param config the JSON representation
+ * @param jsonClaims the JSON representation
  * @returns a config object
  * @throws if the config is invalid
  */

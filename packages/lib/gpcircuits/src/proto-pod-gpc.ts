@@ -394,9 +394,9 @@ export class ProtoPODGPC {
    *
    * @param inputs full inputs (public and private)
    * @param wasmPath path to wasm file for witness generation.
-   *   See {@link artifactPaths}.
+   *   See {@link CircuitArtifactPaths}.
    * @param pkeyPath path to file containing proving key.
-   *   See {@link artifactPaths}.
+   *   See {@link CircuitArtifactPaths}.
    * @returns Groth16 proof, circuit outputs, and full set of public signals
    * (primarily for verification in tests).
    */
@@ -430,7 +430,7 @@ export class ProtoPODGPC {
    * Verify a proof for a circuit in this library.
    *
    * @param vkeyPath path to verification key as a JSON file.
-   *   See {@link artifactPaths}.
+   *   See {@link CircuitArtifactPaths}.
    * @param proof Groth16 proof.
    * @param publicInputs claimed public inputs to the circuit.
    *   See {@link filterPublicInputs}
