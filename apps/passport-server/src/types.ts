@@ -104,6 +104,7 @@ export interface APIs {
 export interface EnvironmentVariables {
   MAILGUN_API_KEY?: string;
   DATABASE_USERNAME?: string;
+  DATABASE_PORT?: string;
   DATABASE_PASSWORD?: string;
   DATABASE_HOST?: string;
   DATABASE_DB_NAME?: string;
