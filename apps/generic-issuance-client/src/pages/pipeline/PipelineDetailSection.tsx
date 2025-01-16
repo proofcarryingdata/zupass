@@ -1,4 +1,3 @@
-import { ExternalLinkIcon } from "@chakra-ui/icons";
 import {
   Accordion,
   AccordionButton,
@@ -80,24 +79,40 @@ export function PipelineDetailSection({
               {pipelineInfo.feeds &&
                 pipelineInfo.feeds.map((feed, i) => (
                   <Box key={feed.url} mb={i === 0 ? 0 : 2}>
-                    <PodLink
-                      hideIcon
-                      isExternal
-                      to={`${
-                        process.env.PASSPORT_CLIENT_URL
-                      }/#/add-subscription?url=${encodeURIComponent(feed.url)}`}
-                    >
-                      <Button colorScheme="green">
-                        <Box mr={2}>{feed.name} Feed for Zupass</Box>{" "}
-                        <ExternalLinkIcon mx="2px" />
-                      </Button>
-                    </PodLink>
-                    <Box ml={4} display="inline-block"></Box>
-                    {isAdminView && (
-                      <PodLink to={feed.url} isExternal={true}>
-                        Feed Link
-                      </PodLink>
-                    )}
+                    <UnorderedList spacing={1}>
+                      <ListItem>
+                        <PodLink
+                          hideIcon
+                          isExternal
+                          to={`${
+                            process.env.PASSPORT_CLIENT_URL
+                          }/#/add-subscription?url=${encodeURIComponent(
+                            feed.url
+                          )}`}
+                        >
+                          Subscribe to Feed in Zupass
+                        </PodLink>
+                      </ListItem>
+                      <ListItem>
+                        <PodLink
+                          to={`${
+                            process.env.PASSPORT_CLIENT_URL
+                          }/#/claim?type=ticket&feedUrl=${encodeURIComponent(
+                            feed.url
+                          )}`}
+                          isExternal={true}
+                        >
+                          Claim Single Ticket in Zupass
+                        </PodLink>
+                      </ListItem>
+                      {isAdminView && (
+                        <ListItem>
+                          <PodLink to={feed.url} isExternal={true}>
+                            Direct Feed Link
+                          </PodLink>
+                        </ListItem>
+                      )}
+                    </UnorderedList>
                   </Box>
                 ))}
             </SectionContainer>
