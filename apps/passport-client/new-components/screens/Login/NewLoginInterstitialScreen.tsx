@@ -1,3 +1,4 @@
+import { assertUnreachable } from "@pcd/util";
 import { useLayoutEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -91,7 +92,17 @@ export function NewLoginInterstitialScreen(): JSX.Element {
             });
             break;
           }
+          case "claimTicket": {
+            console.log("Redirecting to claim ticket screen");
+            const encReq = new URLSearchParams(
+              JSON.parse(pendingRequest.value)
+            ).toString();
+            clearAllPendingRequests();
+            navigate(`/claim?${encReq}`, { replace: true });
+            break;
+          }
           default:
+            assertUnreachable(pendingRequest.key);
             window.location.hash = "#/";
         }
       }

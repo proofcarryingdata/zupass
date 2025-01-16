@@ -16,6 +16,7 @@ import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { ClaimRequest } from "../components/screens/ClaimScreen";
 import {
   Dispatcher,
   StateContext,
@@ -337,7 +338,7 @@ export function useLaserScannerKeystrokeInput(): string {
 
 export function useLoginIfNoSelf(
   key: string,
-  request?: PCDRequest | string
+  request?: PCDRequest | string | ClaimRequest
 ): void {
   const self = useSelf();
   const userForcedToLogout = useUserForcedToLogout();

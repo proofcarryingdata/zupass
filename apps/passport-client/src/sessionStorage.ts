@@ -7,6 +7,7 @@ export function clearAllPendingRequests(): void {
   clearPendingAddSubscriptionRequest();
   clearPendingGenericIssuanceCheckinRequest();
   clearPendingAuthenticateIFrameRequest();
+  clearPendingClaimTicketRequest();
 }
 
 export function hasPendingRequest(): boolean {
@@ -19,11 +20,12 @@ export function hasPendingRequest(): boolean {
     getPendingAddSubscriptionPageRequest() ||
     getPendingViewFrogCryptoPageRequest() ||
     getPendingGenericIssuanceCheckinRequest() ||
-    getPendingAuthenticateIFrameRequest()
+    getPendingAuthenticateIFrameRequest() ||
+    getPendingClaimTicketRequest()
   );
 }
 
-export const pendingRequestKeys: Record<string, string> = {
+export const pendingRequestKeys = {
   getWithoutProving: "getWithoutProvingRequest",
   add: "pendingAddRequest",
   halo: "pendingHaloRequest",
@@ -32,7 +34,8 @@ export const pendingRequestKeys: Record<string, string> = {
   addSubscription: "pendingAddSubscription",
   viewFrogCrypto: "pendingViewFrogCrypto",
   genericIssuanceCheckin: "pendingGenericIssuanceCheckin",
-  authenticateIFrame: "pendingAuthenticateIFrame"
+  authenticateIFrame: "pendingAuthenticateIFrame",
+  claimTicket: "pendingClaimTicket"
 } as const;
 
 export function setPendingGetWithoutProvingRequest(request: string): void {
@@ -154,14 +157,26 @@ export function getPendingAuthenticateIFrameRequest(): string | undefined {
   return value ?? undefined;
 }
 
+export function setPendingClaimTicketRequest(request: string): void {
+  sessionStorage.setItem(pendingRequestKeys.claimTicket, request);
+}
+
+export function clearPendingClaimTicketRequest(): void {
+  sessionStorage.removeItem(pendingRequestKeys.claimTicket);
+}
+
+export function getPendingClaimTicketRequest(): string | undefined {
+  const value = sessionStorage.getItem(pendingRequestKeys.claimTicket);
+  return value ?? undefined;
+}
+
 /**
  * Gets any pending request, if any. Returns undefined if none.
  */
 export function getPendingRequest():
   | { key: keyof typeof pendingRequestKeys; value: string }
   | undefined {
-  for (const key in pendingRequestKeys) {
-    const sessionStorageKey = pendingRequestKeys[key];
+  for (const [key, sessionStorageKey] of Object.entries(pendingRequestKeys)) {
     const item = sessionStorage.getItem(sessionStorageKey);
     if (item) {
       return {
