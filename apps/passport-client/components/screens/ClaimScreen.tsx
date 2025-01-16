@@ -28,7 +28,13 @@ import { NewModals } from "../../new-components/shared/Modals/NewModals";
 import { NewLoader } from "../../new-components/shared/NewLoader";
 import { Typography } from "../../new-components/shared/Typography";
 import { appConfig } from "../../src/appConfig";
-import { useCredentialManager, useDispatch, useSelf } from "../../src/appHooks";
+import {
+  useCredentialManager,
+  useDispatch,
+  useLoginIfNoSelf,
+  useSelf
+} from "../../src/appHooks";
+import { pendingRequestKeys } from "../../src/sessionStorage";
 import { Spacer } from "../core";
 import { PCDCard } from "../shared/PCDCard";
 
@@ -36,6 +42,8 @@ const ClaimRequestSchema = v.object({
   feedUrl: v.pipe(v.string(), v.url()),
   type: v.literal("ticket")
 });
+
+export type ClaimRequest = v.InferOutput<typeof ClaimRequestSchema>;
 
 function validateRequest(
   params: URLSearchParams
@@ -52,6 +60,11 @@ export function ClaimScreen(): JSX.Element | null {
   const params = new URLSearchParams(location.search);
   const request = validateRequest(params);
   const queryClient = new QueryClient();
+
+  useLoginIfNoSelf(
+    pendingRequestKeys.claimTicket,
+    request.success ? request.output : undefined
+  );
 
   return (
     <div>
