@@ -53,10 +53,17 @@ describe("POD Email PCD should work", function () {
   });
 
   it("should reflect prove args", async function () {
+    expect(podEmailPCD.claim.podEntries.emailAddress.type).to.eq("string");
     expect(podEmailPCD.claim.podEntries.emailAddress.value).to.eq(emailAddress);
+    expect(podEmailPCD.claim.podEntries.semaphoreV4PublicKey.type).to.eq(
+      "eddsa_pubkey"
+    );
     expect(podEmailPCD.claim.podEntries.semaphoreV4PublicKey.value).to.eq(
       semaphoreV4PublicKey
     );
+
+    expect(podEmailPCD.claim.podEntries.pod_type.type).to.eq("string");
+    expect(podEmailPCD.claim.podEntries.pod_type.value).to.eq("zupass.email");
     expect(podEmailPCD.id).to.not.be.empty;
   });
 

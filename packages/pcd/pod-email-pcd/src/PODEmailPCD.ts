@@ -22,7 +22,7 @@ export type PODEmailPCDArgs = {
 
   /**
    * The signer's semaphore v4 public key
-   * @todo link to documentation on public key format
+   * See {@link @pcd/pod!encodePublicKey} for details of the string format.
    */
   semaphoreV4PublicKey: StringArgument;
 
@@ -32,13 +32,37 @@ export type PODEmailPCDArgs = {
   id: StringArgument;
 };
 
-export type PODEmailPCDRequiredEntries = {
+/**
+ * A concrete POD value which indicates that this is an email POD.
+ */
+interface EmailPODTypeValue extends PODStringValue {
+  value: "zupass.email";
+}
+
+/**
+ * The POD entries which must be present in a PODEmailPCD.
+ * By extending `PODEntries`, we allow for additional entries beyond those
+ * required by the email POD.
+ */
+export interface PODEmailPCDRequiredEntries extends PODEntries {
   emailAddress: PODStringValue;
   semaphoreV4PublicKey: PODEdDSAPublicKeyValue;
-};
+  pod_type: EmailPODTypeValue;
+}
 
+/**
+ * The claim for a PODEmailPCD.
+ *
+ * We include the `podEntries` field to allow for extensions to the POD in the
+ * future. The type indicates that certain entries are required, but does not
+ * indicate that there are no additional entries.
+ *
+ * Because our PCD includes the full set of entries, it is always possible to
+ * reconstruct the POD that was used to produce the signature, even if other
+ * logic changes.
+ */
 export interface PODEmailPCDClaim {
-  podEntries: PODEntries & PODEmailPCDRequiredEntries;
+  podEntries: PODEmailPCDRequiredEntries;
   signerPublicKey: string;
 }
 
