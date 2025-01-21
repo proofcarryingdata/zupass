@@ -14,9 +14,9 @@ import "./index.css";
 const zapp: Zapp = {
   name: "test-client",
   permissions: {
-    REQUEST_PROOF: { collections: ["Apples", "Bananas"] },
+    REQUEST_PROOF: { collections: ["Apples", "Bananas", "Email"] },
     SIGN_POD: {},
-    READ_POD: { collections: ["Apples", "Bananas"] },
+    READ_POD: { collections: ["Apples", "Bananas", "Email"] },
     INSERT_POD: { collections: ["Apples", "Bananas"] },
     DELETE_POD: { collections: ["Bananas"] },
     READ_PUBLIC_IDENTIFIERS: {}

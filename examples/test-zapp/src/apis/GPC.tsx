@@ -309,6 +309,95 @@ const gpcProof = await z.gpc.prove({ request: request.schema });
             </pre>
           )}
         </div>
+
+        <div>
+          <p>
+            Generating an email proof is done like this:
+            <code className="block text-xs font-base rounded-md p-2 whitespace-pre-wrap">
+              {`
+ const request: PodspecProofRequest = {
+  pods: {
+    pod1: {
+      pod: {
+        entries: {
+          emailAddress: {
+            type: "string"
+          },
+          semaphoreV4PublicKey: {
+            type: "eddsa_pubkey"
+          },
+          pod_type: {
+            type: "string",
+            isMemberOf: [
+              { type: "string", value: "zupass.email" }
+            ]
+          }
+        },
+        meta: {
+          labelEntry: "emailAddress"
+        }
+      },
+      revealed: {
+        emailAddress: true,
+        semaphoreV4PublicKey: true,
+        pod_type: false
+      }
+    }
+  }
+};
+
+const gpcProof = await z.gpc.prove({ request });
+              `}
+            </code>
+          </p>
+          <TryIt
+            onClick={async () => {
+              try {
+                const request: PodspecProofRequest = {
+                  pods: {
+                    pod1: {
+                      pod: {
+                        entries: {
+                          emailAddress: {
+                            type: "string"
+                          },
+                          semaphoreV4PublicKey: {
+                            type: "eddsa_pubkey"
+                          },
+                          pod_type: {
+                            type: "string",
+                            isMemberOf: [
+                              { type: "string", value: "zupass.email" }
+                            ]
+                          }
+                        },
+                        meta: {
+                          labelEntry: "emailAddress"
+                        }
+                      },
+                      revealed: {
+                        emailAddress: true,
+                        semaphoreV4PublicKey: true,
+                        pod_type: false
+                      }
+                    }
+                  }
+                };
+
+                const gpcProof = await z.gpc.prove({ request });
+                setProveResult(gpcProof);
+              } catch (e) {
+                console.log(e);
+              }
+            }}
+            label="Get Email Proof"
+          />
+          {proveResult && (
+            <pre className="whitespace-pre-wrap">
+              {JSONBig.stringify(proveResult, null, 2)}
+            </pre>
+          )}
+        </div>
       </div>
     </div>
   );
