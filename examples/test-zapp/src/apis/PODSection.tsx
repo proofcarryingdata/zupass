@@ -23,6 +23,8 @@ export function PODSection(): ReactNode {
       <div className="prose">
         <h2 className="text-lg font-bold mt-4">Query PODs</h2>
         <QueryPODs z={z} />
+        <h2 className="text-lg font-bold mt-4">Query Email PODs</h2>
+        <QueryEmailPODs z={z} />
         <h2 className="text-lg font-bold mt-4">Sign POD</h2>
         <SignPOD z={z} setSignedPOD={setPOD} />
         <h2 className="text-lg font-bold mt-4">Sign POD with Prefix</h2>
@@ -120,6 +122,74 @@ const pods = await z.pod.collection("${selectedCollection}").query(q);
   );
 }
 
+function QueryEmailPODs({ z }: { z: ParcnetAPI }): ReactNode {
+  const [pods, setPODs] = useState<p.PODData[] | undefined>(undefined);
+  return (
+    <div>
+      <p>
+        Querying Email PODs is done like this:
+        <code className="block text-xs font-base rounded-md p-2 whitespace-pre">
+          {`const q = p.pod({
+  entries: {
+    emailAddress: {
+      type: "string"
+    },
+    semaphoreV4PublicKey: {
+      type: "eddsa_pubkey"
+    },
+    pod_type: {
+      type: "string",
+      isMemberOf: [{ type: "string", value: "zupass.email" }]
+    }
+  }
+});
+const pods = await z.pod.collection("Email").query(q);
+`}
+        </code>
+      </p>
+      <TryIt
+        onClick={async () => {
+          try {
+            const q = p.pod({
+              entries: {
+                emailAddress: {
+                  type: "string"
+                },
+                semaphoreV4PublicKey: {
+                  type: "eddsa_pubkey"
+                },
+                pod_type: {
+                  type: "string",
+                  isMemberOf: [{ type: "string", value: "zupass.email" }]
+                }
+              }
+            });
+            const pods = await z.pod.collection("Email").query(q);
+            console.log(pods);
+            setPODs(pods);
+          } catch (e) {
+            console.log(e);
+          }
+        }}
+        label="Query Email PODs"
+      />
+      {pods !== undefined && (
+        <pre className="whitespace-pre-wrap">
+          {JSONBig.stringify(
+            pods.map((p) => ({
+              entries: p.entries,
+              signature: p.signature,
+              signerPublicKey: p.signerPublicKey
+            })),
+            null,
+            2
+          )}
+        </pre>
+      )}
+    </div>
+  );
+}
+
 type Action =
   | {
       type: "SET_KEY";
@@ -193,7 +263,7 @@ const editPODReducer = function (
       ) {
         newState[action.key] = {
           type: action.podValueType as "string" | "eddsa_pubkey",
-          value: newState[action.key].value.toString()
+          value: newState[action.key].value?.toString() ?? ""
         };
       } else {
         state[action.key].type = action.podValueType;
@@ -203,7 +273,7 @@ const editPODReducer = function (
     case "SET_VALUE": {
       const newState = { ...state };
       if (bigintish.includes(newState[action.key].type)) {
-        const value = BigInt(action.value);
+        const value = BigInt(action.value as string);
         if (value >= POD_INT_MIN && value <= POD_INT_MAX) {
           newState[action.key].value = value;
         }
@@ -271,8 +341,8 @@ ${Object.entries(entries)
   .map(([key, value]) => {
     return `  ${key}: { type: "${value.type}", value: ${
       bigintish.includes(value.type)
-        ? `${value.value.toString()}n`
-        : `"${value.value.toString()}"`
+        ? `${value.value?.toString() ?? ""}n`
+        : `"${value.value?.toString() ?? ""}"`
     } }`;
   })
   .join(",\n")}
@@ -366,8 +436,8 @@ ${Object.entries(entries)
   .map(([key, value]) => {
     return `  ${key}: { type: "${value.type}", value: ${
       bigintish.includes(value.type)
-        ? `${value.value.toString()}n`
-        : `"${value.value.toString()}"`
+        ? `${value.value?.toString() ?? ""}n`
+        : `"${value.value?.toString() ?? ""}"`
     } }`;
   })
   .join(",\n")}
@@ -458,7 +528,7 @@ function EditPODEntry({
       <label className="block">
         {showLabels && <span className="text-gray-700">Value</span>}
         <input
-          value={value.toString()}
+          value={value?.toString() ?? ""}
           type={typeof value === "string" ? "text" : "number"}
           className="mt-1 block w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0"
           placeholder=""
