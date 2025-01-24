@@ -1014,13 +1014,13 @@ async function sync(state: AppState, update: ZuUpdate): Promise<void> {
 
       // sync() is triggered via dispatch on any update, so if we make changes
       // we know we'll be called again the latest AppState snapshot.  If we
-      // have no changes, we can force another sync via and empty update, to
-      // ensure we didn't miss any important states.
+      // have no changes, we can force another sync via dispatch, to ensure we
+      // didn't miss any important states.
       if (stateChanges) {
         update(stateChanges);
       } else if (skippedSyncUpdates > 0) {
         console.log("[SYNC] running an extra sync in case of missed updates");
-        update({});
+        window.setTimeout(() => dispatch({ type: "sync" }, state, update), 0);
       }
       skippedSyncUpdates = 0;
     } finally {

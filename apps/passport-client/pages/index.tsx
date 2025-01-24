@@ -304,9 +304,7 @@ const AppStateProvider: React.FC<AppStateProviderProps> = ({
 
   const update = useCallback(
     (diff: Partial<AppState>): void => {
-      if (Object.keys(diff).length > 0) {
-        setState(Object.assign(state, diff));
-      }
+      setState(Object.assign(state, diff));
 
       // In a React class component, the `setState` method has a second
       // parameter, which is a callback function that React will invoke when
@@ -329,9 +327,7 @@ const AppStateProvider: React.FC<AppStateProviderProps> = ({
       // object directly. It will then emit an event, which is what the rest of
       // the app uses to work around the fact that it also can't track changes
       // to the state object.
-      if (Object.keys(diff).length > 0) {
-        setLastDiff(diff);
-      }
+      setLastDiff(diff);
     },
     [state]
   );
