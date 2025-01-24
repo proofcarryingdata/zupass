@@ -38,6 +38,7 @@ import { LocalStorageNotAccessibleScreen } from "../components/screens/LocalStor
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 // import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
+import * as localForage from "localforage";
 import styled from "styled-components";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
@@ -87,13 +88,15 @@ if (typeof window !== "undefined") {
   const params = new URLSearchParams(window.location.search);
   if (params.has("forceNewSession")) {
     localStorage.clear();
-    const newParams = new URLSearchParams(window.location.search);
-    newParams.delete("forceNewSession");
-    const newSearch = newParams.toString();
-    const newPath = `${window.location.pathname}${
-      newSearch ? `?${newSearch}` : ""
-    }${window.location.hash}`;
-    window.location.replace(newPath);
+    localForage.clear().then(() => {
+      const newParams = new URLSearchParams(window.location.search);
+      newParams.delete("forceNewSession");
+      const newSearch = newParams.toString();
+      const newPath = `${window.location.pathname}${
+        newSearch ? `?${newSearch}` : ""
+      }${window.location.hash}`;
+      window.location.replace(newPath);
+    });
   }
 }
 
@@ -301,7 +304,9 @@ const AppStateProvider: React.FC<AppStateProviderProps> = ({
 
   const update = useCallback(
     (diff: Partial<AppState>): void => {
-      setState(Object.assign(state, diff));
+      if (Object.keys(diff).length > 0) {
+        setState(Object.assign(state, diff));
+      }
 
       // In a React class component, the `setState` method has a second
       // parameter, which is a callback function that React will invoke when
@@ -324,7 +329,9 @@ const AppStateProvider: React.FC<AppStateProviderProps> = ({
       // object directly. It will then emit an event, which is what the rest of
       // the app uses to work around the fact that it also can't track changes
       // to the state object.
-      setLastDiff(diff);
+      if (Object.keys(diff).length > 0) {
+        setLastDiff(diff);
+      }
     },
     [state]
   );

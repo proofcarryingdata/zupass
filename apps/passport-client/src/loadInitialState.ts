@@ -23,26 +23,26 @@ import { AppState } from "./state";
 import { validateAndLogInitialAppState } from "./validateState";
 
 export async function loadInitialState(): Promise<AppState> {
-  let identityV3 = loadIdentity();
+  let identityV3 = await loadIdentity();
 
   if (!identityV3) {
     console.log("Generating a new Semaphore identity...");
     identityV3 = new Identity();
-    saveIdentity(identityV3);
+    await saveIdentity(identityV3);
   }
 
-  const self = loadSelf();
+  const self = await loadSelf();
 
   const pcds = await loadPCDs(self);
 
-  const encryptionKey = loadEncryptionKey();
+  const encryptionKey = await loadEncryptionKey();
   const subscriptions = await loadSubscriptions();
 
   const modal = { modalType: "none" } as AppState["modal"];
 
   const credentialCache = createStorageBackedCredentialCache();
 
-  const persistentSyncStatus = loadPersistentSyncStatus();
+  const persistentSyncStatus = await loadPersistentSyncStatus();
 
   const state: AppState = {
     self,
@@ -100,7 +100,7 @@ export async function loadInitialState(): Promise<AppState> {
 
       if (newSelfResponse.success) {
         state.self = newSelfResponse.value;
-        saveSelf(newSelfResponse.value);
+        await saveSelf(newSelfResponse.value);
       } else {
         // proceed to the next step anyway, since we don't have any other option
       }
