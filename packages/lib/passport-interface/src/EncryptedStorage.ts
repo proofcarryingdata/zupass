@@ -5,6 +5,7 @@ import {
 } from "@pcd/pcd-collection";
 import { PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import stringify from "fast-json-stable-stringify";
+import pako from "pako";
 import { NetworkFeedApi } from "./FeedAPI";
 import { FeedSubscriptionManager } from "./SubscriptionManager";
 import { User } from "./zuzalu";
@@ -106,12 +107,27 @@ export interface SyncedEncryptedStorageV5 {
   _storage_version: "v5";
 }
 
+export interface SyncedEncryptedStorageV6 {
+  self: {
+    uuid: string;
+    commitment: string;
+    emails: string[];
+    salt: string | null;
+    terms_agreed: number;
+    semaphore_v4_commitment?: string | null;
+    semaphore_v4_pubkey?: string | null;
+  };
+  compressed: string;
+  _storage_version: "v6";
+}
+
 export type SyncedEncryptedStorage =
   | SyncedEncryptedStorageV1
   | SyncedEncryptedStorageV2
   | SyncedEncryptedStorageV3
   | SyncedEncryptedStorageV4
-  | SyncedEncryptedStorageV5;
+  | SyncedEncryptedStorageV5
+  | SyncedEncryptedStorageV6;
 
 export function isSyncedEncryptedStorageV1(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -148,6 +164,13 @@ export function isSyncedEncryptedStorageV5(
   return storage._storage_version === "v5";
 }
 
+export function isSyncedEncryptedStorageV6(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  storage: any
+): storage is SyncedEncryptedStorageV6 {
+  return storage._storage_version === "v6";
+}
+
 /**
  * Deserialize a decrypted storage object and set up the PCDCollection and
  * FeedSubscriptionManager to manage its data.  If the storage comes from
@@ -166,7 +189,22 @@ export async function deserializeStorage(
   let pcds: PCDCollection;
   let subscriptions: FeedSubscriptionManager;
 
-  if (isSyncedEncryptedStorageV5(storage)) {
+  console.log("storage", storage);
+
+  if (isSyncedEncryptedStorageV6(storage)) {
+    const decompressed = JSON.parse(
+      new TextDecoder().decode(
+        pako.inflate(Buffer.from(storage.compressed, "base64"))
+      )
+    );
+    pcds = await PCDCollection.deserialize(pcdPackages, decompressed.pcds, {
+      fallbackDeserializeFunction
+    });
+    subscriptions = FeedSubscriptionManager.deserialize(
+      new NetworkFeedApi(),
+      decompressed.subscriptions
+    );
+  } else if (isSyncedEncryptedStorageV5(storage)) {
     pcds = await PCDCollection.deserialize(pcdPackages, storage.pcds, {
       fallbackDeserializeFunction
     });
@@ -226,10 +264,17 @@ export async function serializeStorage(
   subscriptions: FeedSubscriptionManager
 ): Promise<{ serializedStorage: SyncedEncryptedStorage; storageHash: string }> {
   const serializedStorage: SyncedEncryptedStorage = {
-    pcds: await pcds.serializeCollection(),
+    compressed: Buffer.from(
+      pako.deflate(
+        JSON.stringify({
+          pcds: await pcds.serializeCollection(),
+          self: user,
+          subscriptions: subscriptions.serialize()
+        })
+      )
+    ).toString("base64"),
     self: user,
-    subscriptions: subscriptions.serialize(),
-    _storage_version: "v4"
+    _storage_version: "v6"
   };
   return {
     serializedStorage: serializedStorage,
