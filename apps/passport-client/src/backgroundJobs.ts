@@ -129,8 +129,9 @@ export function useBackgroundJobs(): void {
     };
 
     setupBroadcastChannel(dispatch);
-    setupUsingLaserScanning();
-    startBackgroundJobs();
+    setupUsingLaserScanning().then(() => {
+      startBackgroundJobs();
+    });
 
     return () => {
       closeBroadcastChannel();
@@ -143,13 +144,13 @@ export function useBackgroundJobs(): void {
  * on the scan screen so the laser scanner can be used. This flag will be
  * exclusively used on the Devconnect laser scanning devices.
  */
-function setupUsingLaserScanning(): void {
+async function setupUsingLaserScanning(): Promise<void> {
   const queryParams = new URLSearchParams(window.location.search.slice(1));
   const laserQueryParam = queryParams.get("laser");
   if (laserQueryParam === "true") {
-    saveUsingLaserScanner(true);
+    await saveUsingLaserScanner(true);
   } else if (laserQueryParam === "false") {
     // We may want to use this to forcibly make this state false
-    saveUsingLaserScanner(false);
+    await saveUsingLaserScanner(false);
   }
 }

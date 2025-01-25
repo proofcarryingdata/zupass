@@ -30,7 +30,7 @@ export function PrivacyNoticeModal(): JSX.Element {
       });
     } else {
       // Persist to local storage and sync this later
-      savePrivacyNoticeAgreed(LATEST_PRIVACY_NOTICE);
+      await savePrivacyNoticeAgreed(LATEST_PRIVACY_NOTICE);
       dispatch({
         type: "handle-agreed-privacy-notice",
         version: LATEST_PRIVACY_NOTICE

@@ -305,7 +305,8 @@ export function useHasSetupPassword(): boolean {
 export function useLaserScannerKeystrokeInput(): string {
   const [typedText, setTypedText] = useState("");
   const nav = useNavigate();
-  const usingLaserScanner = loadUsingLaserScanner();
+  const [usingLaserScanner, setUsingLaserScanner] = useState(false);
+  loadUsingLaserScanner().then((value) => setUsingLaserScanner(value));
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent): void {

@@ -71,7 +71,7 @@ export const ChangePasswordModal = (): JSX.Element | null => {
     try {
       let currentEncryptionKey: HexString;
       if (!hasSetupPassword) {
-        currentEncryptionKey = loadEncryptionKey() as string;
+        currentEncryptionKey = (await loadEncryptionKey()) as string;
       } else {
         const saltResult = await requestPasswordSalt(
           appConfig.zupassServer,

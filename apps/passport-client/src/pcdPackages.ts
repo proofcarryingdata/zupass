@@ -116,7 +116,7 @@ export async function fallbackDeserializeFunction(
     }.  ${getErrorMessage(deserializeError)}`
   );
   requestLogToServer(appConfig.zupassServer, "pcd-deserialize-fallback", {
-    user: loadSelf()?.uuid,
+    user: (await loadSelf())?.uuid,
     pcdType: serializedPCD.type,
     deserializeError,
     errorMessage: getErrorMessage(deserializeError)
