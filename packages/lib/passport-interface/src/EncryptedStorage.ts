@@ -4,6 +4,7 @@ import {
   PCDCollection
 } from "@pcd/pcd-collection";
 import { PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import * as base64 from "base64-js";
 import stringify from "fast-json-stable-stringify";
 import pako from "pako";
 import { NetworkFeedApi } from "./FeedAPI";
@@ -117,7 +118,16 @@ export interface SyncedEncryptedStorageV6 {
     semaphore_v4_commitment?: string | null;
     semaphore_v4_pubkey?: string | null;
   };
-  compressed: string;
+  /**
+   * Serialized {@link FeedSubscriptionManager}
+   */
+  subscriptions: string;
+
+  /**
+   * Serialized {@link PCDCollection}, gzipped if compressedPCDs is true.
+   */
+  pcds: string;
+  compressedPCDs: boolean;
   _storage_version: "v6";
 }
 
@@ -189,20 +199,16 @@ export async function deserializeStorage(
   let pcds: PCDCollection;
   let subscriptions: FeedSubscriptionManager;
 
-  console.log("storage", storage);
-
   if (isSyncedEncryptedStorageV6(storage)) {
-    const decompressed = JSON.parse(
-      new TextDecoder().decode(
-        pako.inflate(Buffer.from(storage.compressed, "base64"))
-      )
-    );
-    pcds = await PCDCollection.deserialize(pcdPackages, decompressed.pcds, {
+    const serializedPCDs = storage.compressedPCDs
+      ? decompressStringFromBase64(storage.pcds)
+      : storage.pcds;
+    pcds = await PCDCollection.deserialize(pcdPackages, serializedPCDs, {
       fallbackDeserializeFunction
     });
     subscriptions = FeedSubscriptionManager.deserialize(
       new NetworkFeedApi(),
-      decompressed.subscriptions
+      storage.subscriptions
     );
   } else if (isSyncedEncryptedStorageV5(storage)) {
     pcds = await PCDCollection.deserialize(pcdPackages, storage.pcds, {
@@ -254,25 +260,41 @@ export async function deserializeStorage(
 }
 
 /**
+ * Options for serializing storage.
+ */
+interface SerializationOptions {
+  /**
+   * The number of bytes above which PCDs will be compressed.
+   */
+  pcdCompressionThresholdBytes: number;
+}
+
+/**
  * Serializes a user's PCDs and relates state for storage.  The result is
  * unencrypted, and always uses the latest format.  The hash uniquely identifies
  * the content, as described in getStorageHash.
+ *
+ * Sets a default compression threshold of 500,000 bytes. Callers may override
+ * with a different value. The `compressedPCDs` flag in {@link SyncedEncryptedStorageV6}
+ * will enable {@link deserializeStorage} to process either compressed or uncompressed
+ * PCDs.
  */
 export async function serializeStorage(
   user: User,
   pcds: PCDCollection,
-  subscriptions: FeedSubscriptionManager
+  subscriptions: FeedSubscriptionManager,
+  options: SerializationOptions = { pcdCompressionThresholdBytes: 500_000 }
 ): Promise<{ serializedStorage: SyncedEncryptedStorage; storageHash: string }> {
+  const serializedPCDs = await pcds.serializeCollection();
+  const shouldCompress =
+    new Blob([serializedPCDs]).size >= options.pcdCompressionThresholdBytes;
+
   const serializedStorage: SyncedEncryptedStorage = {
-    compressed: Buffer.from(
-      pako.deflate(
-        JSON.stringify({
-          pcds: await pcds.serializeCollection(),
-          self: user,
-          subscriptions: subscriptions.serialize()
-        })
-      )
-    ).toString("base64"),
+    pcds: shouldCompress
+      ? compressStringAndEncodeAsBase64(serializedPCDs)
+      : serializedPCDs,
+    subscriptions: subscriptions.serialize(),
+    compressedPCDs: shouldCompress,
     self: user,
     _storage_version: "v6"
   };
@@ -289,4 +311,22 @@ export async function getStorageHash(
   storage: SyncedEncryptedStorage
 ): Promise<string> {
   return await getHash(stringify(storage));
+}
+
+/**
+ * Compresses a string and encodes it as a base64 string.
+ * @param str the string to compress
+ * @returns the compressed string encoded as a base64 string
+ */
+export function compressStringAndEncodeAsBase64(str: string): string {
+  return base64.fromByteArray(pako.deflate(str));
+}
+
+/**
+ * Decompresses a base64 string and decodes it as a string.
+ * @param base64Str the base64 string to decompress
+ * @returns the decompressed string
+ */
+export function decompressStringFromBase64(base64Str: string): string {
+  return new TextDecoder().decode(pako.inflate(base64.toByteArray(base64Str)));
 }
