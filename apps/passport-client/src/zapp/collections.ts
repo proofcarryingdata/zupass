@@ -6,6 +6,8 @@ import { PODTicketPCD, isPODTicketPCD, ticketToPOD } from "@pcd/pod-ticket-pcd";
 
 export const COLLECTIONS_ROOT_FOLDER_NAME = "Collections";
 
+export const VIRTUAL_COLLECTIONS = ["Devcon SEA", "Email"];
+
 export function collectionIdToFolderName(collectionId: string): string {
   return `${COLLECTIONS_ROOT_FOLDER_NAME}/${collectionId}`;
 }
@@ -28,10 +30,8 @@ export function getPODsForCollections(
 ): POD[] {
   return collectionIds
     .flatMap((collectionId) =>
-      collectionId === "Devcon SEA"
-        ? pcds.getAllPCDsInFolder("Devcon SEA")
-        : collectionId === "Email"
-        ? pcds.getAllPCDsInFolder("Email")
+      VIRTUAL_COLLECTIONS.includes(collectionId)
+        ? pcds.getAllPCDsInFolder(collectionId)
         : pcds.getAllPCDsInFolder(collectionIdToFolderName(collectionId))
     )
     .filter((pcd) => isPODPCD(pcd) || isPODTicketPCD(pcd) || isPODEmailPCD(pcd))

@@ -165,10 +165,9 @@ const pods = await z.pod.collection("Email").query(q);
               }
             });
             const pods = await z.pod.collection("Email").query(q);
-            console.log(pods);
             setPODs(pods);
           } catch (e) {
-            console.log(e);
+            console.error(e);
           }
         }}
         label="Query Email PODs"
