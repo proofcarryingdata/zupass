@@ -110,11 +110,21 @@ function dummyPCD(): PODPCD {
 describe("Compressed storage", () => {
   const packages: PCDPackage[] = [PODPCDPackage];
 
+  const DUMMY_PCD_COUNT = 500;
+
   // Build a dummy PCD collection with 500 PCDs
-  const dummyPCDs = Array(500)
+  const dummyPCDs = Array(DUMMY_PCD_COUNT)
     .fill(0)
     .map(() => dummyPCD());
   const pcds = new PCDCollection(packages, dummyPCDs);
+
+  const dummyUser = {
+    uuid: "",
+    commitment: "",
+    emails: [],
+    salt: "",
+    terms_agreed: 1
+  } satisfies User;
 
   const subscriptions = new FeedSubscriptionManager(
     new MockFeedApi()
@@ -137,48 +147,36 @@ describe("Compressed storage", () => {
     assert.equal(serializedPCDs, serializedPCDs2);
   });
 
-  it("should deserialize storage with the latest version", async () => {
+  it("should deserialize storage with v6, which supports compression", async () => {
     const serializedPCDs = await pcds.serializeCollection();
     const deserialized = await deserializeStorage(
       {
         compressedPCDs: true,
         pcds: compressStringAndEncodeAsBase64(serializedPCDs),
         _storage_version: "v6",
-        self: {
-          uuid: "",
-          commitment: "",
-          emails: [],
-          salt: "",
-          terms_agreed: 1
-        } satisfies User,
+        self: dummyUser,
         subscriptions
       },
       packages
     );
 
-    expect(deserialized.pcds.size()).equal(500);
+    expect(deserialized.pcds.size()).equal(DUMMY_PCD_COUNT);
     expect(serializedPCDs).to.eq(await deserialized.pcds.serializeCollection());
   });
 
-  it("should continue to deserialize storage with old format", async () => {
+  it("should continue to deserialize storage with an older format", async () => {
     const serializedPCDs = await pcds.serializeCollection();
     const deserialized = await deserializeStorage(
       {
         pcds: serializedPCDs,
         _storage_version: "v4",
-        self: {
-          uuid: "",
-          commitment: "",
-          emails: [],
-          salt: "",
-          terms_agreed: 1
-        } satisfies User,
+        self: dummyUser,
         subscriptions
       },
       packages
     );
 
-    expect(deserialized.pcds.size()).equal(500);
+    expect(deserialized.pcds.size()).equal(DUMMY_PCD_COUNT);
     expect(serializedPCDs).to.eq(await deserialized.pcds.serializeCollection());
   });
 
@@ -189,32 +187,20 @@ describe("Compressed storage", () => {
         compressedPCDs: false,
         pcds: serializedPCDs,
         _storage_version: "v6",
-        self: {
-          uuid: "",
-          commitment: "",
-          emails: [],
-          salt: "",
-          terms_agreed: 1
-        } satisfies User,
+        self: dummyUser,
         subscriptions
       },
       packages
     );
 
-    expect(deserialized.pcds.size()).equal(500);
+    expect(deserialized.pcds.size()).equal(DUMMY_PCD_COUNT);
     expect(serializedPCDs).to.eq(await deserialized.pcds.serializeCollection());
   });
 
   it("should round-trip serializeStorage and deserializeStorage when below compression threshold", async () => {
     const mockFeedApi = new MockFeedApi();
     const { serializedStorage } = await serializeStorage(
-      {
-        uuid: "",
-        commitment: "",
-        emails: [],
-        salt: "",
-        terms_agreed: 1
-      } satisfies User,
+      dummyUser,
       pcds,
       new FeedSubscriptionManager(mockFeedApi)
     );
@@ -226,34 +212,29 @@ describe("Compressed storage", () => {
     expect(serializedStorage.pcds).to.eq(await pcds.serializeCollection());
 
     const deserialized = await deserializeStorage(serializedStorage, packages);
-    expect(deserialized.pcds.size()).equal(500);
+    expect(deserialized.pcds.size()).equal(DUMMY_PCD_COUNT);
   });
 
   it("should round-trip serializeStorage and deserializeStorage when above compression threshold", async () => {
     const mockFeedApi = new MockFeedApi();
     const { serializedStorage } = await serializeStorage(
-      {
-        uuid: "",
-        commitment: "",
-        emails: [],
-        salt: "",
-        terms_agreed: 1
-      } satisfies User,
+      dummyUser,
       pcds,
       new FeedSubscriptionManager(mockFeedApi),
-      // Much lower compression threshold than the 500_000 default
+      // Set lower compression threshold than the 500_000 default.
+      // Our PCD collection is around 410_000 bytes, so will now be compressed.
       { pcdCompressionThresholdBytes: 100_000 }
     );
 
     assert(isSyncedEncryptedStorageV6(serializedStorage));
     assert(serializedStorage._storage_version === "v6");
-    // Our PCD collection is too small to trigger compression
+    // Our PCD collection is big enough to compress at the lower threshold
     assert(serializedStorage.compressedPCDs === true);
     expect(decompressStringFromBase64(serializedStorage.pcds)).to.eq(
       await pcds.serializeCollection()
     );
 
     const deserialized = await deserializeStorage(serializedStorage, packages);
-    expect(deserialized.pcds.size()).equal(500);
+    expect(deserialized.pcds.size()).equal(DUMMY_PCD_COUNT);
   });
 });
