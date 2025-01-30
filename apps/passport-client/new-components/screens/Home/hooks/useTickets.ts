@@ -16,6 +16,29 @@ export const isEventTicketPCD = (
     !!pcd.claim.ticket.eventStartDate
   );
 };
+
+interface DateRange {
+  start: Date;
+  end?: Date;
+}
+
+function serializeTimeRange(range: DateRange): string {
+  // Produces something like "2023-01-01T09:00:00.000Z/2023-01-01T17:00:00.000Z"
+  const { start, end } = range;
+  if (end) {
+    return `${start.toISOString()}/${end.toISOString()}`;
+  }
+  return start.toISOString();
+}
+
+function parseTimeRange(serialized: string): DateRange {
+  const [startStr, endStr] = serialized.split("/");
+  return {
+    start: new Date(startStr),
+    end: endStr ? new Date(endStr) : undefined
+  };
+}
+
 export const useTickets = (): Array<[string, TicketPack[]]> => {
   const allPCDs = usePCDs();
   const tickets = allPCDs.filter(isEventTicketPCD).reverse();
@@ -26,32 +49,40 @@ export const useTickets = (): Array<[string, TicketPack[]]> => {
       t1.claim.ticket.attendeeEmail === t2.claim.ticket.attendeeEmail &&
       t1.type === EdDSATicketPCDTypeName
     );
-  }).sort((t1, t2) => {
-    // if one of the tickets doesnt have a date, immidiatly retrun the other one as the bigger one
-    if (!t1.claim.ticket.eventStartDate) return 1;
-    if (!t2.claim.ticket.eventStartDate) return -1;
+  })
+    .filter((t) => {
+      // Filter out tickets that have already passed
+      const { eventStartDate } = t.claim.ticket;
+      if (!eventStartDate) return false;
+      const range = parseTimeRange(eventStartDate);
+      if (range.end && range.end.getTime() < Date.now()) return false;
+      return true;
+    })
+    .sort((t1, t2) => {
+      // if one of the tickets doesnt have a date, immediately retrun the other one as the bigger one
+      if (!t1.claim.ticket.eventStartDate) return 1;
+      if (!t2.claim.ticket.eventStartDate) return -1;
 
-    // parse the date
-    const date1 = Date.parse(t1.claim.ticket.eventStartDate);
-    const date2 = Date.parse(t2.claim.ticket.eventStartDate);
-    const now = Date.now();
-    // const now = Date.parse("2024-03-15T08:00:00.000");
+      // parse the date
+      const range1 = parseTimeRange(t1.claim.ticket.eventStartDate);
+      const range2 = parseTimeRange(t2.claim.ticket.eventStartDate);
+      const now = Date.now();
 
-    const timeToDate1 = date1 - now;
-    const timeToDate2 = date2 - now;
+      const timeToDate1 = range1.start.getTime() - now;
+      const timeToDate2 = range2.start.getTime() - now;
 
-    // 1. both events are upcoming
-    // the smaller timeToDate should be first - ordering by nearest upcoming event first.
-    if (timeToDate1 >= 0 && timeToDate2 >= 0) {
-      return timeToDate1 < timeToDate2 ? -1 : 1;
-    }
+      // 1. both events are upcoming
+      // the smaller timeToDate should be first - ordering by nearest upcoming event first.
+      if (timeToDate1 >= 0 && timeToDate2 >= 0) {
+        return timeToDate1 < timeToDate2 ? -1 : 1;
+      }
 
-    // 2. event1 is upcoming event, event2 has passed
-    // one of the timeToDates is positive(upcoming) - positive should be ordered first
-    // 3. both events have passed
-    // both timeToDates are negative - larger means closer to the current time.
-    return timeToDate1 > timeToDate2 ? -1 : 1;
-  });
+      // 2. event1 is upcoming event, event2 has passed
+      // one of the timeToDates is positive(upcoming) - positive should be ordered first
+      // 3. both events have passed
+      // both timeToDates are negative - larger means closer to the current time.
+      return timeToDate1 > timeToDate2 ? -1 : 1;
+    });
 
   //  This hook is building "ticket packs"
   //  ticket pack - main ticket and all its ticket addons, under the same event and attendee

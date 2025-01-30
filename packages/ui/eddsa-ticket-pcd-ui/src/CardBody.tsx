@@ -56,20 +56,26 @@ function EdDSATicketPCDCardBody({
   return (
     <NEW_UI__Container>
       <NEW_UI__TicketImageContainer ref={ticketImageRef}>
-        {!imageToRender && (
+        {idBasedVerifyURL ? (
           <TicketQR
             pcd={pcd}
             verifyURL={verifyURL}
             idBasedVerifyURL={idBasedVerifyURL}
           />
-        )}
-        {imageToRender && (
+        ) : imageToRender ? (
           <TicketImage
             imageUrl={imageToRender}
             imageAltText={ticketData?.imageAltText}
             hidePadding={true}
           />
+        ) : (
+          <TicketCard
+            eventName={ticketData?.eventName || "Unknown"}
+            eventStartDate={ticketData?.eventStartDate || "Unknown"}
+            colors={["#1A908C", "rgb(235,79,218)"]}
+          />
         )}
+
         <NEW_UI__InfoContainer>
           <NEW_UI__AttendeeName color={ticketData?.accentColor}>
             {ticketData?.attendeeName.toUpperCase() ||
@@ -107,6 +113,49 @@ function EdDSATicketPCDCardBody({
     </NEW_UI__Container>
   );
 }
+
+function TicketCard({
+  eventName,
+  eventStartDate,
+  colors
+}: {
+  eventName: string;
+  eventStartDate: string;
+  colors: string[]; // hex colors to describe the ticket
+}): JSX.Element {
+  return (
+    <TicketCardContainer colors={colors}>
+      <div>
+        <p>{eventName}</p>
+        <p>
+          {new Date(eventStartDate).toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+          })}
+        </p>
+      </div>
+    </TicketCardContainer>
+  );
+}
+
+const TicketCardContainer = styled.div<{ colors: string[] }>`
+  padding: 8px;
+  text-align: center;
+  height: 400px;
+  border-radius: 16px;
+  background: linear-gradient(
+    180deg,
+    ${({ colors }): string => colors[0]} 0%,
+    ${({ colors }): string => colors[1]} 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 800;
+  font-family: Barlow, sans-serif;
+`;
 
 function TicketImage({
   imageUrl,
