@@ -41,6 +41,7 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { assertUnreachable, sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
+import * as localForage from "localforage";
 import _ from "lodash";
 import { createContext } from "react";
 import { appConfig } from "./appConfig";
@@ -417,7 +418,7 @@ async function oneClickLogin(
 
   const crypto = await PCDCrypto.newInstance();
   const encryptionKey = crypto.generateRandomKey();
-  saveEncryptionKey(encryptionKey);
+  await saveEncryptionKey(encryptionKey);
 
   update({
     encryptionKey
@@ -445,7 +446,7 @@ async function oneClickLogin(
 
     // User has encryption key
     if (oneClickLoginResult.value.encryptionKey) {
-      saveEncryptionKey(oneClickLoginResult.value.encryptionKey);
+      await saveEncryptionKey(oneClickLoginResult.value.encryptionKey);
       update({
         encryptionKey: oneClickLoginResult.value.encryptionKey
       });
@@ -514,7 +515,7 @@ async function createNewUserSkipPassword(
 
   const crypto = await PCDCrypto.newInstance();
   const encryptionKey = crypto.generateRandomKey();
-  saveEncryptionKey(encryptionKey);
+  await saveEncryptionKey(encryptionKey);
 
   update({
     encryptionKey
@@ -560,7 +561,7 @@ async function createNewUserWithPassword(
   const { salt: newSalt, key: encryptionKey } =
     crypto.generateSaltAndEncryptionKey(password);
 
-  saveEncryptionKey(encryptionKey);
+  await saveEncryptionKey(encryptionKey);
 
   update({
     encryptionKey
@@ -732,7 +733,7 @@ async function setSelf(
     return;
   }
 
-  saveSelf(self); // Save to local storage.
+  await saveSelf(self); // Save to local storage.
   update({ self }); // Update in-memory state.
 }
 
@@ -754,6 +755,7 @@ async function resetPassport(
     commitment: state.self?.commitment
   });
   // Clear saved state.
+  await localForage.clear();
   window.localStorage.clear();
   // Clear in-memory state
   update({
@@ -907,13 +909,13 @@ async function loadAfterLogin(
   console.log(`[SYNC] saving state at login: revision ${storage.revision}`);
   await savePCDs(pcds);
   await saveSubscriptions(subscriptions);
-  savePersistentSyncStatus({
+  await savePersistentSyncStatus({
     serverStorageRevision: storage.revision,
     serverStorageHash: storageHash
   });
-  saveEncryptionKey(encryptionKey);
-  saveSelf(self);
-  saveIdentity(identityPCD.claim.identityV3);
+  await saveEncryptionKey(encryptionKey);
+  await saveSelf(self);
+  await saveIdentity(identityPCD.claim.identityV3);
 
   update({
     encryptionKey,
@@ -939,8 +941,8 @@ async function loadAfterLogin(
 
 // Update `self` and `encryptionKey` in-memory fields from their saved values in localStorage
 async function handlePasswordChangeOnOtherTab(update: ZuUpdate): Promise<void> {
-  const self = loadSelf();
-  const encryptionKey = loadEncryptionKey();
+  const self = await loadSelf();
+  const encryptionKey = await loadEncryptionKey();
   return update({
     self,
     encryptionKey,
@@ -961,8 +963,8 @@ async function saveNewPasswordAndBroadcast(
 ): Promise<void> {
   if (state.self) {
     const newSelf = { ...state.self, salt: newSalt };
-    saveSelf(newSelf);
-    saveEncryptionKey(newEncryptionKey);
+    await saveSelf(newSelf);
+    await saveEncryptionKey(newEncryptionKey);
     notifyPasswordChangeToOtherTabs();
     update({
       encryptionKey: newEncryptionKey,
@@ -1012,13 +1014,13 @@ async function sync(state: AppState, update: ZuUpdate): Promise<void> {
 
       // sync() is triggered via dispatch on any update, so if we make changes
       // we know we'll be called again the latest AppState snapshot.  If we
-      // have no changes, we can force another sync via and empty update, to
-      // ensure we didn't miss any important states.
+      // have no changes, we can force another sync via dispatch, to ensure we
+      // didn't miss any important states.
       if (stateChanges) {
         update(stateChanges);
       } else if (skippedSyncUpdates > 0) {
         console.log("[SYNC] running an extra sync in case of missed updates");
-        update({});
+        window.setTimeout(() => dispatch({ type: "sync" }, state, update), 0);
       }
       skippedSyncUpdates = 0;
     } finally {
@@ -1061,7 +1063,7 @@ async function doSync(
     console.log("[SYNC] no user available to sync");
     return undefined;
   }
-  if (!loadEncryptionKey()) {
+  if (!(await loadEncryptionKey())) {
     console.log("[SYNC] no encryption key, can't sync");
     return undefined;
   }
@@ -1415,7 +1417,7 @@ async function handleAgreedPrivacyNotice(
   version: number
 ): Promise<void> {
   if (state.self) {
-    saveSelf({ ...state.self, terms_agreed: version });
+    await saveSelf({ ...state.self, terms_agreed: version });
     window.location.hash = "#/";
   }
 }
@@ -1427,7 +1429,7 @@ async function handleAgreedPrivacyNotice(
  * un-dismissable modal.
  */
 async function promptToAgreePrivacyNotice(state: AppState): Promise<void> {
-  const cachedTerms = loadPrivacyNoticeAgreed();
+  const cachedTerms = await loadPrivacyNoticeAgreed();
   if (cachedTerms === LATEST_PRIVACY_NOTICE) {
     // sync to server
     await agreeTerms(
