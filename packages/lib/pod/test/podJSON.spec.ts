@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { expect } from "chai";
 import "mocha";
 import {

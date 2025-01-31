@@ -5,6 +5,7 @@ import {
   numberToBigInt,
   uuidToBigInt
 } from "@pcd/util";
+import { Buffer } from "buffer";
 import urlJoin from "url-join";
 import { EdDSATicketPCD, ITicketData } from "./EdDSATicketPCD";
 

@@ -45,7 +45,7 @@ module.exports = {
         message: "Manual timeouts in Mocha tests are not allowed."
       }
     ],
-    "no-restricted-globals": ["error", "origin"]
+    "no-restricted-globals": ["error", "origin", "Buffer"]
   },
   settings: {
     "import/resolver": {

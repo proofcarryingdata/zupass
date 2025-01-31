@@ -10,6 +10,7 @@ import {
   verifySignature
 } from "@zk-kit/eddsa-poseidon";
 import { BigNumber, leBigIntToBuffer, leBufferToBigInt } from "@zk-kit/utils";
+import { Buffer } from "buffer";
 import { sha256 } from "js-sha256";
 import { poseidon1 } from "poseidon-lite/poseidon1";
 import { poseidon2 } from "poseidon-lite/poseidon2";

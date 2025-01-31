@@ -1,4 +1,5 @@
 import { serializeStorage } from "@pcd/passport-interface";
+import { Buffer } from "buffer";
 import { useCallback, useEffect, useState } from "react";
 import { css } from "styled-components";
 import {

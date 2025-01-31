@@ -27,6 +27,7 @@ import {
   ticketToPOD
 } from "@pcd/pod-ticket-pcd";
 import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
+import { Buffer } from "buffer";
 import { appConfig } from "../appConfig";
 import { StateContextValue } from "../dispatch";
 import { EmbeddedScreenType } from "../embedded";

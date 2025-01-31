@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { podValueToJSON } from "./podJSON";
 import { PODEntries, PODValue, PODValueTuple } from "./podTypes";
 

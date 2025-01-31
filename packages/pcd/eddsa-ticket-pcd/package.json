@@ -35,6 +35,7 @@
     "@pcd/eddsa-pcd": "0.10.0",
     "@pcd/pcd-types": "0.15.0",
     "@pcd/util": "0.9.0",
+    "buffer": "^6.0.3",
     "chai": "^4.3.7",
     "json-bigint": "^1.0.0",
     "lodash": "^4.17.21",

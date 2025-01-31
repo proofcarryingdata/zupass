@@ -17,6 +17,7 @@ import {
   ProverConfig,
   PublicInput
 } from "@personaelabs/spartan-ecdsa";
+import { Buffer } from "buffer";
 import { ethers } from "ethers";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";

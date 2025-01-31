@@ -1,5 +1,4 @@
 import {
-  arrayBufferToHexString,
   EncryptedPacket,
   HexString,
   passportDecrypt,
@@ -244,7 +243,7 @@ export async function testUserSyncKeyChangeNoRev(
   const encryptionKey1 = await crypto.generateRandomKey();
 
   const encryptionKey2 = await crypto.generateRandomKey();
-  const newSalt = arrayBufferToHexString(randomBytes(32));
+  const newSalt = randomBytes(32).toString("hex");
 
   const plaintextData1 = {
     test: "test",
@@ -355,7 +354,7 @@ export async function testUserSyncKeyChangeWithRev(
   const encryptionKey1 = await crypto.generateRandomKey();
 
   const encryptionKey2 = await crypto.generateRandomKey();
-  const newSalt = arrayBufferToHexString(randomBytes(32));
+  const newSalt = randomBytes(32).toString("hex");
 
   const plaintextData1 = {
     test: "test",

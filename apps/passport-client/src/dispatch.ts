@@ -41,6 +41,7 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { assertUnreachable, sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
+import { Buffer } from "buffer";
 import _ from "lodash";
 import { createContext } from "react";
 import { appConfig } from "./appConfig";
