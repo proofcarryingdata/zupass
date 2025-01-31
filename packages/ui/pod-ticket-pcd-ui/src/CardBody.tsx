@@ -2,6 +2,7 @@ import { QRDisplayWithRegenerateAndStorage, styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { PODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { IPODTicketData } from "@pcd/pod-ticket-pcd/src/schema";
+import { Buffer } from "buffer";
 import { useCallback, useRef } from "react";
 import urlJoin from "url-join";
 

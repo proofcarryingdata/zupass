@@ -7,6 +7,7 @@ import {
   derivePublicKey,
   signMessage
 } from "@zk-kit/eddsa-poseidon";
+import { Buffer } from "buffer";
 import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
