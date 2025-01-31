@@ -53,10 +53,15 @@ function EdDSATicketPCDCardBody({
     ? ticketData.qrCodeOverrideImageUrl
     : ticketData?.imageUrl;
 
+  // TODO: Check the end date rather than the start date
+  const eventPassed =
+    ticketData?.eventStartDate &&
+    new Date(ticketData?.eventStartDate || "") < new Date();
+
   return (
     <NEW_UI__Container>
       <NEW_UI__TicketImageContainer ref={ticketImageRef}>
-        {idBasedVerifyURL ? (
+        {!eventPassed && idBasedVerifyURL ? (
           <TicketQR
             pcd={pcd}
             verifyURL={verifyURL}
@@ -72,7 +77,7 @@ function EdDSATicketPCDCardBody({
           <TicketCard
             eventName={ticketData?.eventName || "Unknown"}
             eventStartDate={ticketData?.eventStartDate || "Unknown"}
-            colors={["#1A908C", "rgb(235,79,218)"]}
+            colors={["#1A908C", "rgb(235,79,218)"]} // TODO: Make these configurable
           />
         )}
 
@@ -126,35 +131,106 @@ function TicketCard({
   return (
     <TicketCardContainer colors={colors}>
       <div>
-        <p>{eventName}</p>
-        <p>
+        <TicketCardHeader>{eventName}</TicketCardHeader>
+        <TicketCardDate>
+          {/* TODO: Render start and end date */}
           {new Date(eventStartDate).toLocaleDateString(undefined, {
             year: "numeric",
             month: "long",
             day: "numeric"
           })}
-        </p>
+        </TicketCardDate>
       </div>
     </TicketCardContainer>
   );
 }
 
+const TicketCardHeader = styled.div`
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+`;
+
+const TicketCardDate = styled.div`
+  font-size: 20px;
+  color: #f0f0f0;
+  font-weight: 500;
+`;
+
 const TicketCardContainer = styled.div<{ colors: string[] }>`
-  padding: 8px;
-  text-align: center;
+  width: 400px;
   height: 400px;
+  padding: 16px;
   border-radius: 16px;
+  position: relative;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+  }
+  &::before {
+    left: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  &::after {
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
   background: linear-gradient(
-    180deg,
+    135deg,
     ${({ colors }): string => colors[0]} 0%,
     ${({ colors }): string => colors[1]} 100%
   );
+
+  background-size: 200% 200%;
+  animation: gradientAnimation 8s ease infinite;
+  @keyframes gradientAnimation {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  /* Add a soft box shadow */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
-  font-size: 24px;
-  font-weight: 800;
-  font-family: Barlow, sans-serif;
+  align-items: center;
+  text-align: center;
+  font-family: "Barlow", sans-serif;
+
+  /* Increase font size but vary eventName vs date */
+  p:first-child {
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  p:last-child {
+    font-size: 20px;
+    color: #f0f0f0;
+    font-weight: 500;
+  }
 `;
 
 function TicketImage({
