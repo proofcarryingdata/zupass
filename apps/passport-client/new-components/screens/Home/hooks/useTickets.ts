@@ -2,6 +2,7 @@ import {
   EdDSATicketPCDTypeName,
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
+import { parseDateRange } from "@pcd/passport-interface";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import uniqWith from "lodash/uniqWith";
@@ -16,28 +17,6 @@ export const isEventTicketPCD = (
     !!pcd.claim.ticket.eventStartDate
   );
 };
-
-interface DateRange {
-  start: Date;
-  end?: Date;
-}
-
-function serializeTimeRange(range: DateRange): string {
-  // Produces something like "2023-01-01T09:00:00.000Z/2023-01-01T17:00:00.000Z"
-  const { start, end } = range;
-  if (end) {
-    return `${start.toISOString()}/${end.toISOString()}`;
-  }
-  return start.toISOString();
-}
-
-function parseTimeRange(serialized: string): DateRange {
-  const [startStr, endStr] = serialized.split("/");
-  return {
-    start: new Date(startStr),
-    end: endStr ? new Date(endStr) : undefined
-  };
-}
 
 export const useTickets = (): Array<[string, TicketPack[]]> => {
   const allPCDs = usePCDs();
@@ -54,8 +33,8 @@ export const useTickets = (): Array<[string, TicketPack[]]> => {
       // Filter out tickets that have already passed
       const { eventStartDate } = t.claim.ticket;
       if (!eventStartDate) return false;
-      const range = parseTimeRange(eventStartDate);
-      if (range.end && range.end.getTime() < Date.now()) return false;
+      const range = parseDateRange(eventStartDate);
+      if (range.date_to && new Date(range.date_to) < new Date()) return false;
       return true;
     })
     .sort((t1, t2) => {
@@ -64,12 +43,12 @@ export const useTickets = (): Array<[string, TicketPack[]]> => {
       if (!t2.claim.ticket.eventStartDate) return -1;
 
       // parse the date
-      const range1 = parseTimeRange(t1.claim.ticket.eventStartDate);
-      const range2 = parseTimeRange(t2.claim.ticket.eventStartDate);
+      const range1 = parseDateRange(t1.claim.ticket.eventStartDate);
+      const range2 = parseDateRange(t2.claim.ticket.eventStartDate);
       const now = Date.now();
 
-      const timeToDate1 = range1.start.getTime() - now;
-      const timeToDate2 = range2.start.getTime() - now;
+      const timeToDate1 = new Date(range1.date_from).getTime() - now;
+      const timeToDate2 = new Date(range2.date_from).getTime() - now;
 
       // 1. both events are upcoming
       // the smaller timeToDate should be first - ordering by nearest upcoming event first.

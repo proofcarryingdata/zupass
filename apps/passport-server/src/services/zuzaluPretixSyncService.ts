@@ -1,4 +1,4 @@
-import { DateRange, ZuzaluUserRole } from "@pcd/passport-interface";
+import { MaybeDateRange, ZuzaluUserRole } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
 import { PoolClient } from "postgres-pool";
 import {
@@ -330,9 +330,9 @@ export class ZuzaluPretixSyncService {
         const visitorDateRanges = orderSubevents.map(
           (subEvent) =>
             ({
-              date_from: subEvent?.date_from,
+              date_from: subEvent?.date_from ?? "",
               date_to: subEvent?.date_to
-            }) satisfies DateRange
+            }) satisfies MaybeDateRange
         );
 
         return {

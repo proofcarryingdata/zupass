@@ -1,7 +1,7 @@
 import {
-  DateRange,
   KnownPublicKeyType,
   KnownTicketGroup,
+  MaybeDateRange,
   ZuzaluUserRole
 } from "@pcd/passport-interface";
 
@@ -13,7 +13,7 @@ export interface ZuzaluPretixTicket {
   name: string;
   role: ZuzaluUserRole;
   order_id: string;
-  visitor_date_ranges?: DateRange[] | null;
+  visitor_date_ranges?: MaybeDateRange[] | null;
 }
 
 export interface TelegramReactionCount {
