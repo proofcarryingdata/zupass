@@ -1,3 +1,8 @@
+export interface DateRange {
+  date_from: string;
+  date_to?: string | null;
+}
+
 export interface MaybeDateRange {
   date_from?: string | null;
   date_to?: string | null;
