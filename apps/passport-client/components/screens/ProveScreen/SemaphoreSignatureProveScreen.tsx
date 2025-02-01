@@ -6,6 +6,7 @@ import {
   requestProveOnServer,
   SignInMessagePayload
 } from "@pcd/passport-interface";
+import { NewLoader } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   IdentityV3,
@@ -18,7 +19,6 @@ import {
 import { cloneDeep } from "lodash";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
-import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { Button2 } from "../../../new-components/shared/Button";
 import { Typography } from "../../../new-components/shared/Typography";
 import { appConfig } from "../../../src/appConfig";

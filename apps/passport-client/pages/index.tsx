@@ -38,8 +38,8 @@ import { LocalStorageNotAccessibleScreen } from "../components/screens/LocalStor
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 // import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
+import { NewLoader } from "@pcd/passport-ui";
 import styled from "styled-components";
-import { NewLoader } from "../../../packages/lib/passport-ui/src/NewLoader";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";

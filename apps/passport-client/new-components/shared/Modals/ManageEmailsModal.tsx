@@ -5,6 +5,7 @@ import {
   requestChangeUserEmail,
   requestRemoveUserEmail
 } from "@pcd/passport-interface";
+import { NewLoader } from "@pcd/passport-ui";
 import { getErrorMessage } from "@pcd/util";
 import { validate } from "email-validator";
 import {
@@ -15,7 +16,6 @@ import {
   useTransition
 } from "react";
 import styled from "styled-components";
-import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { appConfig } from "../../../src/appConfig";
 import {
   useBottomModal,

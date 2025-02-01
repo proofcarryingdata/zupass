@@ -1,6 +1,5 @@
 import SwipableViews from "react-swipeable-views";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
-import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import {
   ZAPP_BUTTON_HEIGHT,
   ZappButton
@@ -43,7 +42,7 @@ import { TicketPack } from "./types";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import { isEmailPCD } from "@pcd/email-pcd";
 import { PCDGetRequest } from "@pcd/passport-interface";
-import { Spacer } from "@pcd/passport-ui";
+import { NewLoader, Spacer } from "@pcd/passport-ui";
 import { isSemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import {
   ReactElement,

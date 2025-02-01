@@ -3,11 +3,11 @@ import {
   CredentialManager,
   requestPasswordSalt
 } from "@pcd/passport-interface";
+import { NewLoader } from "@pcd/passport-ui";
 import { getErrorMessage } from "@pcd/util";
 import React, { Suspense, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { appConfig } from "../../../src/appConfig";
 import {
   useBottomModal,

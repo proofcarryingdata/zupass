@@ -1,8 +1,8 @@
+import { NewLoader } from "@pcd/passport-ui";
 import { assertUnreachable } from "@pcd/util";
 import { useLayoutEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { useLoadedIssuedPCDs } from "../../../src/appHooks";
 import {

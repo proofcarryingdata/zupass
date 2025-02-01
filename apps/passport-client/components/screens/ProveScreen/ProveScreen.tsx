@@ -1,10 +1,10 @@
 import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
+import { NewLoader } from "@pcd/passport-ui";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ReactElement } from "react";
 import { useSearchParams } from "react-router-dom";
 import styled from "styled-components";
-import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { ManageEmailModal } from "../../../new-components/shared/Modals/ManageEmailsModal";
 import { ProveModal } from "../../../new-components/shared/Modals/ProveModal";
 import { Typography } from "../../../new-components/shared/Typography";

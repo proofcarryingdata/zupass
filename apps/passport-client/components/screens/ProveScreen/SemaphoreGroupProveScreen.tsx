@@ -5,6 +5,7 @@ import {
   requestProveOnServer,
   requestSemaphoreGroup
 } from "@pcd/passport-interface";
+import { NewLoader } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   SemaphoreGroupPCDArgs,
@@ -16,7 +17,6 @@ import { getErrorMessage } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
-import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { Button2 } from "../../../new-components/shared/Button";
 import { Typography } from "../../../new-components/shared/Typography";
 import { appConfig } from "../../../src/appConfig";

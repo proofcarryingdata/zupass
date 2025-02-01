@@ -2,6 +2,7 @@ import { ProveResult } from "@parcnet-js/client-rpc";
 import * as p from "@parcnet-js/podspec";
 import { EntriesSchema, PodspecProofRequest } from "@parcnet-js/podspec";
 import { GPCIdentifier, gpcProve } from "@pcd/gpc";
+import { NewLoader } from "@pcd/passport-ui";
 import { POD, POD_INT_MAX, POD_INT_MIN } from "@pcd/pod";
 import {
   PODTicketPCD,
@@ -11,7 +12,6 @@ import {
 import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
 import { ReactNode, useMemo, useState } from "react";
 import styled from "styled-components";
-import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
 import { Button2 } from "../../../new-components/shared/Button";
 import { Typography } from "../../../new-components/shared/Typography";

@@ -1,10 +1,10 @@
 import { requestGenericIssuanceTicketPreviews } from "@pcd/passport-interface";
+import { NewLoader } from "@pcd/passport-ui";
 import { IPODTicketData } from "@pcd/pod-ticket-pcd";
 import { TicketQR } from "@pcd/pod-ticket-pcd-ui";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
-import { NewLoader } from "../../../../packages/lib/passport-ui/src/NewLoader";
 import { AppContainer } from "../../components/shared/AppContainer";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useSelf } from "../../src/appHooks";

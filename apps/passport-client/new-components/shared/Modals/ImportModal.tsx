@@ -1,5 +1,6 @@
 import { EmailPCDTypeName } from "@pcd/email-pcd";
 import { deserializeStorage } from "@pcd/passport-interface";
+import { NewLoader } from "@pcd/passport-ui";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDTypeName } from "@pcd/semaphore-group-pcd";
@@ -7,7 +8,6 @@ import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 import { useFilePicker } from "use-file-picker";
-import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import {
   useBottomModal,
   useDispatch,

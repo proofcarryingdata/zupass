@@ -1,9 +1,9 @@
 import { requestDownloadAndDecryptStorage } from "@pcd/passport-interface";
+import { NewLoader } from "@pcd/passport-ui";
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import urljoin from "url-join";
 import * as v from "valibot";
-import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
 import { Button2 } from "../../../new-components/shared/Button";
 import { Typography } from "../../../new-components/shared/Typography";

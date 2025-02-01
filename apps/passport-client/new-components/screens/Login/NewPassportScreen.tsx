@@ -6,11 +6,11 @@ import {
   requestPasswordSalt,
   requestVerifyToken
 } from "@pcd/passport-interface";
+import { NewLoader } from "@pcd/passport-ui";
 import { getErrorMessage, sleep } from "@pcd/util";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useIdentityV3, useQuery } from "../../../src/appHooks";

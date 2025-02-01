@@ -10,6 +10,7 @@ import {
   ProveOptions,
   requestProveOnServer
 } from "@pcd/passport-interface";
+import { NewLoader } from "@pcd/passport-ui";
 import {
   ArgsOf,
   PCDOf,
@@ -30,7 +31,6 @@ import {
 import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
-import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { Accordion } from "../../../new-components/shared/Accordion";
 import { Button2 } from "../../../new-components/shared/Button";
 import { Typography } from "../../../new-components/shared/Typography";

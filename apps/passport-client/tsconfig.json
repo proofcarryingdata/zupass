@@ -14,12 +14,7 @@
     "skipLibCheck": true,
     "strict": true
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "./build.ts",
-    "../../packages/lib/passport-ui/src/NewLoader.tsx"
-  ],
+  "include": ["**/*.ts", "**/*.tsx", "./build.ts"],
   "exclude": ["node_modules", "src/worker"],
   "references": [
     {

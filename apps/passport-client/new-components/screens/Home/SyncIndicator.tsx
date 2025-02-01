@@ -1,5 +1,5 @@
+import { NewLoader } from "@pcd/passport-ui";
 import { ReactElement, useEffect, useState } from "react";
-import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import {
   useExtraSubscriptionFetchRequested,
   useIsSyncSettled

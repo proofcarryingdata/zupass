@@ -1,6 +1,6 @@
+import { NewLoader } from "@pcd/passport-ui";
 import { Dispatch, ReactNode, SetStateAction, useRef, useState } from "react";
 import styled from "styled-components";
-import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { checkPasswordStrength } from "../../../src/checkPasswordStrength";
 import { PASSWORD_MINIMUM_LENGTH } from "../../../src/password";
 import { Button2 } from "../Button";

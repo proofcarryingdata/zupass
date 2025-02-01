@@ -1,6 +1,6 @@
+import { NewLoader } from "@pcd/passport-ui";
 import { ReactElement, useCallback, useState } from "react";
 import styled from "styled-components";
-import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { useBottomModal, useDispatch, useSelf } from "../../../src/appHooks";
 import { BottomModal, BottomModalHeader } from "../BottomModal";
 import { Button2 } from "../Button";

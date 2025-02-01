@@ -7,6 +7,7 @@ import {
   NetworkFeedApi,
   PODBOX_CREDENTIAL_REQUEST
 } from "@pcd/passport-interface";
+import { NewLoader } from "@pcd/passport-ui";
 import { ReplaceInFolderAction } from "@pcd/pcd-collection";
 import {
   PODTicketPCD,
@@ -22,7 +23,6 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import * as v from "valibot";
-import { NewLoader } from "../../../../packages/lib/passport-ui/src/NewLoader";
 import { BottomModal } from "../../new-components/shared/BottomModal";
 import { Button2 } from "../../new-components/shared/Button";
 import { NewModals } from "../../new-components/shared/Modals/NewModals";
