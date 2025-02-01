@@ -1,5 +1,6 @@
 import { serializeStorage } from "@pcd/passport-interface";
 import { LinkButton } from "@pcd/passport-ui";
+import { Buffer } from "buffer";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import {

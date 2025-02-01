@@ -280,7 +280,7 @@ export async function logValidationErrors(
   }
 
   try {
-    const user = loadSelf();
+    const user = await loadSelf();
     errorReport.userUUID = errorReport.userUUID ?? user?.uuid;
     console.log(`encountered state validation errors: `, errorReport);
     await requestLogToServer(appConfig.zupassServer, "state-validation-error", {

@@ -1,6 +1,7 @@
 import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { Point } from "@zk-kit/baby-jubjub";
+import { Buffer } from "buffer";
 import { PODEntries } from "../src";
 
 // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103

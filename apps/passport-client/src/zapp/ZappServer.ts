@@ -27,11 +27,16 @@ import {
   ticketToPOD
 } from "@pcd/pod-ticket-pcd";
 import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
+import { Buffer } from "buffer";
 import { appConfig } from "../appConfig";
 import { StateContextValue } from "../dispatch";
 import { EmbeddedScreenType } from "../embedded";
 import { getGPCArtifactsURL } from "../util";
-import { collectionIdToFolderName, getPODsForCollections } from "./collections";
+import {
+  collectionIdToFolderName,
+  getPODsForCollections,
+  VIRTUAL_COLLECTIONS
+} from "./collections";
 import { QuerySubscriptionManager } from "./query_subscription_manager";
 import { ListenMode } from "./useZappServer";
 
@@ -159,7 +164,7 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
   public async insert(collectionId: string, podData: PODData): Promise<void> {
     if (
       !this.getPermissions().INSERT_POD?.collections.includes(collectionId) ||
-      collectionId === "Devcon SEA"
+      VIRTUAL_COLLECTIONS.includes(collectionId)
     ) {
       throw new MissingPermissionError("INSERT_POD", "pod.insert");
     }
@@ -195,7 +200,7 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
   public async delete(collectionId: string, signature: string): Promise<void> {
     if (
       !this.getPermissions().DELETE_POD?.collections.includes(collectionId) ||
-      collectionId === "Devcon SEA"
+      VIRTUAL_COLLECTIONS.includes(collectionId)
     ) {
       throw new MissingPermissionError("DELETE_POD", "pod.delete");
     }

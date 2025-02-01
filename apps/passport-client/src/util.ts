@@ -12,6 +12,7 @@ import {
 } from "@pcd/passport-interface";
 import { splitPath } from "@pcd/pcd-collection";
 import { sleep } from "@pcd/util";
+import { Buffer } from "buffer";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import { Dispatcher } from "./dispatch";

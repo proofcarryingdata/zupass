@@ -8,6 +8,7 @@ import {
 import { MerkleProof, Poseidon, Tree } from "@personaelabs/spartan-ecdsa";
 import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
+import { Buffer } from "buffer";
 import { ethers } from "ethers";
 import JSONBig from "json-bigint";
 import "mocha";

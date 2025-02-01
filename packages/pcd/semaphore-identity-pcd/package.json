@@ -40,6 +40,7 @@
     "@types/json-bigint": "^1.0.3",
     "@zk-kit/eddsa-poseidon": "^1.1.0",
     "@zk-kit/utils": "^1.2.1",
+    "buffer": "^6.0.3",
     "js-sha256": "^0.11.0",
     "json-bigint": "^1.0.0",
     "poseidon-lite": "^0.3.0",

@@ -1,17 +1,18 @@
 import { PODData, podToPODData } from "@parcnet-js/podspec";
 import { POD, PODEntries, encodePrivateKey } from "@pcd/pod";
 import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
+import { Buffer } from "buffer";
 import { ReactNode, useMemo } from "react";
 import styled from "styled-components";
+import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
+import { Button2 } from "../../../new-components/shared/Button";
+import { Typography } from "../../../new-components/shared/Typography";
+import { hideScrollCSS } from "../../../new-components/shared/utils";
 import { useIdentityV3, useZappOrigin } from "../../../src/appHooks";
+import { BANNER_HEIGHT } from "../../../src/sharedConstants";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { AppContainer } from "../../shared/AppContainer";
 import { displayPODValue } from "../../shared/uiUtil";
-import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
-import { Typography } from "../../../new-components/shared/Typography";
-import { Button2 } from "../../../new-components/shared/Button";
-import { BANNER_HEIGHT } from "../../../src/sharedConstants";
-import { hideScrollCSS } from "../../../new-components/shared/utils";
 
 export function EmbeddedSignPODScreen({
   entries,

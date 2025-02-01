@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { gzip, ungzip } from "pako";
 import * as QRCode from "qrcode";
 import { useCallback, useEffect, useMemo, useState } from "react";

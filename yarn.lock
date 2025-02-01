@@ -2305,6 +2305,11 @@
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
 
+"@faker-js/faker@^9.4.0":
+  version "9.4.0"
+  resolved "https://registry.yarnpkg.com/@faker-js/faker/-/faker-9.4.0.tgz#3e85604df3a318729436677565e9433d964276d2"
+  integrity sha512-85+k0AxaZSTowL0gXp8zYWDIrWclTbRPg/pm/V0dSFZ6W6D4lhcG3uuZl4zLsEKfEvs69xDbLN2cHQudwp95JA==
+
 "@fastify/busboy@^2.0.0":
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/@fastify/busboy/-/busboy-2.1.1.tgz#b9da6a878a371829a0502c9b6c1c143ef6663f4d"
@@ -3864,7 +3869,7 @@
     browser-or-node "^2.0.0"
     cross-fetch "^3.0.6"
 
-"@parcnet-js/app-connector-react@^1.0.3":
+"@parcnet-js/app-connector-react@^1.0.5":
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector-react/-/app-connector-react-1.0.5.tgz#2779164d1edcb9c5a09ff0e95958f5abe7e8044d"
   integrity sha512-VOW6EQBGy5EAkej6elklzJzw6Q92/omULsToBhrv945nLKTjgTZMKC+y4VlPGZap1sGufgEy6S9mkQKaxonnTg==
@@ -3872,7 +3877,7 @@
     "@parcnet-js/app-connector" "1.1.10"
     react-shadow "^20.5.0"
 
-"@parcnet-js/app-connector@1.1.10", "@parcnet-js/app-connector@^1.1.8":
+"@parcnet-js/app-connector@1.1.10", "@parcnet-js/app-connector@^1.1.10":
   version "1.1.10"
   resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-1.1.10.tgz#a27480333078494e1cb6f3dbce588ec4085b35ba"
   integrity sha512-wc5U2cJpLwvPN2IOpEUmBdDLueO4s1e5uZzxI2KRSpuoYShMs1ZC/zV3NGxooU0jGC9baLf3WCjjjpHTknJgFQ==
@@ -3892,7 +3897,7 @@
     "@parcnet-js/client-rpc" "1.2.0"
     valibot "^0.42.0"
 
-"@parcnet-js/client-rpc@1.2.0", "@parcnet-js/client-rpc@^1.1.6", "@parcnet-js/client-rpc@^1.2.0":
+"@parcnet-js/client-rpc@1.2.0", "@parcnet-js/client-rpc@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-1.2.0.tgz#b6b12442456296ee4897c32606183a5309b0f618"
   integrity sha512-Mmv+inaoWu13buhCQJHKUrSqIJbBWFDcHFDQh7R+qTWjgPX3iB8nF8tSvujv6OsKNLj0mj8k0sTj+bKZG4Lfag==
@@ -3902,7 +3907,7 @@
     "@pcd/pod" "^0.5.0"
     valibot "^0.42.0"
 
-"@parcnet-js/podspec@1.2.0", "@parcnet-js/podspec@^1.1.3", "@parcnet-js/podspec@^1.2.0":
+"@parcnet-js/podspec@1.2.0", "@parcnet-js/podspec@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@parcnet-js/podspec/-/podspec-1.2.0.tgz#b584ccb48c41de43f245ce2848f1132ab34d0189"
   integrity sha512-VOksMRk9POo+mECc3VS7+YGDIv+yQ9Tu+bf8C9jZRnn9sKL8p8FE4fKdINZFimEeTe7xdR3dm47LwRcghFcWLQ==
@@ -3910,7 +3915,7 @@
     "@pcd/gpc" "^0.4.0"
     "@pcd/pod" "^0.5.0"
 
-"@parcnet-js/ticket-spec@^1.1.8":
+"@parcnet-js/ticket-spec@^1.1.9":
   version "1.1.9"
   resolved "https://registry.yarnpkg.com/@parcnet-js/ticket-spec/-/ticket-spec-1.1.9.tgz#c29246ace3060847df97925cfa45b5226ea0f7ce"
   integrity sha512-6m/zvkjZ4bT2OR9mj0G+5tAbNvTnOMVM2xJb/jYYdKziC3uW2E29EXdGuvn34eBz9CEbJo9A7H+b9IZIByTnWg==
@@ -7728,7 +7733,7 @@ base-x@^3.0.2, base-x@^3.0.8:
   dependencies:
     safe-buffer "^5.0.1"
 
-base64-js@^1.3.1:
+base64-js@^1.3.1, base64-js@^1.5.1:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-1.5.1.tgz#1b1b440160a5bf7ad40b650f095963481903930a"
   integrity sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==
@@ -12568,6 +12573,11 @@ ignore@^5.2.0, ignore@^5.2.4, ignore@^5.3.1:
   resolved "https://registry.yarnpkg.com/ignore/-/ignore-5.3.2.tgz#3cd40e729f3643fd87cb04e50bf0eb722bc596f5"
   integrity sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==
 
+immediate@~3.0.5:
+  version "3.0.6"
+  resolved "https://registry.yarnpkg.com/immediate/-/immediate-3.0.6.tgz#9db1dbd0faf8de6fbe0f5dd5e56bb606280de69b"
+  integrity sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ==
+
 import-fresh@^3.2.1:
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/import-fresh/-/import-fresh-3.3.0.tgz#37162c25fcb9ebaa2e6e53d5b4d88ce17d9e0c2b"
@@ -14072,6 +14082,13 @@ libsodium-wrappers-sumo@^0.7.15:
   dependencies:
     libsodium-sumo "^0.7.15"
 
+lie@3.1.1:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/lie/-/lie-3.1.1.tgz#9a436b2cc7746ca59de7a41fa469b3efb76bd87e"
+  integrity sha512-RiNhHysUjhrDQntfYSfY4MU24coXXdEOgw9WGcKHNeEwffDYbF//u87M1EWaMGzuFoSbqW0C9C6lEEhDOAswfw==
+  dependencies:
+    immediate "~3.0.5"
+
 liftoff@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/liftoff/-/liftoff-4.0.0.tgz#1a463b9073335cd425cdaa3b468996f7d66d2d81"
@@ -14115,6 +14132,13 @@ loader-runner@^4.2.0:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/loader-runner/-/loader-runner-4.3.0.tgz#c1b4a163b99f614830353b16755e7149ac2314e1"
   integrity sha512-3R/1M+yS3j5ou80Me59j7F9IMs4PXs3VqRrm0TU3AbKPxlmpoY1TNscJV/oGJXo8qCatFGTfDbY6W6ipGOYXfg==
+
+localforage@^1.10.0:
+  version "1.10.0"
+  resolved "https://registry.yarnpkg.com/localforage/-/localforage-1.10.0.tgz#5c465dc5f62b2807c3a84c0c6a1b1b3212781dd4"
+  integrity sha512-14/H1aX7hzBBmmh7sGPd+AOMkkIrHM3Z1PAyGgZigA1H1p5O5ANnMyWzvpAETtG68/dC4pC0ncy3+PPGzXZHPg==
+  dependencies:
+    lie "3.1.1"
 
 locate-path@^5.0.0:
   version "5.0.0"

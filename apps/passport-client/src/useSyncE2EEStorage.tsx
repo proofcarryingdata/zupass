@@ -21,6 +21,7 @@ import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import stringify from "fast-json-stable-stringify";
 import { useCallback, useContext, useEffect } from "react";
 import { appConfig } from "./appConfig";
+import { useCanSync } from "./appHooks";
 import { StateContext } from "./dispatch";
 import {
   loadEncryptionKey,
@@ -34,7 +35,6 @@ import {
 import { fallbackDeserializeFunction, getPackages } from "./pcdPackages";
 import { useOnStateChange } from "./subscribe";
 import { validateAndLogRunningAppState } from "./validateState";
-import { useCanSync } from "./appHooks";
 
 export type UpdateBlobKeyStorageInfo = {
   revision: string;
@@ -52,7 +52,7 @@ export async function updateBlobKeyForEncryptedStorage(
   knownServerStorageRevision?: string,
   credential?: SerializedPCD<SemaphoreSignaturePCD>
 ): Promise<UpdateBlobKeyResult> {
-  const oldUser = loadSelf();
+  const oldUser = await loadSelf();
   const newUser = { ...oldUser, salt: newSalt } as ZupassUserJson;
   const pcds = await loadPCDs(oldUser);
   const subscriptions = await loadSubscriptions();
@@ -84,7 +84,7 @@ export async function updateBlobKeyForEncryptedStorage(
     console.log(
       `[SYNC] changed e2ee storage key (revision ${changeResult.value.revision})`
     );
-    savePersistentSyncStatus({
+    await savePersistentSyncStatus({
       serverStorageRevision: changeResult.value.revision,
       serverStorageHash: storageHash
     });
@@ -175,7 +175,7 @@ export async function uploadSerializedStorage(
     };
   }
 
-  const encryptionKey = loadEncryptionKey() as string;
+  const encryptionKey = (await loadEncryptionKey()) as string;
   const blobKey = await getHash(encryptionKey);
 
   const encryptedStorage = await passportEncrypt(
@@ -195,7 +195,7 @@ export async function uploadSerializedStorage(
     console.log(
       `[SYNC] uploaded e2ee storage (revision ${uploadResult.value.revision})`
     );
-    savePersistentSyncStatus({
+    await savePersistentSyncStatus({
       serverStorageRevision: uploadResult.value.revision,
       serverStorageHash: storageHash
     });
@@ -410,7 +410,7 @@ export async function downloadAndMergeStorage(
   console.log("[SYNC] downloading e2ee storage");
 
   // Download latest revision from server, if it's newer than what's known.
-  const encryptionKey = loadEncryptionKey() as string;
+  const encryptionKey = (await loadEncryptionKey()) as string;
   const storageResult = await requestDownloadAndDecryptUpdatedStorage(
     appConfig.zupassServer,
     encryptionKey,
@@ -486,7 +486,7 @@ export async function downloadAndMergeStorage(
   // Save and return results.
   await savePCDs(newPCDs);
   await saveSubscriptions(newSubscriptions);
-  savePersistentSyncStatus({
+  await savePersistentSyncStatus({
     serverStorageRevision: storageResult.value.revision,
     serverStorageHash: dlServerHash
   });
