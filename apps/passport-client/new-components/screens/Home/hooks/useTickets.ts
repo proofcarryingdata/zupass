@@ -28,40 +28,29 @@ export const useTickets = (): Array<[string, TicketPack[]]> => {
       t1.claim.ticket.attendeeEmail === t2.claim.ticket.attendeeEmail &&
       t1.type === EdDSATicketPCDTypeName
     );
-  })
-    .filter((t) => {
-      // Filter out tickets that have already passed
-      const { eventStartDate } = t.claim.ticket;
-      if (!eventStartDate) return false;
-      const range = parseDateRange(eventStartDate);
-      if (range.date_to && new Date(range.date_to) < new Date()) return false;
-      return true;
-    })
-    .sort((t1, t2) => {
-      // if one of the tickets doesnt have a date, immediately retrun the other one as the bigger one
-      if (!t1.claim.ticket.eventStartDate) return 1;
-      if (!t2.claim.ticket.eventStartDate) return -1;
+  }).sort((t1, t2) => {
+    const range1 = parseDateRange(t1.claim.ticket.eventStartDate);
+    const range2 = parseDateRange(t2.claim.ticket.eventStartDate);
+    if (!range1.date_from) return 1;
+    if (!range2.date_from) return -1;
 
-      // parse the date
-      const range1 = parseDateRange(t1.claim.ticket.eventStartDate);
-      const range2 = parseDateRange(t2.claim.ticket.eventStartDate);
-      const now = Date.now();
+    const now = Date.now();
 
-      const timeToDate1 = new Date(range1.date_from).getTime() - now;
-      const timeToDate2 = new Date(range2.date_from).getTime() - now;
+    const timeToDate1 = new Date(range1.date_from).getTime() - now;
+    const timeToDate2 = new Date(range2.date_from).getTime() - now;
 
-      // 1. both events are upcoming
-      // the smaller timeToDate should be first - ordering by nearest upcoming event first.
-      if (timeToDate1 >= 0 && timeToDate2 >= 0) {
-        return timeToDate1 < timeToDate2 ? -1 : 1;
-      }
+    // 1. both events are upcoming
+    // the smaller timeToDate should be first - ordering by nearest upcoming event first.
+    if (timeToDate1 >= 0 && timeToDate2 >= 0) {
+      return timeToDate1 < timeToDate2 ? -1 : 1;
+    }
 
-      // 2. event1 is upcoming event, event2 has passed
-      // one of the timeToDates is positive(upcoming) - positive should be ordered first
-      // 3. both events have passed
-      // both timeToDates are negative - larger means closer to the current time.
-      return timeToDate1 > timeToDate2 ? -1 : 1;
-    });
+    // 2. event1 is upcoming event, event2 has passed
+    // one of the timeToDates is positive(upcoming) - positive should be ordered first
+    // 3. both events have passed
+    // both timeToDates are negative - larger means closer to the current time.
+    return timeToDate1 > timeToDate2 ? -1 : 1;
+  });
 
   //  This hook is building "ticket packs"
   //  ticket pack - main ticket and all its ticket addons, under the same event and attendee

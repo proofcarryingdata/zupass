@@ -4,10 +4,15 @@ import {
   TicketCategory,
   getEdDSATicketData
 } from "@pcd/eddsa-ticket-pcd";
-import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
+import {
+  ZUCONNECT_23_DAY_PASS_PRODUCT_ID,
+  parseDateRange,
+  prettyPrintDateRange
+} from "@pcd/passport-interface";
 import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { useRef } from "react";
+import { useExtractColors } from "react-extract-colors";
 import { TicketQR } from "./TicketQR";
 
 type NEW_UI__AddOns = {
@@ -53,19 +58,36 @@ function EdDSATicketPCDCardBody({
     ? ticketData.qrCodeOverrideImageUrl
     : ticketData?.imageUrl;
 
-  // TODO: Check the end date rather than the start date
+  // Defaults to the Zuzalu image for grabbing accent colors
+  const extracted = useExtractColors(
+    imageToRender ?? "images/zuzalu/zuzalu.png",
+    {
+      //  sortBy: "vibrance",
+      colorSimilarityThreshold: 100
+    }
+  );
+
+  const { colors, loading, error } = extracted;
+
+  console.log({ extracted, imageToRender });
+
+  const { date_from, date_to } = parseDateRange(ticketData?.eventStartDate);
   const eventPassed =
-    ticketData?.eventStartDate &&
-    new Date(ticketData?.eventStartDate || "") < new Date();
+    (date_to && new Date(date_to) < new Date()) ||
+    (!date_to && date_from && new Date(date_from) < new Date());
 
   return (
     <NEW_UI__Container>
       <NEW_UI__TicketImageContainer ref={ticketImageRef}>
-        {!eventPassed && idBasedVerifyURL ? (
-          <TicketQR
-            pcd={pcd}
-            verifyURL={verifyURL}
-            idBasedVerifyURL={idBasedVerifyURL}
+        {eventPassed ? (
+          <TicketCard
+            eventName={ticketData?.eventName || "Unknown"}
+            eventStartDate={ticketData?.eventStartDate || "Unknown"}
+            colors={
+              error
+                ? ["#1A908C", "rgb(235,79,218)"] // Fallback colors
+                : colors
+            }
           />
         ) : imageToRender ? (
           <TicketImage
@@ -73,11 +95,13 @@ function EdDSATicketPCDCardBody({
             imageAltText={ticketData?.imageAltText}
             hidePadding={true}
           />
+        ) : loading ? (
+          <div>Loading...</div> // TODO: REPLACE WITH NEWLOADER IN PASSPORT-UI
         ) : (
-          <TicketCard
-            eventName={ticketData?.eventName || "Unknown"}
-            eventStartDate={ticketData?.eventStartDate || "Unknown"}
-            colors={["#1A908C", "rgb(235,79,218)"]} // TODO: Make these configurable
+          <TicketQR
+            pcd={pcd}
+            verifyURL={verifyURL}
+            idBasedVerifyURL={idBasedVerifyURL}
           />
         )}
 
@@ -126,19 +150,14 @@ function TicketCard({
 }: {
   eventName: string;
   eventStartDate: string;
-  colors: string[]; // hex colors to describe the ticket
+  colors: string[];
 }): JSX.Element {
   return (
     <TicketCardContainer colors={colors}>
       <div>
         <TicketCardHeader>{eventName}</TicketCardHeader>
         <TicketCardDate>
-          {/* TODO: Render start and end date */}
-          {new Date(eventStartDate).toLocaleDateString(undefined, {
-            year: "numeric",
-            month: "long",
-            day: "numeric"
-          })}
+          {prettyPrintDateRange(parseDateRange(eventStartDate))}
         </TicketCardDate>
       </div>
     </TicketCardContainer>
@@ -161,7 +180,6 @@ const TicketCardDate = styled.div`
 `;
 
 const TicketCardContainer = styled.div<{ colors: string[] }>`
-  width: 400px;
   height: 400px;
   padding: 16px;
   border-radius: 16px;
