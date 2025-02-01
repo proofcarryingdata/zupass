@@ -4,11 +4,11 @@ import { TicketQR } from "@pcd/pod-ticket-pcd-ui";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
+import { NewLoader } from "../../../../packages/lib/passport-ui/src/NewLoader";
 import { AppContainer } from "../../components/shared/AppContainer";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useSelf } from "../../src/appHooks";
 import { Button2 } from "../shared/Button";
-import { NewLoader } from "../shared/NewLoader";
 import { TicketCard } from "../shared/TicketCard";
 import { Typography } from "../shared/Typography";
 

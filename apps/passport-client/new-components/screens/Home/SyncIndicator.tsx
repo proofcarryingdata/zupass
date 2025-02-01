@@ -1,9 +1,9 @@
 import { ReactElement, useEffect, useState } from "react";
+import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import {
   useExtraSubscriptionFetchRequested,
   useIsSyncSettled
 } from "../../../src/appHooks";
-import { NewLoader } from "../../shared/NewLoader";
 import { Typography } from "../../shared/Typography";
 
 const syncStates = {

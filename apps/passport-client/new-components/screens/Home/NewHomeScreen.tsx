@@ -1,5 +1,6 @@
 import SwipableViews from "react-swipeable-views";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
+import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import {
   ZAPP_BUTTON_HEIGHT,
   ZappButton
@@ -23,7 +24,6 @@ import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { nextFrame } from "../../../src/util";
 import { FloatingMenu } from "../../shared/FloatingMenu";
 import { NewModals } from "../../shared/Modals/NewModals";
-import { NewLoader } from "../../shared/NewLoader";
 import { SwipeViewContainer } from "../../shared/SwipeViewContainer";
 import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";

@@ -4,9 +4,9 @@ import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ReactElement } from "react";
 import { useSearchParams } from "react-router-dom";
 import styled from "styled-components";
+import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { ManageEmailModal } from "../../../new-components/shared/Modals/ManageEmailsModal";
 import { ProveModal } from "../../../new-components/shared/Modals/ProveModal";
-import { NewLoader } from "../../../new-components/shared/NewLoader";
 import { Typography } from "../../../new-components/shared/Typography";
 import {
   useDispatch,

@@ -7,6 +7,7 @@ import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 import { useFilePicker } from "use-file-picker";
+import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import {
   useBottomModal,
   useDispatch,
@@ -17,7 +18,6 @@ import { AppState } from "../../../src/state";
 import { useSelector } from "../../../src/subscribe";
 import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
-import { NewLoader } from "../NewLoader";
 import { Typography } from "../Typography";
 
 const Container = styled.div`

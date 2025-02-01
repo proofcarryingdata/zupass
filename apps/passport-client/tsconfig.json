@@ -7,10 +7,7 @@
     "downlevelIteration": true,
     "jsx": "react-jsx",
     "target": "ES2020",
-    "lib": [
-      "ES2020",
-      "DOM"
-    ],
+    "lib": ["ES2020", "DOM"],
     "moduleDetection": "force",
     // To allow for mocha and jest to work together:
     // https://stackoverflow.com/a/65568463
@@ -20,12 +17,10 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    "./build.ts"
+    "./build.ts",
+    "../../packages/lib/passport-ui/src/NewLoader.tsx"
   ],
-  "exclude": [
-    "node_modules",
-    "src/worker"
-  ],
+  "exclude": ["node_modules", "src/worker"],
   "references": [
     {
       "path": "../../packages/lib/client-shared"

@@ -7,6 +7,7 @@ import { getErrorMessage } from "@pcd/util";
 import React, { Suspense, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { appConfig } from "../../../src/appConfig";
 import {
   useBottomModal,
@@ -21,7 +22,6 @@ import { loadEncryptionKey } from "../../../src/localstorage";
 import { setPassword } from "../../../src/password";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { BottomModal } from "../BottomModal";
-import { NewLoader } from "../NewLoader";
 import { Typography } from "../Typography";
 
 const NewPasswordForm2 = React.lazy(() =>

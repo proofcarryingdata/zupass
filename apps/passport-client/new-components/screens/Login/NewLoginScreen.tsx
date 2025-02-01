@@ -2,6 +2,7 @@ import { requestLogToServer } from "@pcd/passport-interface";
 import { validateEmail } from "@pcd/util";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
+import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { appConfig } from "../../../src/appConfig";
 import {
@@ -28,7 +29,6 @@ import {
   LoginForm,
   LoginTitleContainer
 } from "../../shared/Login/LoginComponents";
-import { NewLoader } from "../../shared/NewLoader";
 import { Typography } from "../../shared/Typography";
 
 export const NewLoginScreen = (): JSX.Element => {

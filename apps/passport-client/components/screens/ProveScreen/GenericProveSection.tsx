@@ -30,9 +30,9 @@ import {
 import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
+import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { Accordion } from "../../../new-components/shared/Accordion";
 import { Button2 } from "../../../new-components/shared/Button";
-import { NewLoader } from "../../../new-components/shared/NewLoader";
 import { Typography } from "../../../new-components/shared/Typography";
 import { appConfig } from "../../../src/appConfig";
 import {

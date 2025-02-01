@@ -10,6 +10,7 @@ import { getErrorMessage, sleep } from "@pcd/util";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useIdentityV3, useQuery } from "../../../src/appHooks";
@@ -21,7 +22,6 @@ import {
   LoginForm,
   LoginTitleContainer
 } from "../../shared/Login/LoginComponents";
-import { NewLoader } from "../../shared/NewLoader";
 import { ResendCodeButton2 } from "../../shared/ResendCodeButton";
 import { Typography } from "../../shared/Typography";
 

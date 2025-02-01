@@ -39,6 +39,7 @@ import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 // import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
 import styled from "styled-components";
+import { NewLoader } from "../../../packages/lib/passport-ui/src/NewLoader";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
@@ -63,7 +64,6 @@ import { NewSyncExistingScreen } from "../new-components/screens/Login/NewSyncEx
 import { NewPrivacyNoticeScreen } from "../new-components/screens/NewPrivacyNoticeScreen";
 import { NewTermsScreen } from "../new-components/screens/NewTermsScreen";
 import { NewUpdatedTermsScreen } from "../new-components/screens/NewUpdatedTermsScreen";
-import { NewLoader } from "../new-components/shared/NewLoader";
 import { Typography } from "../new-components/shared/Typography";
 import { appConfig } from "../src/appConfig";
 import {

@@ -11,9 +11,9 @@ import {
 import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
 import { ReactNode, useMemo, useState } from "react";
 import styled from "styled-components";
+import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
 import { Button2 } from "../../../new-components/shared/Button";
-import { NewLoader } from "../../../new-components/shared/NewLoader";
 import { Typography } from "../../../new-components/shared/Typography";
 import { hideScrollCSS } from "../../../new-components/shared/utils";
 import {

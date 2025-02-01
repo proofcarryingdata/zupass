@@ -15,6 +15,7 @@ import {
   useTransition
 } from "react";
 import styled from "styled-components";
+import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { appConfig } from "../../../src/appConfig";
 import {
   useBottomModal,
@@ -28,7 +29,6 @@ import { AppState } from "../../../src/state";
 import { BottomModal, BottomModalHeader } from "../BottomModal";
 import { Button2 } from "../Button";
 import { Input2 } from "../Input";
-import { NewLoader } from "../NewLoader";
 import { Typography } from "../Typography";
 
 enum EmailManagerState {

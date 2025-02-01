@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NewLoader } from "../../new-components/shared/NewLoader";
+import { NewLoader } from "../../../../packages/lib/passport-ui/src/NewLoader";
 import { Typography } from "../../new-components/shared/Typography";
 
 const textDisplayTimeout = 2000;

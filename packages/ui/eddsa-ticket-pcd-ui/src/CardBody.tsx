@@ -9,7 +9,7 @@ import {
   parseDateRange,
   prettyPrintDateRange
 } from "@pcd/passport-interface";
-import { styled } from "@pcd/passport-ui";
+import { NewLoader, styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { useRef } from "react";
 import { useExtractColors } from "react-extract-colors";
@@ -96,7 +96,7 @@ function EdDSATicketPCDCardBody({
             hidePadding={true}
           />
         ) : loading ? (
-          <div>Loading...</div> // TODO: REPLACE WITH NEWLOADER IN PASSPORT-UI
+          <NewLoader />
         ) : (
           <TicketQR
             pcd={pcd}

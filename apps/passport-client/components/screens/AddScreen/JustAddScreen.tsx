@@ -5,9 +5,9 @@ import {
 import { ErrorContainer } from "@pcd/passport-ui";
 import { getErrorMessage } from "@pcd/util";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { NewLoader } from "../../../../../packages/lib/passport-ui/src/NewLoader";
 import { BottomModal } from "../../../new-components/shared/BottomModal";
 import { Button2 } from "../../../new-components/shared/Button";
-import { NewLoader } from "../../../new-components/shared/NewLoader";
 import { Typography } from "../../../new-components/shared/Typography";
 import {
   useCredentialManager,

@@ -22,10 +22,10 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import * as v from "valibot";
+import { NewLoader } from "../../../../packages/lib/passport-ui/src/NewLoader";
 import { BottomModal } from "../../new-components/shared/BottomModal";
 import { Button2 } from "../../new-components/shared/Button";
 import { NewModals } from "../../new-components/shared/Modals/NewModals";
-import { NewLoader } from "../../new-components/shared/NewLoader";
 import { Typography } from "../../new-components/shared/Typography";
 import { appConfig } from "../../src/appConfig";
 import {
