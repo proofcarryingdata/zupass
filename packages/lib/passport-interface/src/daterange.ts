@@ -1,9 +1,4 @@
 export interface DateRange {
-  date_from: string;
-  date_to?: string | null;
-}
-
-export interface MaybeDateRange {
   date_from?: string | null;
   date_to?: string | null;
 }
@@ -13,7 +8,7 @@ export interface FullDateRange {
   date_to: string;
 }
 
-export function serializeDateRange(range: MaybeDateRange): string {
+export function serializeDateRange(range: DateRange): string {
   // Produces something like "2023-01-01T09:00:00.000Z/2023-01-01T17:00:00.000Z"
   const { date_from, date_to } = range;
   if (date_from && date_to) {
@@ -28,7 +23,7 @@ export function serializeDateRange(range: MaybeDateRange): string {
   return "";
 }
 
-export function parseDateRange(serialized: string | undefined): MaybeDateRange {
+export function parseDateRange(serialized: string | undefined): DateRange {
   if (!serialized) {
     return {};
   }
@@ -64,7 +59,7 @@ const formatShort = (dateString: string): string => {
 // 3) If only date_from is present, format as "Oct 10, 2025"
 // 4) If only date_to is present, format as "Nov 10, 2025"
 // 5) If neither date_from nor date_to are present, return an empty string
-export function prettyPrintDateRange(range: MaybeDateRange): string {
+export function prettyPrintDateRange(range: DateRange): string {
   const { date_from, date_to } = range;
 
   if (!date_from && !date_to) {

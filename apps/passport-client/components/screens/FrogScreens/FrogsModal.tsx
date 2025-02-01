@@ -19,7 +19,7 @@ export function FrogsModal({
   const focusedPCD = pcds[focused ?? 0];
 
   const onSwipeLeft = useCallback(() => {
-    setFocused((prev) => Math.min(pcds?.length - 1 ?? 0, (prev ?? 0) + 1));
+    setFocused((prev) => Math.min(pcds.length - 1, (prev ?? 0) + 1));
   }, [pcds]);
   const onSwipeRight = useCallback(() => {
     setFocused((prev) => Math.max(0, (prev ?? 0) - 1));

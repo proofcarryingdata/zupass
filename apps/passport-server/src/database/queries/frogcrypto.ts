@@ -194,7 +194,7 @@ export async function sampleFrogData(
 ): Promise<FrogCryptoFrogData | undefined> {
   const [biomeKeys, scalingFactors] = _.chain(biomes)
     .toPairs()
-    .map(([biome, config]) => [biome, config?.dropWeightScaler])
+    .map(([biome, config]) => [biome, (config as any)?.dropWeightScaler])
     .filter(([, scalingFactor]) => !!scalingFactor)
     .unzip()
     .value();

@@ -431,7 +431,7 @@ export function useWrithingVoidParticles(
     }
 
     const absorberBaseSize =
-      Math.min(window.innerWidth, window.innerHeight) / 5 ?? 50;
+      Math.min(window.innerWidth, window.innerHeight) / 5;
     const particles: RecursivePartial<ParticlesOptions> = {
       shape: {
         type: "image",

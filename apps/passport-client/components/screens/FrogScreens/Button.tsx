@@ -267,7 +267,7 @@ const TextureSearchButton = forwardRef(
       ...props
     }: React.ComponentPropsWithRef<"button"> & {
       pending?: boolean;
-      backgroundImage: string;
+      backgroundImage?: string;
       buttonStyle?: CSSProperties;
     },
     buttonRef: React.Ref<HTMLButtonElement>
