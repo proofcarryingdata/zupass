@@ -59,17 +59,12 @@ function EdDSATicketPCDCardBody({
     : ticketData?.imageUrl;
 
   // Defaults to the Zuzalu image for grabbing accent colors
-  const extracted = useExtractColors(
+  const { colors, loading, error } = useExtractColors(
     imageToRender ?? "images/zuzalu/zuzalu.png",
     {
-      //  sortBy: "vibrance",
       colorSimilarityThreshold: 100
     }
   );
-
-  const { colors, loading, error } = extracted;
-
-  console.log({ extracted, imageToRender });
 
   const { date_from, date_to } = parseDateRange(ticketData?.eventStartDate);
   const eventPassed =
