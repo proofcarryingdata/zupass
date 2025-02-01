@@ -101,7 +101,7 @@ export function initPCDRoutes(
         ballotSignal.pollSignals.push(pollSignal);
       });
 
-      const signalHash = sha256(stableStringify(ballotSignal));
+      const signalHash = sha256(stableStringify(ballotSignal) ?? "");
       logger.info(`[SERVER BALLOT SIGNAL]`, ballotSignal);
 
       try {
@@ -229,7 +229,7 @@ export function initPCDRoutes(
         };
         multiVoteSignal.voteSignals.push(voteSignal);
       }
-      const signalHash = sha256(stableStringify(multiVoteSignal));
+      const signalHash = sha256(stableStringify(multiVoteSignal) ?? "");
 
       const allVotes: PollWithVotes[] = [];
 
