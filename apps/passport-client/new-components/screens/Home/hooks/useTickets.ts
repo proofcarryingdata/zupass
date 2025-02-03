@@ -2,6 +2,7 @@ import {
   EdDSATicketPCDTypeName,
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
+import { parseDateRange } from "@pcd/passport-interface";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import uniqWith from "lodash/uniqWith";
@@ -16,6 +17,7 @@ export const isEventTicketPCD = (
     !!pcd.claim.ticket.eventStartDate
   );
 };
+
 export const useTickets = (): Array<[string, TicketPack[]]> => {
   const allPCDs = usePCDs();
   const tickets = allPCDs.filter(isEventTicketPCD).reverse();
@@ -26,19 +28,17 @@ export const useTickets = (): Array<[string, TicketPack[]]> => {
       t1.claim.ticket.attendeeEmail === t2.claim.ticket.attendeeEmail &&
       t1.type === EdDSATicketPCDTypeName
     );
+    // TODO: section off past events outside of the main carousel, perhaps into a separate 'events' drawer
   }).sort((t1, t2) => {
-    // if one of the tickets doesnt have a date, immidiatly retrun the other one as the bigger one
-    if (!t1.claim.ticket.eventStartDate) return 1;
-    if (!t2.claim.ticket.eventStartDate) return -1;
+    const range1 = parseDateRange(t1.claim.ticket.eventStartDate);
+    const range2 = parseDateRange(t2.claim.ticket.eventStartDate);
+    if (!range1.date_from) return 1;
+    if (!range2.date_from) return -1;
 
-    // parse the date
-    const date1 = Date.parse(t1.claim.ticket.eventStartDate);
-    const date2 = Date.parse(t2.claim.ticket.eventStartDate);
     const now = Date.now();
-    // const now = Date.parse("2024-03-15T08:00:00.000");
 
-    const timeToDate1 = date1 - now;
-    const timeToDate2 = date2 - now;
+    const timeToDate1 = new Date(range1.date_from).getTime() - now;
+    const timeToDate2 = new Date(range2.date_from).getTime() - now;
 
     // 1. both events are upcoming
     // the smaller timeToDate should be first - ordering by nearest upcoming event first.
