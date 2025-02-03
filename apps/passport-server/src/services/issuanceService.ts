@@ -692,9 +692,8 @@ export class IssuanceService {
       }
 
       const allUsersAndTickets = await fetchAllUsersWithZuzaluTickets(client);
-      const zuzaluTickets = allUsersAndTickets.find(
-        (u) => u.uuid === user.uuid
-      )?.zuzaluTickets;
+      const zuzaluTickets = allUsersAndTickets.find((u) => u.uuid === user.uuid)
+        ?.zuzaluTickets;
       if (!zuzaluTickets) {
         return [];
       }
