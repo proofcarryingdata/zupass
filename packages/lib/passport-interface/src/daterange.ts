@@ -3,11 +3,6 @@ export interface DateRange {
   date_to?: string | null;
 }
 
-export interface FullDateRange {
-  date_from: string;
-  date_to: string;
-}
-
 // Format a date string into "MMM D, YYYY"
 const formatFull = (dateString: string): string => {
   const date = new Date(dateString);
