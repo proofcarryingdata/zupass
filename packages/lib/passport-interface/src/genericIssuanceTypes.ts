@@ -187,6 +187,7 @@ const ImageOptionsSchema = z.object({
   requireCheckedIn: z.boolean(),
   qrCodeOverrideImageUrl: z.string().optional(),
   eventStartDate: z.string().optional(),
+  eventEndDate: z.string().optional(),
   eventLocation: z.string().optional(),
   accentColor: z.string().optional()
 });

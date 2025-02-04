@@ -8,33 +8,7 @@ export interface FullDateRange {
   date_to: string;
 }
 
-export function serializeDateRange(range: DateRange): string {
-  // Produces something like "2023-01-01T09:00:00.000Z/2023-01-01T17:00:00.000Z"
-  const { date_from, date_to } = range;
-  if (date_from && date_to) {
-    return `${date_from}/${date_to}`;
-  }
-  if (date_from) {
-    return date_from;
-  }
-  if (date_to) {
-    return `/${date_to}`;
-  }
-  return "";
-}
-
-export function parseDateRange(serialized: string | undefined): DateRange {
-  if (!serialized) {
-    return {};
-  }
-  const [date_from, date_to] = serialized.split("/");
-  return {
-    date_from,
-    date_to
-  };
-}
-
-// Helper to format a date string into "MMM D, YYYY"
+// Format a date string into "MMM D, YYYY"
 const formatFull = (dateString: string): string => {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-US", {
@@ -44,7 +18,7 @@ const formatFull = (dateString: string): string => {
   });
 };
 
-// Helper to format a date string into "MMM D" (no year)
+// Format a date string into "MMM D" (no year)
 const formatShort = (dateString: string): string => {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-US", {
@@ -53,7 +27,7 @@ const formatShort = (dateString: string): string => {
   });
 };
 
-// Function to format date into a short, human-readable string
+// Format a date range into a short, human-readable string
 // 1) If both date_from and date_to are present and the same year, format as "Oct 10 - Nov 10, 2025"
 // 2) If both date_from and date_to are present and different years, format as "Oct 10, 2024 - Nov 10, 2025"
 // 3) If only date_from is present, format as "Oct 10, 2025"

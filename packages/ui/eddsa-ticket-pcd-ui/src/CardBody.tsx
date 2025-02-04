@@ -5,8 +5,8 @@ import {
   getEdDSATicketData
 } from "@pcd/eddsa-ticket-pcd";
 import {
+  DateRange,
   ZUCONNECT_23_DAY_PASS_PRODUCT_ID,
-  parseDateRange,
   prettyPrintDateRange
 } from "@pcd/passport-interface";
 import {
@@ -73,18 +73,23 @@ function EdDSATicketPCDCardBody({
     }
   );
 
-  const { date_from, date_to } = parseDateRange(ticketData?.eventStartDate);
+  const dateRange = {
+    date_from: ticketData?.eventStartDate,
+    date_to: ticketData?.eventEndDate
+  };
   const eventPassed =
-    (date_to && new Date(date_to) < new Date()) ||
-    (!date_to && date_from && new Date(date_from) < new Date());
+    (dateRange.date_to && new Date(dateRange.date_to) < new Date()) ||
+    (!dateRange.date_to &&
+      dateRange.date_from &&
+      new Date(dateRange.date_from) < new Date());
 
   return (
     <NEW_UI__Container>
       <NEW_UI__TicketImageContainer ref={ticketImageRef}>
         {eventPassed ? (
           <TicketCard
-            eventName={ticketData?.eventName || "Unknown"}
-            eventStartDate={ticketData?.eventStartDate || "Unknown"}
+            eventName={ticketData?.eventName || "Unknown event"}
+            dateRange={dateRange}
             colors={error ? FALLBACK_COLORS : colors}
             loading={loading}
           />
@@ -142,12 +147,12 @@ function EdDSATicketPCDCardBody({
 
 function TicketCard({
   eventName,
-  eventStartDate,
+  dateRange,
   colors,
   loading
 }: {
   eventName: string;
-  eventStartDate: string;
+  dateRange: DateRange;
   colors: string[];
   loading?: boolean;
 }): JSX.Element {
@@ -156,9 +161,7 @@ function TicketCard({
       {!loading && (
         <div>
           <TicketCardHeader>{eventName}</TicketCardHeader>
-          <TicketCardDate>
-            {prettyPrintDateRange(parseDateRange(eventStartDate))}
-          </TicketCardDate>
+          <TicketCardDate>{prettyPrintDateRange(dateRange)}</TicketCardDate>
         </div>
       )}
     </TicketCardContainer>

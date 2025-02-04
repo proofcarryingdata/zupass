@@ -2,7 +2,6 @@ import {
   EdDSATicketPCDTypeName,
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
-import { parseDateRange } from "@pcd/passport-interface";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import uniqWith from "lodash/uniqWith";
@@ -30,8 +29,15 @@ export const useTickets = (): Array<[string, TicketPack[]]> => {
     );
     // TODO: section off past events outside of the main carousel, perhaps into a separate 'events' drawer
   }).sort((t1, t2) => {
-    const range1 = parseDateRange(t1.claim.ticket.eventStartDate);
-    const range2 = parseDateRange(t2.claim.ticket.eventStartDate);
+    const range1 = {
+      date_from: t1.claim.ticket.eventStartDate,
+      date_to: t1.claim.ticket.eventEndDate
+    };
+    const range2 = {
+      date_from: t2.claim.ticket.eventStartDate,
+      date_to: t2.claim.ticket.eventEndDate
+    };
+
     if (!range1.date_from) return 1;
     if (!range2.date_from) return -1;
 
