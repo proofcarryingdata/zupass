@@ -630,6 +630,11 @@ export class LemonadePipeline implements BasePipeline {
     return event.imageOptions?.eventStartDate;
   }
 
+  private atomToEventEndDate(atom: LemonadeAtom): string | undefined {
+    const event = this.lemonadeAtomToEvent(atom);
+    return event.imageOptions?.eventEndDate;
+  }
+
   private async manualTicketToTicketData(
     client: PoolClient,
     manualTicket: ManualTicket,
@@ -655,6 +660,7 @@ export class LemonadePipeline implements BasePipeline {
       imageUrl: this.imageOptionsToImageUrl(event.imageOptions, !!checkIn),
       qrCodeOverrideImageUrl: event.imageOptions?.qrCodeOverrideImageUrl,
       eventStartDate: event.imageOptions?.eventStartDate,
+      eventEndDate: event.imageOptions?.eventEndDate,
       eventLocation: event.imageOptions?.eventLocation,
       accentColor: event.imageOptions?.accentColor,
       isRevoked: false,
@@ -1212,6 +1218,7 @@ export class LemonadePipeline implements BasePipeline {
       imageUrl: this.atomToImageUrl(atom),
       qrCodeOverrideImageUrl: this.atomToQrCodeOverrideImageUrl(atom),
       eventStartDate: this.atomToEventStartDate(atom),
+      eventEndDate: this.atomToEventEndDate(atom),
       eventLocation: this.atomToEventLocation(atom),
       accentColor: this.atomToAccentColor(atom),
       attendeeSemaphoreId: semaphoreId,

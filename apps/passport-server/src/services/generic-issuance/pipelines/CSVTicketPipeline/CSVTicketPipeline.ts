@@ -328,6 +328,7 @@ export class CSVTicketPipeline implements BasePipeline {
         this.definition.options.imageOptions?.qrCodeOverrideImageUrl,
       eventLocation: this.definition.options.imageOptions?.eventLocation,
       eventStartDate: this.definition.options.imageOptions?.eventStartDate,
+      eventEndDate: this.definition.options.imageOptions?.eventEndDate,
       accentColor: this.definition.options.imageOptions?.accentColor
     };
 
@@ -382,6 +383,7 @@ export class CSVTicketPipeline implements BasePipeline {
         this.definition.options.imageOptions?.qrCodeOverrideImageUrl,
       eventLocation: this.definition.options.imageOptions?.eventLocation,
       eventStartDate: this.definition.options.imageOptions?.eventStartDate,
+      eventEndDate: this.definition.options.imageOptions?.eventEndDate,
       accentColor: this.definition.options.imageOptions?.accentColor
     };
 

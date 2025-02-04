@@ -83,11 +83,18 @@ export function dataToPodEntries<T>(
     // Convert the fields into POD entries based on their Zod type.
     switch (typeName) {
       case "ZodString":
-        entries[key] = {
-          // Strings become values without any changes.
-          value: data[key],
-          type: "string"
-        };
+        if (field._def.effect?.transform === "datetime") {
+          entries[key] = {
+            value: new Date(data[key]),
+            type: "date"
+          };
+        } else {
+          entries[key] = {
+            // Strings become values without any changes.
+            value: data[key],
+            type: "string"
+          };
+        }
         break;
       case "ZodNativeEnum":
       case "ZodNumber":
