@@ -86,18 +86,12 @@ function EdDSATicketPCDCardBody({
   return (
     <NEW_UI__Container>
       <NEW_UI__TicketImageContainer ref={ticketImageRef}>
-        {eventPassed ? (
+        {eventPassed || !idBasedVerifyURL ? (
           <TicketCard
             eventName={ticketData?.eventName || "Unknown event"}
             dateRange={dateRange}
             colors={error ? FALLBACK_COLORS : colors}
             loading={loading}
-          />
-        ) : imageToRender ? (
-          <TicketImage
-            imageUrl={imageToRender}
-            imageAltText={ticketData?.imageAltText}
-            hidePadding={true}
           />
         ) : (
           <TicketQR
@@ -308,23 +302,6 @@ export const TicketCardContainer = styled.div<{
           `}
   }
 `;
-
-function TicketImage({
-  imageUrl,
-  imageAltText,
-  hidePadding
-}: {
-  imageUrl: string;
-  imageAltText: string | undefined;
-  hidePadding?: boolean;
-}): JSX.Element {
-  if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
-  return (
-    <div style={{ padding: "8px" }}>
-      <img src={imageUrl} alt={imageAltText} />
-    </div>
-  );
-}
 
 function getHeader({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element {
   let header;
