@@ -9,7 +9,8 @@ import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
   ITicketData,
-  TicketCategory
+  TicketCategory,
+  isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage, isEmailPCD } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
@@ -46,11 +47,17 @@ import {
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { encodePublicKey } from "@pcd/pod";
 import { PODEmailPCD, PODEmailPCDPackage } from "@pcd/pod-email-pcd";
+import {
+  IPODTicketData,
+  PODTicketPCD,
+  PODTicketPCDPackage
+} from "@pcd/pod-ticket-pcd";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import { IdentityV3, v3tov4Identity } from "@pcd/semaphore-identity-pcd";
 import { RollbarService } from "@pcd/server-shared";
 import { ONE_HOUR_MS } from "@pcd/util";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
+import stable_stringify from "fast-json-stable-stringify";
 import _ from "lodash";
 import { LRUCache } from "lru-cache";
 import NodeRSA from "node-rsa";
@@ -238,7 +245,11 @@ export class IssuanceService {
                   type: PCDActionType.ReplaceInFolder,
                   folder: "Zuzalu '23",
                   pcds: await Promise.all(
-                    pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+                    pcds.map((pcd) =>
+                      isEdDSATicketPCD(pcd)
+                        ? EdDSATicketPCDPackage.serialize(pcd)
+                        : PODTicketPCDPackage.serialize(pcd)
+                    )
                   )
                 });
               });
@@ -286,7 +297,11 @@ export class IssuanceService {
                   type: PCDActionType.ReplaceInFolder,
                   folder: "ZuConnect",
                   pcds: await Promise.all(
-                    pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+                    pcds.map((pcd) =>
+                      isEdDSATicketPCD(pcd)
+                        ? EdDSATicketPCDPackage.serialize(pcd)
+                        : PODTicketPCDPackage.serialize(pcd)
+                    )
                   )
                 });
               });
@@ -440,6 +455,40 @@ export class IssuanceService {
     });
   }
 
+  private async getOrGeneratePODTicket(
+    ticketData: IPODTicketData
+  ): Promise<PODTicketPCD> {
+    return traced("IssuanceService", "getOrGeneratePODTicket", async (span) => {
+      span?.setAttribute("ticket_id", ticketData.ticketId);
+      span?.setAttribute("ticket_email", ticketData.attendeeEmail);
+      span?.setAttribute("ticket_name", ticketData.attendeeName);
+
+      const cachedTicket = await this.getCachedPODTicket(ticketData);
+      if (cachedTicket) {
+        return cachedTicket;
+      }
+
+      logger(`[ISSUANCE] cache miss for POD ticket id ${ticketData.ticketId}`);
+
+      const generatedTicket = await IssuanceService.ticketDataToPODTicketPCD(
+        ticketData,
+        this.eddsaPrivateKey
+      );
+
+      try {
+        this.cachePODTicket(generatedTicket);
+      } catch (e) {
+        this.rollbarService?.reportError(e);
+        logger(
+          `[ISSUANCE] error caching POD ticket ${ticketData.ticketId} ` +
+            `${ticketData.attendeeEmail} for ${ticketData.eventId} (${ticketData.eventName})`
+        );
+      }
+
+      return generatedTicket;
+    });
+  }
+
   private static async getTicketCacheKey(
     ticketData: ITicketData
   ): Promise<string> {
@@ -452,9 +501,27 @@ export class IssuanceService {
     return hash;
   }
 
+  private static async getPODTicketCacheKey(
+    ticketData: IPODTicketData
+  ): Promise<string> {
+    const ticketCopy: Partial<IPODTicketData> = { ...ticketData };
+    // the reason we remove `timestampSigned` from the cache key
+    // is that it changes every time we instantiate `ITicketData`
+    // for a particular ticket, rendering the caching ineffective.
+    delete ticketCopy.timestampSigned;
+    const hash = await getHash(stable_stringify(ticketCopy) + "3");
+    return hash;
+  }
+
   private async cacheTicket(ticket: EdDSATicketPCD): Promise<void> {
     const key = await IssuanceService.getTicketCacheKey(ticket.claim.ticket);
     const serialized = await EdDSATicketPCDPackage.serialize(ticket);
+    this.cacheService.setValue(key, JSON.stringify(serialized));
+  }
+
+  private async cachePODTicket(ticket: PODTicketPCD): Promise<void> {
+    const key = await IssuanceService.getPODTicketCacheKey(ticket.claim.ticket);
+    const serialized = await PODTicketPCDPackage.serialize(ticket);
     this.cacheService.setValue(key, JSON.stringify(serialized));
   }
 
@@ -482,6 +549,30 @@ export class IssuanceService {
     }
   }
 
+  private async getCachedPODTicket(
+    ticketData: IPODTicketData
+  ): Promise<PODTicketPCD | undefined> {
+    const key = await IssuanceService.getPODTicketCacheKey(ticketData);
+    const serializedTicket = await this.cacheService.getValue(key);
+    if (!serializedTicket) {
+      logger(`[ISSUANCE] cache miss for POD ticket id ${ticketData.ticketId}`);
+      return undefined;
+    }
+    logger(`[ISSUANCE] cache hit for POD ticket id ${ticketData.ticketId}`);
+    const parsedTicket = JSON.parse(serializedTicket.cache_value);
+
+    try {
+      const deserializedTicket = await PODTicketPCDPackage.deserialize(
+        parsedTicket.pcd
+      );
+      return deserializedTicket;
+    } catch (e) {
+      logger("[ISSUANCE]", `failed to parse cached POD ticket ${key}`, e);
+      this.rollbarService?.reportError(e);
+      return undefined;
+    }
+  }
+
   private static async ticketDataToTicketPCD(
     ticketData: ITicketData,
     eddsaPrivateKey: string
@@ -489,6 +580,30 @@ export class IssuanceService {
     const stableId = await getHash(JSON.stringify(ticketData));
 
     const ticketPCD = await EdDSATicketPCDPackage.prove({
+      ticket: {
+        value: ticketData,
+        argumentType: ArgumentTypeName.Object
+      },
+      privateKey: {
+        value: eddsaPrivateKey,
+        argumentType: ArgumentTypeName.String
+      },
+      id: {
+        value: stableId,
+        argumentType: ArgumentTypeName.String
+      }
+    });
+
+    return ticketPCD;
+  }
+
+  private static async ticketDataToPODTicketPCD(
+    ticketData: IPODTicketData,
+    eddsaPrivateKey: string
+  ): Promise<PODTicketPCD> {
+    const stableId = await getHash(`pod-ticket-${JSON.stringify(ticketData)}`);
+
+    const ticketPCD = await PODTicketPCDPackage.prove({
       ticket: {
         value: ticketData,
         argumentType: ArgumentTypeName.Object
@@ -664,7 +779,7 @@ export class IssuanceService {
   private async issueZuzaluTicketPCDs(
     client: PoolClient,
     credential: VerifiedCredential
-  ): Promise<EdDSATicketPCD[]> {
+  ): Promise<(EdDSATicketPCD | PODTicketPCD)[]> {
     return traced("IssuanceService", "issueZuzaluTicketPCDs", async (span) => {
       // The image we use for Zuzalu tickets is served from the same place
       // as passport-client.
@@ -701,39 +816,39 @@ export class IssuanceService {
       const tickets = [];
 
       for (const ticket of zuzaluTickets) {
-        tickets.push(
-          await this.getOrGenerateTicket({
-            attendeeSemaphoreId: user.commitment,
-            eventName: "Zuzalu",
-            checkerEmail: undefined,
-            ticketId: user.uuid,
-            ticketName: ticket.role.toString(),
-            attendeeName: ticket.name,
-            attendeeEmail: ticket.email,
-            eventId: ZUZALU_23_EVENT_ID,
-            productId: zuzaluRoleToProductId(ticket.role),
-            timestampSigned: Date.now(),
-            timestampConsumed: 0,
-            isConsumed: false,
-            isRevoked: false,
-            ticketCategory: TicketCategory.Zuzalu,
-            imageUrl: urljoin(
-              imageServerUrl,
-              "images/zuzalu",
-              "zuzalu-landscape.webp"
-            ),
-            qrCodeOverrideImageUrl: urljoin(
-              imageServerUrl,
-              "images/zuzalu",
-              "zuzalu.png"
-            ),
-            imageAltText: "Zuzalu logo",
-            eventLocation: "Lustica Bay, Montenegro",
-            eventStartDate: "2023-03-25T00:00:00.000Z",
-            eventEndDate: "2023-05-25T00:00:00.000Z",
-            accentColor: "#147C66"
-          })
-        );
+        const ticketData = {
+          attendeeSemaphoreId: user.commitment,
+          eventName: "Zuzalu",
+          checkerEmail: undefined,
+          ticketId: user.uuid,
+          ticketName: ticket.role.toString(),
+          attendeeName: ticket.name,
+          attendeeEmail: ticket.email,
+          eventId: ZUZALU_23_EVENT_ID,
+          productId: zuzaluRoleToProductId(ticket.role),
+          timestampSigned: Date.now(),
+          timestampConsumed: 0,
+          isConsumed: false,
+          isRevoked: false,
+          ticketCategory: TicketCategory.Zuzalu,
+          imageUrl: urljoin(
+            imageServerUrl,
+            "images/zuzalu",
+            "zuzalu-landscape.webp"
+          ),
+          qrCodeOverrideImageUrl: urljoin(
+            imageServerUrl,
+            "images/zuzalu",
+            "zuzalu.png"
+          ),
+          imageAltText: "Zuzalu logo",
+          eventLocation: "Lustica Bay, Montenegro",
+          eventStartDate: "2023-03-25T00:00:00.000Z",
+          eventEndDate: "2023-05-25T00:00:00.000Z",
+          accentColor: "#147C66"
+        };
+        tickets.push(await this.getOrGenerateTicket(ticketData));
+        tickets.push(await this.getOrGeneratePODTicket(ticketData));
       }
 
       return tickets;
@@ -748,7 +863,7 @@ export class IssuanceService {
   private async issueZuconnectTicketPCDs(
     client: PoolClient,
     credential: VerifiedCredential
-  ): Promise<EdDSATicketPCD[]> {
+  ): Promise<(EdDSATicketPCD | PODTicketPCD)[]> {
     return traced(
       "IssuanceService",
       "issueZuconnectTicketPCDs",
@@ -788,39 +903,39 @@ export class IssuanceService {
             ticket.product_id === ZUCONNECT_23_DAY_PASS_PRODUCT_ID
               ? ticket.extra_info.join("\n")
               : zuconnectProductIdToName(ticket.product_id);
-          pcds.push(
-            await this.getOrGenerateTicket({
-              attendeeSemaphoreId: user.commitment,
-              eventName: "Zuconnect",
-              checkerEmail: undefined,
-              ticketId: ticket.id,
-              ticketName,
-              attendeeName: `${ticket.attendee_name}`,
-              attendeeEmail: ticket.attendee_email,
-              eventId: zuconnectProductIdToEventId(ticket.product_id),
-              productId: ticket.product_id,
-              timestampSigned: Date.now(),
-              timestampConsumed: 0,
-              isConsumed: false,
-              isRevoked: false,
-              ticketCategory: TicketCategory.ZuConnect,
-              imageUrl: urljoin(
-                imageServerUrl,
-                "images/zuzalu",
-                "zuconnect-landscape.webp"
-              ),
-              qrCodeOverrideImageUrl: urljoin(
-                imageServerUrl,
-                "images/zuzalu",
-                "zuconnect.png"
-              ),
-              imageAltText: "ZuConnect",
-              eventLocation: "Istanbul, Turkey",
-              eventStartDate: "2023-10-29T00:00:00.000Z",
-              eventEndDate: "2023-11-11T00:00:00.000Z",
-              accentColor: "#DBA452"
-            })
-          );
+          const ticketData = {
+            attendeeSemaphoreId: user.commitment,
+            eventName: "Zuconnect",
+            checkerEmail: undefined,
+            ticketId: ticket.id,
+            ticketName,
+            attendeeName: `${ticket.attendee_name}`,
+            attendeeEmail: ticket.attendee_email,
+            eventId: zuconnectProductIdToEventId(ticket.product_id),
+            productId: ticket.product_id,
+            timestampSigned: Date.now(),
+            timestampConsumed: 0,
+            isConsumed: false,
+            isRevoked: false,
+            ticketCategory: TicketCategory.ZuConnect,
+            imageUrl: urljoin(
+              imageServerUrl,
+              "images/zuzalu",
+              "zuconnect-landscape.webp"
+            ),
+            qrCodeOverrideImageUrl: urljoin(
+              imageServerUrl,
+              "images/zuzalu",
+              "zuconnect.png"
+            ),
+            imageAltText: "ZuConnect",
+            eventLocation: "Istanbul, Turkey",
+            eventStartDate: "2023-10-29T00:00:00.000Z",
+            eventEndDate: "2023-11-11T00:00:00.000Z",
+            accentColor: "#DBA452"
+          };
+          pcds.push(await this.getOrGenerateTicket(ticketData));
+          pcds.push(await this.getOrGeneratePODTicket(ticketData));
         }
 
         return pcds;
