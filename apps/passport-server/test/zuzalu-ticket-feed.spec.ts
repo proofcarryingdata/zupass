@@ -6,6 +6,7 @@ import {
   ZUZALU_23_EVENT_ID
 } from "@pcd/passport-interface";
 import { isReplaceInFolderAction, PCDActionType } from "@pcd/pcd-collection";
+import { PODTicketPCDPackage } from "@pcd/pod-ticket-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
@@ -108,10 +109,9 @@ describe("zuzalu-specific zupass functionality", function () {
       expect(action.folder).to.eq("Zuzalu '23");
 
       expect(Array.isArray(action.pcds)).to.eq(true);
-      expect(action.pcds.length).to.eq(1);
+      expect(action.pcds.length).to.eq(2);
 
-      const zuzaluTicketPCD = action.pcds[0];
-
+      const [zuzaluTicketPCD, podTicketPCD] = action.pcds;
       expect(zuzaluTicketPCD.type).to.eq(EdDSATicketPCDPackage.name);
 
       const deserializedZuzaluTicketPCD =
@@ -125,6 +125,16 @@ describe("zuzalu-specific zupass functionality", function () {
         deserializedZuzaluTicketPCD
       );
       expect(verified).to.eq(true);
+
+      expect(podTicketPCD.type).to.eq(PODTicketPCDPackage.name);
+
+      const deserializedPodTicketPCD = await PODTicketPCDPackage.deserialize(
+        podTicketPCD.pcd
+      );
+
+      expect(deserializedPodTicketPCD.claim.ticket.eventId).to.eq(
+        ZUZALU_23_EVENT_ID
+      );
     }
   );
 });
