@@ -1007,7 +1007,9 @@ export class PretixPipeline implements BasePipeline {
       imageUrl: this.imageOptionsToImageUrl(event.imageOptions, !!checkIn),
       qrCodeOverrideImageUrl: event.imageOptions?.qrCodeOverrideImageUrl,
       eventStartDate: event.imageOptions?.eventStartDate,
+      eventEndDate: event.imageOptions?.eventEndDate,
       eventLocation: event.imageOptions?.eventLocation,
+      accentColor: event.imageOptions?.accentColor,
       isAddOn: product.isAddOnItem,
       isConsumed: checkIn ? true : false,
       isRevoked: false,
@@ -1043,7 +1045,9 @@ export class PretixPipeline implements BasePipeline {
       imageUrl: this.imageOptionsToImageUrl(event.imageOptions, !!checkIn),
       qrCodeOverrideImageUrl: event.imageOptions?.qrCodeOverrideImageUrl,
       eventStartDate: event.imageOptions?.eventStartDate,
+      eventEndDate: event.imageOptions?.eventEndDate,
       eventLocation: event.imageOptions?.eventLocation,
+      accentColor: event.imageOptions?.accentColor,
       isAddOn: product.isAddOnItem,
       isConsumed: checkIn ? true : false,
       isRevoked: false,
@@ -1324,7 +1328,9 @@ export class PretixPipeline implements BasePipeline {
       imageUrl: this.atomToImageUrl(atom),
       qrCodeOverrideImageUrl: this.atomToQrCodeOverrideImageUrl(atom),
       eventStartDate: this.atomToEventStartDate(atom),
+      eventEndDate: this.atomToEventEndDate(atom),
       eventLocation: this.atomToEventLocation(atom),
+      accentColor: this.atomToAccentColor(atom),
       isAddOn: !!atom.parentAtomId,
       isConsumed: atom.isConsumed,
       isRevoked: false,
@@ -1360,7 +1366,9 @@ export class PretixPipeline implements BasePipeline {
       imageUrl: this.atomToImageUrl(atom),
       qrCodeOverrideImageUrl: this.atomToQrCodeOverrideImageUrl(atom),
       eventStartDate: this.atomToEventStartDate(atom),
+      eventEndDate: this.atomToEventEndDate(atom),
       eventLocation: this.atomToEventLocation(atom),
+      accentColor: this.atomToAccentColor(atom),
       isAddOn: !!atom.parentAtomId,
       isConsumed: atom.isConsumed,
       isRevoked: false,
@@ -2263,6 +2271,11 @@ export class PretixPipeline implements BasePipeline {
     );
   }
 
+  private atomToAccentColor(atom: PretixAtom): string | undefined {
+    const event = this.getEventById(atom.eventId);
+    return event.imageOptions?.accentColor;
+  }
+
   private atomToEventName(atom: PretixAtom): string {
     return this.getEventById(atom.eventId).name;
   }
@@ -2273,6 +2286,10 @@ export class PretixPipeline implements BasePipeline {
 
   private atomToEventStartDate(atom: PretixAtom): string | undefined {
     return this.getEventById(atom.eventId).imageOptions?.eventStartDate;
+  }
+
+  private atomToEventEndDate(atom: PretixAtom): string | undefined {
+    return this.getEventById(atom.eventId).imageOptions?.eventEndDate;
   }
 
   private atomToIsAddOn(atom: PretixAtom): boolean | undefined {

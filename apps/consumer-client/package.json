@@ -38,6 +38,7 @@
     "@simplewebauthn/browser": "^7.2.0",
     "@simplewebauthn/server": "^7.2.0",
     "@zk-kit/eddsa-poseidon": "^1.1.0",
+    "buffer": "^6.0.3",
     "dotenv": "^16.0.3",
     "ethers": "^5.7.2",
     "json-bigint": "^1.0.0",

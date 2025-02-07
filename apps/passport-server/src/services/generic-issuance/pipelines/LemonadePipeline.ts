@@ -615,6 +615,11 @@ export class LemonadePipeline implements BasePipeline {
     );
   }
 
+  private atomToAccentColor(atom: LemonadeAtom): string | undefined {
+    const event = this.lemonadeAtomToEvent(atom);
+    return event.imageOptions?.accentColor;
+  }
+
   private atomToEventLocation(atom: LemonadeAtom): string | undefined {
     const event = this.lemonadeAtomToEvent(atom);
     return event.imageOptions?.eventLocation;
@@ -623,6 +628,11 @@ export class LemonadePipeline implements BasePipeline {
   private atomToEventStartDate(atom: LemonadeAtom): string | undefined {
     const event = this.lemonadeAtomToEvent(atom);
     return event.imageOptions?.eventStartDate;
+  }
+
+  private atomToEventEndDate(atom: LemonadeAtom): string | undefined {
+    const event = this.lemonadeAtomToEvent(atom);
+    return event.imageOptions?.eventEndDate;
   }
 
   private async manualTicketToTicketData(
@@ -650,7 +660,9 @@ export class LemonadePipeline implements BasePipeline {
       imageUrl: this.imageOptionsToImageUrl(event.imageOptions, !!checkIn),
       qrCodeOverrideImageUrl: event.imageOptions?.qrCodeOverrideImageUrl,
       eventStartDate: event.imageOptions?.eventStartDate,
+      eventEndDate: event.imageOptions?.eventEndDate,
       eventLocation: event.imageOptions?.eventLocation,
+      accentColor: event.imageOptions?.accentColor,
       isRevoked: false,
       timestampSigned: Date.now(),
       timestampConsumed: checkIn ? checkIn.timestamp.getTime() : 0,
@@ -1206,7 +1218,9 @@ export class LemonadePipeline implements BasePipeline {
       imageUrl: this.atomToImageUrl(atom),
       qrCodeOverrideImageUrl: this.atomToQrCodeOverrideImageUrl(atom),
       eventStartDate: this.atomToEventStartDate(atom),
+      eventEndDate: this.atomToEventEndDate(atom),
       eventLocation: this.atomToEventLocation(atom),
+      accentColor: this.atomToAccentColor(atom),
       attendeeSemaphoreId: semaphoreId,
       isConsumed: atom.checkinDate instanceof Date,
       isRevoked: false, // Not clear what concept this maps to in Lemonade

@@ -4,10 +4,20 @@ import {
   TicketCategory,
   getEdDSATicketData
 } from "@pcd/eddsa-ticket-pcd";
-import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
-import { styled } from "@pcd/passport-ui";
+import {
+  DateRange,
+  ZUCONNECT_23_DAY_PASS_PRODUCT_ID,
+  prettyPrintDateRange
+} from "@pcd/passport-interface";
+import {
+  FlattenSimpleInterpolation,
+  css,
+  keyframes,
+  styled
+} from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { useRef } from "react";
+import { useExtractColors } from "react-extract-colors";
 import { TicketQR } from "./TicketQR";
 
 type NEW_UI__AddOns = {
@@ -29,6 +39,8 @@ export interface EdDSATicketPCDCardProps {
   // when clicked on the the addons sections, if there is any, do something
   addOns?: NEW_UI__AddOns;
 }
+
+const FALLBACK_COLORS = ["#1A908C", "#EB4FDA"];
 
 export const EdDSATicketPCDUI: PCDUI<EdDSATicketPCD, EdDSATicketPCDCardProps> =
   {
@@ -53,25 +65,44 @@ function EdDSATicketPCDCardBody({
     ? ticketData.qrCodeOverrideImageUrl
     : ticketData?.imageUrl;
 
+  // Defaults to the Zuzalu image for grabbing accent colors
+  const { colors, loading, error } = useExtractColors(
+    imageToRender ?? "images/zuzalu/zuzalu.png",
+    {
+      colorSimilarityThreshold: 100
+    }
+  );
+
+  const dateRange = {
+    date_from: ticketData?.eventStartDate,
+    date_to: ticketData?.eventEndDate
+  };
+  const eventPassed =
+    (dateRange.date_to && new Date(dateRange.date_to) < new Date()) ||
+    (!dateRange.date_to &&
+      dateRange.date_from &&
+      new Date(dateRange.date_from) < new Date());
+
   return (
     <NEW_UI__Container>
       <NEW_UI__TicketImageContainer ref={ticketImageRef}>
-        {!imageToRender && (
+        {eventPassed || !idBasedVerifyURL ? (
+          <TicketCard
+            eventName={ticketData?.eventName || "Unknown event"}
+            dateRange={dateRange}
+            colors={error ? FALLBACK_COLORS : colors}
+            loading={loading}
+          />
+        ) : (
           <TicketQR
             pcd={pcd}
             verifyURL={verifyURL}
             idBasedVerifyURL={idBasedVerifyURL}
           />
         )}
-        {imageToRender && (
-          <TicketImage
-            imageUrl={imageToRender}
-            imageAltText={ticketData?.imageAltText}
-            hidePadding={true}
-          />
-        )}
+
         <NEW_UI__InfoContainer>
-          <NEW_UI__AttendeeName>
+          <NEW_UI__AttendeeName color={ticketData?.accentColor}>
             {ticketData?.attendeeName.toUpperCase() ||
               ticketData?.eventName.toUpperCase() ||
               "Unknown"}
@@ -108,22 +139,169 @@ function EdDSATicketPCDCardBody({
   );
 }
 
-function TicketImage({
-  imageUrl,
-  imageAltText,
-  hidePadding
+function TicketCard({
+  eventName,
+  dateRange,
+  colors,
+  loading
 }: {
-  imageUrl: string;
-  imageAltText: string | undefined;
-  hidePadding?: boolean;
+  eventName: string;
+  dateRange: DateRange;
+  colors: string[];
+  loading?: boolean;
 }): JSX.Element {
-  if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
   return (
-    <div style={{ padding: "8px" }}>
-      <img src={imageUrl} alt={imageAltText} />
-    </div>
+    <TicketCardContainer colors={colors} loading={loading}>
+      {!loading && (
+        <div>
+          <TicketCardHeader>{eventName}</TicketCardHeader>
+          <TicketCardDate>{prettyPrintDateRange(dateRange)}</TicketCardDate>
+        </div>
+      )}
+    </TicketCardContainer>
   );
 }
+
+const TicketCardHeader = styled.div`
+  font-size: 28px;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+`;
+
+const TicketCardDate = styled.div`
+  font-size: 20px;
+  color: #f0f0f0;
+  font-weight: 500;
+`;
+
+const shimmer = keyframes`
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+`;
+
+export const TicketCardContainer = styled.div<{
+  colors: string[];
+  loading?: boolean;
+}>`
+  height: 400px;
+  padding: 16px;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden; /* so skeleton shimmer doesn’t flow outside */
+
+  /* Ticket notches */
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: white;
+  }
+  &::before {
+    left: -10px;
+  }
+  &::after {
+    right: -10px;
+  }
+
+  background: ${({ loading, colors }): string =>
+    loading
+      ? "#e0e0e0"
+      : `linear-gradient(135deg, ${colors[0]} 0%, ${colors[1]} 100%)`};
+
+  /* If not loading, show your animated gradient */
+  ${({ loading }): FlattenSimpleInterpolation =>
+    !loading
+      ? css`
+          background-size: 200% 200%;
+          animation: gradientAnimation 8s ease infinite;
+
+          @keyframes gradientAnimation {
+            0% {
+              background-position: 0% 50%;
+            }
+            50% {
+              background-position: 100% 50%;
+            }
+            100% {
+              background-position: 0% 50%;
+            }
+          }
+        `
+      : css``}
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-family: "Barlow", sans-serif;
+
+  /* Text styling only visible if not loading */
+  p {
+    ${({ loading }): string => (loading ? "display: none;" : "")}
+
+    &:first-child {
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    &:last-child {
+      font-size: 20px;
+      color: #f0f0f0;
+      font-weight: 500;
+    }
+  }
+
+  /* Skeleton lines (only visible if loading = true) */
+  .skeleton-line {
+    ${({ loading }): FlattenSimpleInterpolation =>
+      loading
+        ? css`
+            width: 60%;
+            height: 24px;
+            border-radius: 4px;
+            background-color: #d6d6d6;
+            margin: 8px 0;
+            position: relative;
+            overflow: hidden;
+
+            &::after {
+              content: "";
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 40%;
+              height: 100%;
+              background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.5) 50%,
+                rgba(255, 255, 255, 0) 100%
+              );
+              animation: ${shimmer} 1.2s ease-in-out infinite;
+            }
+          `
+        : css`
+            display: none;
+          `}
+  }
+`;
 
 function getHeader({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element {
   let header;
@@ -171,8 +349,8 @@ const NEW_UI__InfoContainer = styled.div`
   justify-content: center;
   align-items: flex-start;
 `;
-const NEW_UI__AttendeeName = styled.div`
-  color: #9a4ac9;
+const NEW_UI__AttendeeName = styled.div<{ color?: string }>`
+  color: ${({ color }): string => color || "#9a4ac9"};
   font-size: 20px;
   font-style: normal;
   font-weight: 800;

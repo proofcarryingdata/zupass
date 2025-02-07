@@ -36,6 +36,7 @@
     "@pcd/pcd-types": "0.15.0",
     "@pcd/semaphore-signature-pcd": "0.15.0",
     "@trufflesuite/bigint-buffer": "^1.1.10",
+    "buffer": "^6.0.3",
     "chai": "^4.3.7",
     "json-bigint": "^1.0.0",
     "uuid": "^9.0.0",

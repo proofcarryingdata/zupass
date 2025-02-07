@@ -38,6 +38,7 @@ import { LocalStorageNotAccessibleScreen } from "../components/screens/LocalStor
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 // import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
+import * as localForage from "localforage";
 import styled from "styled-components";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
@@ -87,13 +88,15 @@ if (typeof window !== "undefined") {
   const params = new URLSearchParams(window.location.search);
   if (params.has("forceNewSession")) {
     localStorage.clear();
-    const newParams = new URLSearchParams(window.location.search);
-    newParams.delete("forceNewSession");
-    const newSearch = newParams.toString();
-    const newPath = `${window.location.pathname}${
-      newSearch ? `?${newSearch}` : ""
-    }${window.location.hash}`;
-    window.location.replace(newPath);
+    localForage.clear().then(() => {
+      const newParams = new URLSearchParams(window.location.search);
+      newParams.delete("forceNewSession");
+      const newSearch = newParams.toString();
+      const newPath = `${window.location.pathname}${
+        newSearch ? `?${newSearch}` : ""
+      }${window.location.hash}`;
+      window.location.replace(newPath);
+    });
   }
 }
 
@@ -176,6 +179,12 @@ function RouterImpl(): JSX.Element {
     )
   );
 
+  const LazyClaimScreen = React.lazy(() =>
+    import("../components/screens/ClaimScreen").then((module) => ({
+      default: module.ClaimScreen
+    }))
+  );
+
   return (
     <HashRouter>
       <Routes>
@@ -256,6 +265,22 @@ function RouterImpl(): JSX.Element {
             element={<AuthenticateIFrameScreen />}
           />
           <Route path="embedded" element={<EmbeddedScreen />} />
+          <Route
+            path="claim"
+            element={
+              <React.Suspense
+                fallback={
+                  <AppContainer bg="gray" fullscreen>
+                    <LoaderContainer>
+                      <NewLoader />
+                    </LoaderContainer>
+                  </AppContainer>
+                }
+              >
+                <LazyClaimScreen />
+              </React.Suspense>
+            }
+          />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>

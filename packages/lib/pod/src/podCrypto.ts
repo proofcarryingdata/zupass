@@ -10,6 +10,7 @@ import {
   verifySignature
 } from "@zk-kit/eddsa-poseidon";
 import { BigNumber, leBigIntToBuffer, leBufferToBigInt } from "@zk-kit/utils";
+import { Buffer } from "buffer";
 import { sha256 } from "js-sha256";
 import { poseidon1 } from "poseidon-lite/poseidon1";
 import { poseidon2 } from "poseidon-lite/poseidon2";
@@ -142,7 +143,7 @@ export function encodePublicKey(
 }
 
 /**
- * Decodes a public key packed by {@encodePublicKey}.  The input must be
+ * Decodes a public key packed by {@link encodePublicKey}.  The input must be
  * 32 bytes, represented as hex or Base64.  Base64 padding is optional.
  *
  * @param publicKey the public key string to decode

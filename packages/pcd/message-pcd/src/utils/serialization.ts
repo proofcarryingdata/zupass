@@ -1,4 +1,5 @@
 import { toBigIntBE, toBufferBE } from "@trufflesuite/bigint-buffer";
+import { Buffer } from "buffer";
 import { Message, MessageSchema } from "../Message";
 
 export type MsgAsInt = {

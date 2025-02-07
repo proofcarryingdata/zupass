@@ -1,4 +1,3 @@
-import { arrayBufferToHexString } from "@pcd/passport-crypto";
 import {
   requestConfirmationEmail,
   requestCreateNewUser,
@@ -87,10 +86,10 @@ export async function testLogin(
     token = serverToken;
   }
 
-  const salt = arrayBufferToHexString(randomBytes(32));
+  const salt = randomBytes(32).toString("hex");
   let encryptionKey: string | undefined = undefined;
   if (skipSetupPassword) {
-    encryptionKey = arrayBufferToHexString(randomBytes(32));
+    encryptionKey = randomBytes(32).toString("hex");
   }
 
   const newUserResult = await requestCreateNewUser(

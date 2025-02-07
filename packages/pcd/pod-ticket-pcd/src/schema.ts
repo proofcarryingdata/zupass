@@ -42,9 +42,11 @@ export const TicketDataSchema = z.object({
   qrCodeOverrideImageUrl: z.string().optional(),
   ticketSecret: z.string().optional(),
   eventLocation: z.string().optional(),
-  eventStartDate: z.string().optional(),
+  eventStartDate: z.string().datetime().optional(),
+  eventEndDate: z.string().datetime().optional(),
   isAddOn: z.boolean().optional(),
-  parentTicketId: z.string().uuid().optional() // the "parent" ticket that this is an add-on to
+  parentTicketId: z.string().uuid().optional(), // the "parent" ticket that this is an add-on to
+  accentColor: z.string().optional()
 });
 
 export type IPODTicketData = z.infer<typeof TicketDataSchema>;

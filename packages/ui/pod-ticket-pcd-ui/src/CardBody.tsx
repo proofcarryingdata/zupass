@@ -2,6 +2,7 @@ import { QRDisplayWithRegenerateAndStorage, styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { PODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { IPODTicketData } from "@pcd/pod-ticket-pcd/src/schema";
+import { Buffer } from "buffer";
 import { useCallback, useRef } from "react";
 import urlJoin from "url-join";
 
@@ -67,18 +68,23 @@ export function PODTicketCardBodyImpl({
           />
         )}
         <NEW_UI__InfoContainer>
-          <NEW_UI__AttendeeName>
+          <NEW_UI__AttendeeName color={ticketData?.accentColor}>
             {ticketData?.attendeeName.toUpperCase() ||
               ticketData.eventName.toUpperCase() ||
               "Unknown"}
           </NEW_UI__AttendeeName>
           <NEW_UI__ExtraInfoContainer>
-            {ticketData?.attendeeEmail && (
-              <NEW_UI__ExtraInfo>{ticketData.attendeeEmail}</NEW_UI__ExtraInfo>
-            )}
-            {ticketData?.attendeeEmail && ticketData?.ticketName && (
-              <NEW_UI__ExtraInfo>•</NEW_UI__ExtraInfo>
-            )}
+            {ticketData?.attendeeEmail &&
+              ticketData?.attendeeEmail !== ticketData?.attendeeName && (
+                <>
+                  <NEW_UI__ExtraInfo>
+                    {ticketData.attendeeEmail}
+                  </NEW_UI__ExtraInfo>
+                  {ticketData?.ticketName && (
+                    <NEW_UI__ExtraInfo>•</NEW_UI__ExtraInfo>
+                  )}
+                </>
+              )}
             {ticketData?.ticketName && (
               <NEW_UI__ExtraInfo>{ticketData.ticketName}</NEW_UI__ExtraInfo>
             )}
@@ -200,8 +206,8 @@ const NEW_UI__InfoContainer = styled.div`
   justify-content: center;
   align-items: flex-start;
 `;
-const NEW_UI__AttendeeName = styled.div`
-  color: #9a4ac9;
+const NEW_UI__AttendeeName = styled.div<{ color?: string }>`
+  color: ${({ color }): string => color || "#9a4ac9"};
   font-size: 20px;
   font-style: normal;
   font-weight: 800;

@@ -63,8 +63,10 @@ export interface ITicketData {
   qrCodeOverrideImageUrl?: string;
   eventLocation?: string;
   eventStartDate?: string;
+  eventEndDate?: string;
   isAddOn?: boolean;
   parentTicketId?: string;
+  accentColor?: string;
 }
 
 /**

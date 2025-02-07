@@ -14,6 +14,7 @@ import {
   pendingRequestKeys,
   setPendingAddRequest,
   setPendingAddSubscriptionRequest,
+  setPendingClaimTicketRequest,
   setPendingGenericIssuanceCheckinRequest,
   setPendingGetWithoutProvingRequest,
   setPendingProofRequest,
@@ -55,6 +56,8 @@ export const NewLoginScreen = (): JSX.Element => {
   const pendingGenericIssuanceCheckinRequest = query?.get(
     pendingRequestKeys.genericIssuanceCheckin
   );
+  const pendingClaimTicketRequest = query?.get(pendingRequestKeys.claimTicket);
+
   useEffect(() => {
     let pendingRequestForLogging: string | undefined = undefined;
 
@@ -81,6 +84,9 @@ export const NewLoginScreen = (): JSX.Element => {
         pendingGenericIssuanceCheckinRequest
       );
       pendingRequestForLogging = pendingRequestKeys.genericIssuanceCheckin;
+    } else if (pendingClaimTicketRequest) {
+      setPendingClaimTicketRequest(pendingClaimTicketRequest);
+      pendingRequestForLogging = pendingRequestKeys.claimTicket;
     }
 
     if (pendingRequestForLogging) {
@@ -95,7 +101,8 @@ export const NewLoginScreen = (): JSX.Element => {
     pendingViewSubscriptionsRequest,
     pendingAddSubscriptionRequest,
     pendingViewFrogCryptoRequest,
-    pendingGenericIssuanceCheckinRequest
+    pendingGenericIssuanceCheckinRequest,
+    pendingClaimTicketRequest
   ]);
 
   const suggestedEmail = query?.get("email");

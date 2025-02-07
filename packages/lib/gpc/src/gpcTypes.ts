@@ -6,7 +6,8 @@ import type { Groth16Proof } from "snarkjs";
 /**
  * String specifying a named entry, virtual or otherwise, in a named object, in
  * the format `objectName.entryName`.  Each of the sub-parts should be a valid
- * PODName, checked by {@link POD_NAME_REGEX} or {@link POD_VIRTUAL_NAME_REGEX}.
+ * PODName, checked by {@link @pcd/pod!POD_NAME_REGEX} or
+ * {@link POD_VIRTUAL_NAME_REGEX}.
  *
  * Examples: "ticket1.eventID", "award.$signerPublicKey"
  */
@@ -48,14 +49,21 @@ export const POD_VIRTUAL_NAME_REGEX = new RegExp(
  */
 export type PODMembershipLists = Record<PODName, PODValue[] | PODValueTuple[]>;
 
-// Single source of truth for tuple prefix (used internally).
-// This should not be a valid {@link PODName} to avoid name clashes.
+/**
+ * Single source of truth for tuple prefix (used internally).
+ * This should not be a valid {@link PODName} to avoid name clashes.
+ */
 export const TUPLE_PREFIX = "$tuple";
-type TuplePrefix = typeof TUPLE_PREFIX;
+
+/**
+ * Type representation of the tuple prefix string "$tuple".
+ */
+export type TuplePrefix = typeof TUPLE_PREFIX;
 
 /**
  * String specifying a named tuple in the format `tuple.tupleName`.
- * `tupleName` should be a valid PODName checked by {@link POD_NAME_REGEX}.
+ * `tupleName` should be a valid PODName checked by
+ * {@link @pcd/pod!POD_NAME_REGEX}.
  */
 export type TupleIdentifier = `${TuplePrefix}.${PODName}`;
 
@@ -101,7 +109,7 @@ export type GPCProofEntryConfigCommon = {
    * used to find the entry in one of the pods in {@link GPCProofInputs}.
    *
    * Comparison in the proof circuit is based on the hash produced by
-   * {@link podValueHash}.  This means values of different types can be
+   * {@link @pcd/pod!podValueHash}.  This means values of different types can be
    * considered equal if they are treated in the same way by circuits.
    *
    * If undefined, there is no equality constraint.
@@ -119,7 +127,7 @@ export type GPCProofEntryConfigCommon = {
    * find the entry in one of the pods in {@link GPCProofInputs}.
    *
    * Comparison in the proof circuit is based on the hash produced by
-   * {@link podValueHash}.  This means values of different types can be
+   * {@link @pcd/pod!podValueHash}.  This means values of different types can be
    * considered equal if they are treated in the same way by circuits.
    *
    * If undefined, there is no inequality constraint.
@@ -229,7 +237,7 @@ export type GPCProofEntryConfig = GPCProofEntryConfigCommon &
      * their identity commitment.
      *
      * Comparison in the proof circuit is based on the hash produced by
-     * {@link podValueHash}.  This means values of different types can be
+     * {@link @pcd/pod!podValueHash}.  This means values of different types can be
      * considered equal if they are treated in the same way by circuits.
      *
      * If undefined, there is no owner-related constraint on this entry.
@@ -326,7 +334,7 @@ export type GPCProofConfig = {
    * will pick the smallest supported circuit which can handle this
    * configuration.
    *
-   * See {@link ProtoPODGPC.CIRCUIT_FAMILY} for supported circuits.)
+   * See {@link "@pcd/gpcircuits"!ProtoPODGPC.CIRCUIT_FAMILY} for supported circuits.)
    */
   circuitIdentifier?: GPCIdentifier;
 
@@ -399,7 +407,7 @@ export type GPCBoundConfig = GPCProofConfig & {
    * and verifying.  Same meaning as in {@link GPCProofConfig} except here it
    * is a required field.
    *
-   * See {@link ProtoPODGPC.CIRCUIT_FAMILY} for supported circuits.)
+   * See {@link "@pcd/gpcircuits"!ProtoPODGPC.CIRCUIT_FAMILY} for supported circuits.)
    */
   circuitIdentifier: GPCIdentifier;
 };
@@ -420,13 +428,13 @@ export type GPCProof = Groth16Proof;
 export type GPCProofOwnerInputs = {
   /**
    * The owner's identity using Semaphore V3. This need not be specified if no
-   * entry has {@link isOwnerID} equal to "SemaphoreV3".
+   * entry has {@link GPCProofEntryConfig.isOwnerID} equal to "SemaphoreV3".
    */
   semaphoreV3?: IdentityV3;
 
   /**
    * The owner's identity using Semaphore V4. This need not be specified if no
-   * entry has {@link isOwnerID} equal to "SemaphoreV4".
+   * entry has {@link GPCProofEntryConfig.isOwnerID} equal to "SemaphoreV4".
    */
   semaphoreV4?: IdentityV4;
 
@@ -436,11 +444,11 @@ export type GPCProofOwnerInputs = {
    * owner's private identity.  This allows identifying duplicate proofs (e.g.
    * to avoid double spending or voting) without de-anonymizing the owner.
    *
-   * This field can be a {@link PODValue} of any type, and will be represented
+   * This field can be a {@link @pcd/pod!PODValue} of any type, and will be represented
    * in the circuit as a number or a hash as appropriate.  When the proof
    * is verified, the external nullifier is also verified (as a public input).
    *
-   * This field cannot be set if no entry is marked with {@link isOwnerID},
+   * This field cannot be set if no entry is marked with {@link GPCProofEntryConfig.isOwnerID},
    * because such a nullifier would not be cryptographically tied to anything
    * verifiable.
    */
@@ -482,7 +490,7 @@ export type GPCProofInputs = {
    * to allow identifying duplicate proofs without de-anonymizing.
    *
    * This field can be omitted if an owner is not needed for any entry
-   * an entry with {@link isOwnerID} set.
+   * an entry with {@link GPCProofEntryConfig.isOwnerID} set.
    */
   owner?: GPCProofOwnerInputs;
 
@@ -502,7 +510,7 @@ export type GPCProofInputs = {
    * avoid reuse.  Unlike a nullifier, this watermark is not cryptographically
    * tied to any specific input data.
    *
-   * This field can be a {@link PODValue} of any type, and will be represented
+   * This field can be a {@link @pcd/pod!PODValue} of any type, and will be represented
    * in the circuit as a number or a hash as appropriate.  When the proof
    * is verified, the watermark is also verified (as a public input).
    */
@@ -545,12 +553,13 @@ export type GPCRevealedObjectClaims = {
 export type GPCRevealedOwnerClaims = {
   /**
    * If this field is set, it matches the corresponding field in
-   * {@link GPCProofInputs}, and {@link nullifierHash} will also be set.  The
-   * hash is uniquely tied to this value, and to the owner's private identity.
-   * This allows identifying duplicate proofs (e.g. to avoid double spending
-   * or voting) without de-anonymizing the owner.
+   * {@link GPCProofInputs}, and {@link nullifierHashV3} or
+   * {@link nullifierHashV4} will also be set.  The hash is uniquely tied to
+   * this value, and to the owner's private identity. This allows identifying
+   * duplicate proofs (e.g. to avoid double spending or voting) without
+   * de-anonymizing the owner.
    *
-   * This field can be a {@link PODValue} of any type, and will be represented
+   * This field can be a {@link @pcd/pod!PODValue} of any type, and will be represented
    * in the circuit as a number or a hash as appropriate.  When the proof
    * is verified, the external nullifier is also verified (as a public input).
    */
@@ -621,7 +630,7 @@ export type GPCRevealedClaims = {
    * specific use case, to avoid reuse.  Unlike a nullifier, this watermark is
    * not cryptographically tied to any specific input data.
    *
-   * This field can be a {@link PODValue} of any type, and will be represented
+   * This field can be a {@link @pcd/pod!PODValue} of any type, and will be represented
    * in the circuit as a number or a hash as appropriate.  When the proof
    * is verified, the watermark is also verified (as a public input).
    */

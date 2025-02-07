@@ -16,6 +16,7 @@ import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { ClaimRequest } from "../components/screens/ClaimScreen";
 import {
   Dispatcher,
   StateContext,
@@ -304,7 +305,8 @@ export function useHasSetupPassword(): boolean {
 export function useLaserScannerKeystrokeInput(): string {
   const [typedText, setTypedText] = useState("");
   const nav = useNavigate();
-  const usingLaserScanner = loadUsingLaserScanner();
+  const [usingLaserScanner, setUsingLaserScanner] = useState(false);
+  loadUsingLaserScanner().then((value) => setUsingLaserScanner(value));
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent): void {
@@ -337,7 +339,7 @@ export function useLaserScannerKeystrokeInput(): string {
 
 export function useLoginIfNoSelf(
   key: string,
-  request?: PCDRequest | string
+  request?: PCDRequest | string | ClaimRequest
 ): void {
   const self = useSelf();
   const userForcedToLogout = useUserForcedToLogout();

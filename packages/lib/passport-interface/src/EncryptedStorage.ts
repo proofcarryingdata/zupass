@@ -4,7 +4,9 @@ import {
   PCDCollection
 } from "@pcd/pcd-collection";
 import { PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import * as base64 from "base64-js";
 import stringify from "fast-json-stable-stringify";
+import pako from "pako";
 import { NetworkFeedApi } from "./FeedAPI";
 import { FeedSubscriptionManager } from "./SubscriptionManager";
 import { User } from "./zuzalu";
@@ -106,12 +108,36 @@ export interface SyncedEncryptedStorageV5 {
   _storage_version: "v5";
 }
 
+export interface SyncedEncryptedStorageV6 {
+  self: {
+    uuid: string;
+    commitment: string;
+    emails: string[];
+    salt: string | null;
+    terms_agreed: number;
+    semaphore_v4_commitment?: string | null;
+    semaphore_v4_pubkey?: string | null;
+  };
+  /**
+   * Serialized {@link FeedSubscriptionManager}
+   */
+  subscriptions: string;
+
+  /**
+   * Serialized {@link PCDCollection}, gzipped if compressedPCDs is true.
+   */
+  pcds: string;
+  compressedPCDs: boolean;
+  _storage_version: "v6";
+}
+
 export type SyncedEncryptedStorage =
   | SyncedEncryptedStorageV1
   | SyncedEncryptedStorageV2
   | SyncedEncryptedStorageV3
   | SyncedEncryptedStorageV4
-  | SyncedEncryptedStorageV5;
+  | SyncedEncryptedStorageV5
+  | SyncedEncryptedStorageV6;
 
 export function isSyncedEncryptedStorageV1(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -148,6 +174,13 @@ export function isSyncedEncryptedStorageV5(
   return storage._storage_version === "v5";
 }
 
+export function isSyncedEncryptedStorageV6(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  storage: any
+): storage is SyncedEncryptedStorageV6 {
+  return storage._storage_version === "v6";
+}
+
 /**
  * Deserialize a decrypted storage object and set up the PCDCollection and
  * FeedSubscriptionManager to manage its data.  If the storage comes from
@@ -166,7 +199,18 @@ export async function deserializeStorage(
   let pcds: PCDCollection;
   let subscriptions: FeedSubscriptionManager;
 
-  if (isSyncedEncryptedStorageV5(storage)) {
+  if (isSyncedEncryptedStorageV6(storage)) {
+    const serializedPCDs = storage.compressedPCDs
+      ? decompressStringFromBase64(storage.pcds)
+      : storage.pcds;
+    pcds = await PCDCollection.deserialize(pcdPackages, serializedPCDs, {
+      fallbackDeserializeFunction
+    });
+    subscriptions = FeedSubscriptionManager.deserialize(
+      new NetworkFeedApi(),
+      storage.subscriptions
+    );
+  } else if (isSyncedEncryptedStorageV5(storage)) {
     pcds = await PCDCollection.deserialize(pcdPackages, storage.pcds, {
       fallbackDeserializeFunction
     });
@@ -216,20 +260,43 @@ export async function deserializeStorage(
 }
 
 /**
+ * Options for serializing storage.
+ */
+interface SerializationOptions {
+  /**
+   * The number of bytes above which PCDs will be compressed.
+   */
+  pcdCompressionThresholdBytes: number;
+}
+
+/**
  * Serializes a user's PCDs and relates state for storage.  The result is
  * unencrypted, and always uses the latest format.  The hash uniquely identifies
  * the content, as described in getStorageHash.
+ *
+ * Sets a default compression threshold of 500,000 bytes. Callers may override
+ * with a different value. The `compressedPCDs` flag in {@link SyncedEncryptedStorageV6}
+ * will enable {@link deserializeStorage} to process either compressed or uncompressed
+ * PCDs.
  */
 export async function serializeStorage(
   user: User,
   pcds: PCDCollection,
-  subscriptions: FeedSubscriptionManager
+  subscriptions: FeedSubscriptionManager,
+  options: SerializationOptions = { pcdCompressionThresholdBytes: 500_000 }
 ): Promise<{ serializedStorage: SyncedEncryptedStorage; storageHash: string }> {
+  const serializedPCDs = await pcds.serializeCollection();
+  const shouldCompress =
+    new Blob([serializedPCDs]).size >= options.pcdCompressionThresholdBytes;
+
   const serializedStorage: SyncedEncryptedStorage = {
-    pcds: await pcds.serializeCollection(),
-    self: user,
+    pcds: shouldCompress
+      ? compressStringAndEncodeAsBase64(serializedPCDs)
+      : serializedPCDs,
     subscriptions: subscriptions.serialize(),
-    _storage_version: "v4"
+    compressedPCDs: shouldCompress,
+    self: user,
+    _storage_version: "v6"
   };
   return {
     serializedStorage: serializedStorage,
@@ -244,4 +311,22 @@ export async function getStorageHash(
   storage: SyncedEncryptedStorage
 ): Promise<string> {
   return await getHash(stringify(storage));
+}
+
+/**
+ * Compresses a string and encodes it as a base64 string.
+ * @param str the string to compress
+ * @returns the compressed string encoded as a base64 string
+ */
+export function compressStringAndEncodeAsBase64(str: string): string {
+  return base64.fromByteArray(pako.deflate(str));
+}
+
+/**
+ * Decompresses a base64 string and decodes it as a string.
+ * @param base64Str the base64 string to decompress
+ * @returns the decompressed string
+ */
+export function decompressStringFromBase64(base64Str: string): string {
+  return new TextDecoder().decode(pako.inflate(base64.toByteArray(base64Str)));
 }

@@ -5,6 +5,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
+import * as localForage from "localforage";
 import { z } from "zod";
 import { fallbackDeserializeFunction, getPackages } from "./pcdPackages";
 import { validateAndLogRunningAppState } from "./validateState";
@@ -23,22 +24,23 @@ export async function savePCDs(pcds: PCDCollection): Promise<void> {
   }
 
   const serialized = await pcds.serializeCollection();
-  window.localStorage[COLLECTION_KEY] = serialized;
+  await localForage.setItem(COLLECTION_KEY, serialized);
 }
 
 /**
  * {@link self} argument used only to modify validation behavior.
  */
 export async function loadPCDs(self?: User): Promise<PCDCollection> {
-  const oldPCDs = window.localStorage[OLD_PCDS_KEY];
+  const oldPCDs = await localForage.getItem<string>(OLD_PCDS_KEY);
   if (oldPCDs) {
     const collection = new PCDCollection(await getPackages());
-    await collection.deserializeAllAndAdd(JSON.parse(oldPCDs ?? "[]"));
+    await collection.deserializeAllAndAdd(JSON.parse(oldPCDs) ?? []);
     await savePCDs(collection);
-    window.localStorage.removeItem(OLD_PCDS_KEY);
+    await localForage.removeItem(OLD_PCDS_KEY);
   }
 
-  const serializedCollection = window.localStorage[COLLECTION_KEY];
+  const serializedCollection =
+    await localForage.getItem<string>(COLLECTION_KEY);
   const collection = await PCDCollection.deserialize(
     await getPackages(),
     serializedCollection ?? "{}",
@@ -65,26 +67,28 @@ export async function loadPCDs(self?: User): Promise<PCDCollection> {
 export async function saveSubscriptions(
   subscriptions: FeedSubscriptionManager
 ): Promise<void> {
-  window.localStorage["subscriptions"] = subscriptions.serialize();
+  await localForage.setItem("subscriptions", subscriptions.serialize());
 }
 
 export async function loadSubscriptions(): Promise<FeedSubscriptionManager> {
+  const data = await localForage.getItem<string>("subscriptions");
   return FeedSubscriptionManager.deserialize(
     new NetworkFeedApi(),
-    window.localStorage["subscriptions"] ?? "{}"
+    data ?? "{}"
   );
 }
 
-export function saveEncryptionKey(key: string): void {
-  window.localStorage["encryption_key"] = key;
+export async function saveEncryptionKey(key: string): Promise<void> {
+  await localForage.setItem("encryption_key", key);
 }
 
-export function loadEncryptionKey(): string | undefined {
-  return window.localStorage["encryption_key"];
+export async function loadEncryptionKey(): Promise<string | undefined> {
+  const key = await localForage.getItem<string>("encryption_key");
+  return key ?? undefined;
 }
 
-export function loadSelf(): User | undefined {
-  const self = window.localStorage["self"];
+export async function loadSelf(): Promise<User | undefined> {
+  const self = await localForage.getItem<string>("self");
   if (self && self !== "") {
     const parsedSelf = JSON.parse(self);
 
@@ -102,28 +106,29 @@ export function loadSelf(): User | undefined {
 
     return parsedSelf;
   }
+  return undefined;
 }
 
-export function saveSelf(self: User): void {
-  window.localStorage["self"] = JSON.stringify(self);
+export async function saveSelf(self: User): Promise<void> {
+  await localForage.setItem("self", JSON.stringify(self));
 }
 
-export function loadIdentity(): Identity | null {
-  const str = window.localStorage["identity"];
+export async function loadIdentity(): Promise<Identity | null> {
+  const str = await localForage.getItem<string>("identity");
   return str ? new Identity(str) : null;
 }
 
-export function saveIdentity(identity: Identity): void {
-  window.localStorage["identity"] = identity.toString();
+export async function saveIdentity(identity: Identity): Promise<void> {
+  await localForage.setItem("identity", identity.toString());
 }
 
-export function loadPrivacyNoticeAgreed(): number | null {
-  const stored = window.localStorage["privacy_notice_agreed"];
+export async function loadPrivacyNoticeAgreed(): Promise<number | null> {
+  const stored = await localForage.getItem<string>("privacy_notice_agreed");
   return stored ? parseInt(stored) : null;
 }
 
-export function savePrivacyNoticeAgreed(version: number): void {
-  window.localStorage["privacy_notice_agreed"] = version.toString();
+export async function savePrivacyNoticeAgreed(version: number): Promise<void> {
+  await localForage.setItem("privacy_notice_agreed", version.toString());
 }
 
 /**
@@ -155,12 +160,14 @@ const PersistentSyncStatusSchema = z.object({
 });
 export type PersistentSyncStatus = z.infer<typeof PersistentSyncStatusSchema>;
 
-export function savePersistentSyncStatus(status: PersistentSyncStatus): void {
-  window.localStorage["sync_status"] = JSON.stringify(status);
+export async function savePersistentSyncStatus(
+  status: PersistentSyncStatus
+): Promise<void> {
+  await localForage.setItem("sync_status", JSON.stringify(status));
 }
 
-export function loadPersistentSyncStatus(): PersistentSyncStatus {
-  const statusString = window.localStorage["sync_status"];
+export async function loadPersistentSyncStatus(): Promise<PersistentSyncStatus> {
+  const statusString = await localForage.getItem<string>("sync_status");
   if (!statusString) {
     return {};
   }
@@ -168,27 +175,33 @@ export function loadPersistentSyncStatus(): PersistentSyncStatus {
     return PersistentSyncStatusSchema.parse(JSON.parse(statusString));
   } catch (e) {
     console.error(
-      "Can't parse stored PersistentSyncStatus.  Resetting to default.",
+      "Can't parse stored PersistentSyncStatus. Resetting to default.",
       e
     );
     return {};
   }
 }
 
-export function saveUsingLaserScanner(usingLaserScanner: boolean): void {
-  window.localStorage["using_laser_scanner"] = usingLaserScanner.toString();
+export async function saveUsingLaserScanner(
+  usingLaserScanner: boolean
+): Promise<void> {
+  await localForage.setItem(
+    "using_laser_scanner",
+    usingLaserScanner.toString()
+  );
 }
 
-export function loadUsingLaserScanner(): boolean {
-  return window.localStorage["using_laser_scanner"] === "true";
+export async function loadUsingLaserScanner(): Promise<boolean> {
+  const value = await localForage.getItem<string>("using_laser_scanner");
+  return value === "true";
 }
 
-function cleanUpDeprecatedStorage(): void {
+async function cleanUpDeprecatedStorage(): Promise<void> {
   try {
-    window?.localStorage?.removeItem("offline_tickets");
-    window?.localStorage?.removeItem("checked_in_offline_devconnect_tickets");
-    window?.localStorage?.removeItem("credential-cache-multi");
-    window?.localStorage?.removeItem("credential-cache-multi-email");
+    await localForage.removeItem("offline_tickets");
+    await localForage.removeItem("checked_in_offline_devconnect_tickets");
+    await localForage.removeItem("credential-cache-multi");
+    await localForage.removeItem("credential-cache-multi-email");
   } catch (e) {
     console.error("Error cleaning up deprecated storage", e);
   }

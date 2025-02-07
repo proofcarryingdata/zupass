@@ -1,5 +1,6 @@
 import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { requireDefinedParameter } from "@pcd/util";
+import { Buffer } from "buffer";
 import { sha256 } from "js-sha256";
 import { v4 as uuid } from "uuid";
 import {

@@ -2,6 +2,7 @@ import { generateSnarkMessageHash } from "@pcd/util";
 import { Point } from "@zk-kit/baby-jubjub";
 import { Signature } from "@zk-kit/eddsa-poseidon";
 import { BigNumber } from "@zk-kit/utils";
+import { Buffer } from "buffer";
 import { expect } from "chai";
 import {
   Eddsa as CLEddsa,

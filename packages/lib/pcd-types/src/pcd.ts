@@ -55,12 +55,12 @@ export interface PCD<C = unknown, P = unknown> {
  *
  * @typeParam {@link A} - the type of the arguments passed into {@link PCDPackage#prove}
  *   to instantiate a new {@link PCD}. It is important that {@link A} can be serialized
- *   and deserialized using {@code JSON.stringify} {@code JSON.parse}, because these arguments
+ *   and deserialized using `JSON.stringify` and `JSON.parse`, because these arguments
  *   should be able to be passed over the wire trivially. This may cause the type of {@link A}
- *   to be less convenient that desired. Eg. you may have to pass {@code BigInt}s in as strings,
+ *   to be less convenient that desired. Eg. you may have to pass `BigInt`s in as strings,
  *   etc. Another important note about {@link A} is that each of its fields must implement the
  *   {@link Argument} interface. This is important because it enables Zupass to introspect the
- *   arguments, and to implement useful features like the {@code GenericProveScreen}, which is
+ *   arguments, and to implement useful features like the `GenericProveScreen`, which is
  *   a screen that automatically builds a UI which lets a user input all the arguments required to
  *   instantiate a new instance of a particular {@link PCD} based on the request it gets from a
  *   third party.
@@ -210,7 +210,7 @@ export interface Argument<
   /**
    * This is the type of the params that are passed into the validator function
    * of the argument. It is important that this type is serializable and
-   * deserializable using {@code JSON.stringify} and {@code JSON.parse}, because
+   * deserializable using `JSON.stringify` and `JSON.parse`, because
    * these arguments should be able to be passed over the wire trivially.
    */
   ValidatorParams = Record<string, unknown>
@@ -246,7 +246,7 @@ export interface Argument<
 /**
  * Fields of the object passed into {@link PCDPackage.prove} can only represent
  * one of the following types. {@link Unknown} is included to be used in a similar
- * way as {@code unknown} is used in TypeScript.
+ * way as `unknown` is used in TypeScript.
  */
 export enum ArgumentTypeName {
   String = "String",

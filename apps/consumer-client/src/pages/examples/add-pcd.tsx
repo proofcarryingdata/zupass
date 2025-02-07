@@ -43,6 +43,7 @@ import {
   verifyRegistrationResponse
 } from "@simplewebauthn/server";
 import { derivePublicKey } from "@zk-kit/eddsa-poseidon";
+import { Buffer } from "buffer";
 import { ethers } from "ethers";
 import JSONBig from "json-bigint";
 import { useEffect, useState } from "react";

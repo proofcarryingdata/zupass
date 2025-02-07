@@ -1,3 +1,4 @@
+import { isNaN, parseInt } from "lodash";
 import { ClientConfig } from "pg";
 import { PoolOptionsExplicit, SslSettings } from "postgres-pool";
 
@@ -24,6 +25,12 @@ export function getDatabaseConfiguration(
   if (process.env.DATABASE_DB_NAME === undefined) {
     throw new Error("Missing environment variable: DATABASE_DB_NAME");
   }
+  if (
+    process.env.DATABASE_PORT !== undefined &&
+    isNaN(process.env.DATABASE_PORT)
+  ) {
+    throw new Error("Invalid environment variable: DATABASE_PORT");
+  }
   if (!["true", "false"].includes(process.env.DATABASE_SSL || "")) {
     throw new Error("Missing or incorrect env variable: DATABASE_SSL");
   }
@@ -49,7 +56,7 @@ export function getDatabaseConfiguration(
     password: process.env.DATABASE_PASSWORD,
     host: process.env.DATABASE_HOST,
     database: process.env.DATABASE_DB_NAME,
-    port: 5432,
+    port: parseInt(process.env.DATABASE_PORT ?? "5432"),
     ssl:
       process.env.DATABASE_SSL === "true"
         ? { rejectUnauthorized: false }

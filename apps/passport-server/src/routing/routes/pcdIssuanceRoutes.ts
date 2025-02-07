@@ -26,8 +26,8 @@ export function initPCDIssuanceRoutes(
   logger("[INIT] initializing PCD issuance routes");
 
   /**
-   * If either of the {@code process.env.SERVER_RSA_PRIVATE_KEY_BASE64} or
-   * {@code process.env.SERVER_EDDSA_PRIVATE_KEY} are not initialized properly,
+   * If either of the `process.env.SERVER_RSA_PRIVATE_KEY_BASE64` or
+   * `process.env.SERVER_EDDSA_PRIVATE_KEY` are not initialized properly,
    * then this server won't have an {@link IssuanceService}. It'll continue
    * to work, except users won't get any 'issued' tickets - Devconnect,
    * Zuconnect, Zuzalu, etc.

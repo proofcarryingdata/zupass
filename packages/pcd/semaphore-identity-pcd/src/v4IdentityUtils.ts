@@ -1,10 +1,11 @@
 import { decodePublicKey, encodePrivateKey, encodePublicKey } from "@pcd/pod";
 import { randomUUID } from "@pcd/util";
 import { beBigIntToBuffer } from "@zk-kit/utils";
+import { Buffer } from "buffer";
 import { sha256 } from "js-sha256";
 import { poseidon2 } from "poseidon-lite/poseidon2";
-import { IdentityV3, IdentityV4 } from "./forwardedTypes";
 import { SemaphoreIdentityPCD } from "./SemaphoreIdentityPCD";
+import { IdentityV3, IdentityV4 } from "./forwardedTypes";
 
 /**
  * Given a semaphore v4 public key, returns the corresponding v4 identity commitment.
