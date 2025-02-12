@@ -7,6 +7,7 @@ import {
   verifyAuthenticationResponse
 } from "@simplewebauthn/server";
 import JSONBig from "json-bigint";
+import { Buffer } from "node:buffer";
 import { v4 as uuid } from "uuid";
 import {
   WebAuthnPCD,

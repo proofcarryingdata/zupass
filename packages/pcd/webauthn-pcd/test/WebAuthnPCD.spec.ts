@@ -1,5 +1,6 @@
 import { VerifyAuthenticationResponseOpts } from "@simplewebauthn/server";
 import assert from "assert";
+import { Buffer } from "node:buffer";
 import { WebAuthnPCDArgs, WebAuthnPCDPackage } from "../src/index";
 
 const args: WebAuthnPCDArgs = {
