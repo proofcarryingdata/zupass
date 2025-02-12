@@ -7,6 +7,7 @@ import {
   verifyAuthenticationResponse
 } from "@simplewebauthn/server";
 import JSONBig from "json-bigint";
+import { Buffer } from "node:buffer";
 import { v4 as uuid } from "uuid";
 import {
   WebAuthnPCD,
@@ -21,10 +22,10 @@ export async function prove(args: WebAuthnPCDArgs): Promise<WebAuthnPCD> {
     rpID: args.rpID,
     challenge: args.challenge,
     allowCredentials: [
-      {
-        id: args.authenticator.credentialID,
-        type: "public-key"
-      }
+      // {
+      //   id: args.authenticator.credentialID,
+      //   type: "public-key"
+      // }
     ]
   });
   const authenticationResponseJSON = await startAuthentication(
@@ -50,7 +51,9 @@ export async function prove(args: WebAuthnPCDArgs): Promise<WebAuthnPCD> {
 export async function verify(pcd: WebAuthnPCD): Promise<boolean> {
   const { verified } = await verifyAuthenticationResponse({
     response: pcd.proof,
-    expectedChallenge: pcd.claim.challenge,
+    expectedChallenge: Buffer.from(pcd.claim.challenge)
+      .toString("base64")
+      .replace(/=+$/, ""),
     expectedOrigin: pcd.claim.origin,
     expectedRPID: pcd.claim.rpID,
     authenticator: {
