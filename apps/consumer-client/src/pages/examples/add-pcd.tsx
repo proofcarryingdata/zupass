@@ -443,8 +443,8 @@ export default function Page(): JSX.Element {
               return;
             }
             try {
-              await verifyWebAuthnPCD(serializedWebAuthnPCD);
-              console.log("Verified successfully with WebAuthn");
+              const verified = await verifyWebAuthnPCD(serializedWebAuthnPCD);
+              console.log("Verified with WebAuthn:", verified);
             } catch (err) {
               console.error("Error verifying with WebAuthn:", err);
             }
@@ -829,13 +829,14 @@ async function signWithWebAuthn(
   }
 }
 
-async function verifyWebAuthnPCD(serializedPCD: string): Promise<void> {
+async function verifyWebAuthnPCD(serializedPCD: string): Promise<boolean> {
   const parsed = JSON.parse(serializedPCD) as SerializedPCD;
   console.log("Parsed serializedPCD:", parsed);
   const pcd = await WebAuthnPCDPackage.deserialize(parsed.pcd);
   console.log("Deserialized PCD:", pcd);
   const verified = await WebAuthnPCDPackage.verify(pcd);
   console.log("WebAuthn PCD verified:", verified);
+  return verified;
 }
 
 async function addWebAuthnPCD(): Promise<void> {
