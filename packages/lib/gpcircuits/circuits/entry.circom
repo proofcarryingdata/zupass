@@ -45,7 +45,7 @@ template EntryModule (
     objectContentID === proofRoot;
 
     // Constrain entry proofs to always refer to the name leaf (even index) not
-    // the value leaf (odd index).  This relies on issuer to ownly sign a
+    // the value leaf (odd index).  This relies on issuer to only sign a
     // validly constructed POD, with alternating names and values.
     proofIndices[0] === 0;
 
