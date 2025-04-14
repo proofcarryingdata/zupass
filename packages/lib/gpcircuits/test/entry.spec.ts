@@ -183,6 +183,36 @@ describe("entry.EntryModule should work", function () {
       }
     }
   });
+
+  it("should reject Merkle proofs of values rather than names", async () => {
+    for (const entryName of Object.keys(sampleEntries)) {
+      const { inputs, outputs } = makeTestSignals(
+        entryName,
+        MERKLE_MAX_DEPTH,
+        true // isValueHashRevealed
+      );
+
+      // Hack the input signals to point to the value corresponding to the name,
+      // which will always be the next leaf in index order.  Due to the
+      // relationship of name and value as siblings, this alternate input
+      // effectively swaps the role of name and value hashes.  This is a valid
+      // Merkle proof (per the BinaryMerkleRoot template) but shouldn't be
+      // accepted by EntryModule.
+      const swappedSiblings: CircuitSignal[] = [...inputs.proofSiblings];
+      swappedSiblings[0] = inputs.nameHash;
+      const swappedInputs: EntryModuleInputs = {
+        ...inputs,
+        nameHash: outputs.revealedValueHash,
+        proofIndex: BigInt(inputs.proofIndex) + 1n,
+        proofSiblings: swappedSiblings
+      };
+      // const swappedOutputs: EntryModuleOutputs = {
+      //   revealedValueHash: inputs.nameHash
+      // };
+
+      await circuit.expectFail(swappedInputs);
+    }
+  });
 });
 
 describe("entry.EntryConstraintModule should work", function () {
