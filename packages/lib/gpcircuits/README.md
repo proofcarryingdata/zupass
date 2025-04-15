@@ -63,7 +63,17 @@ GPC configuration doesn't yet support.
 
 Pre-compiled artifacts for these circuits at various sizes are published in the
 [`@pcd/proto-pod-gpc-artifacts`](https://github.com/proofcarryingdata/snark-artifacts/tree/pre-release/packages/proto-pod-gpc)
-package. They are stored in a dedicated repo due to their size.
+package. They are stored in a dedicated repo due to their size. See the READMEs
+in that repo for instructions on compiling an deploying a new version.
+
+In this package you'll also find scripts to generate your own artifacts for a
+custom circuit family:
+
+- Edit the `PARAMS` constant in `scripts/paramGen.ts`
+- Re-generate parameter lists and top-level circom files: `yarn gen-circuit-parameters`
+- Compile circuits to generate artifacts: `yarn gen-artifacts`
+- Package artifacts and supporting files into an archive: `yarn package-artifacts`
+- You'll find the resulting archive in `artifacts/prod-artifacts.tgz`
 
 ## Related Packages
 
