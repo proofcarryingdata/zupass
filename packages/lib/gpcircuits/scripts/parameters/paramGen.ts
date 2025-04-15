@@ -430,7 +430,7 @@ export const PARAMS: ProtoPODGPCCircuitParams[] = [
     tupleArity: 3,
     includeOwnerV3: true,
     includeOwnerV4: true
-  }
+  },
   // 20 entries
   // {
   //   maxObjects: 3,
@@ -546,19 +546,32 @@ export const PARAMS: ProtoPODGPCCircuitParams[] = [
   //   includeOwnerV4: true
   // },
   // 20 entries
-  // {
-  //   maxObjects: 5,
-  //   maxEntries: 20,
-  //   merkleMaxDepth: 6,
-  //   maxNumericValues: 0,
-  //   maxEntryInequalities: 0,
-  //   maxLists: 0,
-  //   maxListElements: 0,
-  //   maxTuples: 0,
-  //   tupleArity: 0,
-  //   includeOwnerV3: false,
-  //   includeOwnerV4: true
-  // },
+  {
+    maxObjects: 5,
+    maxEntries: 20,
+    merkleMaxDepth: 6,
+    maxNumericValues: 0,
+    maxEntryInequalities: 0,
+    maxLists: 0,
+    maxListElements: 0,
+    maxTuples: 0,
+    tupleArity: 0,
+    includeOwnerV3: false,
+    includeOwnerV4: true
+  },
+  {
+    maxObjects: 5,
+    maxEntries: 20,
+    merkleMaxDepth: 8,
+    maxNumericValues: 5,
+    maxEntryInequalities: 5,
+    maxLists: 2,
+    maxListElements: 20,
+    maxTuples: 2,
+    tupleArity: 3,
+    includeOwnerV3: false,
+    includeOwnerV4: true
+  }
   // 30 entries
   // {
   //   maxObjects: 5,

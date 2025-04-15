@@ -13,7 +13,7 @@
       "includeOwnerV3": false,
       "includeOwnerV4": true
     },
-    7444
+    7441
   ],
   [
     {
@@ -29,7 +29,7 @@
       "includeOwnerV3": true,
       "includeOwnerV4": true
     },
-    15361
+    15346
   ],
   [
     {
@@ -45,7 +45,7 @@
       "includeOwnerV3": false,
       "includeOwnerV4": true
     },
-    18885
+    18855
   ],
   [
     {
@@ -61,7 +61,7 @@
       "includeOwnerV3": false,
       "includeOwnerV4": true
     },
-    20176
+    20143
   ],
   [
     {
@@ -77,7 +77,7 @@
       "includeOwnerV3": false,
       "includeOwnerV4": true
     },
-    20596
+    20563
   ],
   [
     {
@@ -93,7 +93,7 @@
       "includeOwnerV3": false,
       "includeOwnerV4": true
     },
-    20746
+    20713
   ],
   [
     {
@@ -109,7 +109,7 @@
       "includeOwnerV3": false,
       "includeOwnerV4": true
     },
-    23002
+    22966
   ],
   [
     {
@@ -125,7 +125,7 @@
       "includeOwnerV3": false,
       "includeOwnerV4": true
     },
-    38257
+    38227
   ],
   [
     {
@@ -141,6 +141,38 @@
       "includeOwnerV3": true,
       "includeOwnerV4": true
     },
-    40566
+    40536
+  ],
+  [
+    {
+      "maxObjects": 5,
+      "maxEntries": 20,
+      "merkleMaxDepth": 6,
+      "maxNumericValues": 0,
+      "maxEntryInequalities": 0,
+      "maxLists": 0,
+      "maxListElements": 0,
+      "maxTuples": 0,
+      "tupleArity": 0,
+      "includeOwnerV3": false,
+      "includeOwnerV4": true
+    },
+    56539
+  ],
+  [
+    {
+      "maxObjects": 5,
+      "maxEntries": 20,
+      "merkleMaxDepth": 8,
+      "maxNumericValues": 5,
+      "maxEntryInequalities": 5,
+      "maxLists": 2,
+      "maxListElements": 20,
+      "maxTuples": 2,
+      "tupleArity": 3,
+      "includeOwnerV3": false,
+      "includeOwnerV4": true
+    },
+    69820
   ]
 ]
