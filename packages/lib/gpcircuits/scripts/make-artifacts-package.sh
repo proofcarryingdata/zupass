@@ -27,4 +27,4 @@ cp "$SRC_DIR"/*-pkey.zkey "$TMP_DIR"
 cp "$SRC_DIR"/*.wasm "$TMP_DIR"
 cp "$SRC_DIR/../../src/circuitParameters.json" "$TMP_DIR"
 cp "$CIRCOM_SRC_DIR"/*.circom "$TMP_DIR/circom"
-tar -czv -f "$DST_FILE" -C "$TMP_DIR" .
+COPYFILE_DISABLE=1 tar -czv -f "$DST_FILE" -C "$TMP_DIR" .
