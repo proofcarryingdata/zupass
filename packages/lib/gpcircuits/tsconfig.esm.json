@@ -14,10 +14,10 @@
       "path": "../pod/tsconfig.esm.json"
     },
     {
-      "path": "../semaphore-identity-v3-wrapper/tsconfig.esm.json"
+      "path": "../util/tsconfig.esm.json"
     },
     {
-      "path": "../util/tsconfig.esm.json"
+      "path": "../semaphore-identity-v3-wrapper/tsconfig.esm.json"
     }
   ]
 }

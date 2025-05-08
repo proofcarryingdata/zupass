@@ -14,10 +14,10 @@
       "path": "../pod/tsconfig.cjs.json"
     },
     {
-      "path": "../semaphore-identity-v3-wrapper/tsconfig.cjs.json"
+      "path": "../util/tsconfig.cjs.json"
     },
     {
-      "path": "../util/tsconfig.cjs.json"
+      "path": "../semaphore-identity-v3-wrapper/tsconfig.cjs.json"
     }
   ]
 }

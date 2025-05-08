@@ -35,6 +35,9 @@
       "path": "../pod/tsconfig.cjs.json"
     },
     {
+      "path": "../../pcd/pod-pcd/tsconfig.cjs.json"
+    },
+    {
       "path": "../../pcd/pod-ticket-pcd/tsconfig.cjs.json"
     },
     {
@@ -42,9 +45,6 @@
     },
     {
       "path": "../../pcd/semaphore-identity-pcd/tsconfig.cjs.json"
-    },
-    {
-      "path": "../../pcd/pod-pcd/tsconfig.cjs.json"
     },
     {
       "path": "../semaphore-identity-v3-wrapper/tsconfig.cjs.json"
