@@ -64,7 +64,7 @@ GPC configuration doesn't yet support.
 Pre-compiled artifacts for these circuits at various sizes are published in the
 [`@pcd/proto-pod-gpc-artifacts`](https://github.com/proofcarryingdata/snark-artifacts/tree/pre-release/packages/proto-pod-gpc)
 package. They are stored in a dedicated repo due to their size. See the READMEs
-in that repo for instructions on compiling an deploying a new version.
+in that repo for instructions on compiling and deploying a new version.
 
 In this package you'll also find scripts to generate your own artifacts for a
 custom circuit family:
