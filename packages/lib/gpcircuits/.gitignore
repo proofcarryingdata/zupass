@@ -8,3 +8,4 @@ circuits/main
 circuits/test
 artifacts/test
 artifacts/prod
+artifacts/*.tgz

@@ -33,14 +33,15 @@
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "test": "ts-mocha --type-check --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
-    "clean": "rm -rf dist node_modules *.tsbuildinfo build circuits/test ptau && yarn clean-prod-artifacts && yarn clean-test-artifacts",
+    "clean": "rm -rf dist node_modules *.tsbuildinfo build circuits/test ptau && yarn clean-artifacts && yarn clean-test-artifacts",
     "gen-circuit-parameters": "tsx scripts/gen-circuit-parameters.ts",
     "gen-test-circuit-parameters": "tsx scripts/gen-circuit-parameters.ts test",
     "gen-artifacts": "tsx scripts/gen-artifacts.ts",
     "gen-test-artifacts": "tsx scripts/gen-artifacts.ts test",
-    "clean-prod-artifacts": "rm -rf artifacts/prod circuits/main",
-    "clean-test-artifacts": "rm -rf artifacts/test circuits/main",
-    "copy-snark-artifacts": "./scripts/copy-snark-artifacts.sh"
+    "clean-artifacts": "rm -rf artifacts/prod* circuits/main",
+    "clean-test-artifacts": "rm -rf artifacts/test* circuits/main",
+    "copy-snark-artifacts": "./scripts/copy-snark-artifacts.sh",
+    "package-artifacts": "./scripts/make-artifacts-package.sh"
   },
   "dependencies": {
     "@pcd/pod": "0.5.0",
