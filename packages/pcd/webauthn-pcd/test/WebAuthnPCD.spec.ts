@@ -1,5 +1,6 @@
 import { VerifyAuthenticationResponseOpts } from "@simplewebauthn/server";
 import assert from "assert";
+import { Buffer } from "node:buffer";
 import { WebAuthnPCDArgs, WebAuthnPCDPackage } from "../src/index";
 
 const args: WebAuthnPCDArgs = {
@@ -53,7 +54,9 @@ jest.mock("@simplewebauthn/server", () => ({
   verifyAuthenticationResponse: async ({
     expectedChallenge
   }: VerifyAuthenticationResponseOpts): Promise<{ verified: boolean }> => ({
-    verified: expectedChallenge === "valid_challenge"
+    verified:
+      expectedChallenge ===
+      Buffer.from("valid_challenge").toString("base64").replace(/=+$/, "")
   })
 }));
 
