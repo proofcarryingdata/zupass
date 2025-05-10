@@ -8,8 +8,18 @@
     "rootDir": "."
   },
   // Some artifact-including packages need to import a JSON file
-  "include": ["src", "test", "src/*.json", "scripts", "circomkit.json"],
-  "exclude": ["dist", "build", "node_modules"],
+  "include": [
+    "src",
+    "test",
+    "src/*.json",
+    "scripts",
+    "circomkit.json"
+  ],
+  "exclude": [
+    "dist",
+    "build",
+    "node_modules"
+  ],
   // DO NOT MODIFY MANUALLY BEYOND THIS POINT
   // References are automatically maintained by `yarn fix-references`
   "references": [
@@ -17,10 +27,10 @@
       "path": "../pod"
     },
     {
-      "path": "../semaphore-identity-v3-wrapper"
+      "path": "../util"
     },
     {
-      "path": "../util"
+      "path": "../semaphore-identity-v3-wrapper"
     }
   ]
 }

@@ -22,9 +22,6 @@
   // References are automatically maintained by `yarn fix-references`
   "references": [
     {
-      "path": "../util"
-    },
-    {
       "path": "../../pcd/eddsa-pcd"
     },
     {
@@ -32,6 +29,9 @@
     },
     {
       "path": "../semaphore-identity-v3-wrapper"
+    },
+    {
+      "path": "../util"
     }
   ]
 }

@@ -38,8 +38,8 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/util": "0.9.0",
     "@zk-kit/eddsa-poseidon": "^1.1.0",
+    "@zk-kit/baby-jubjub": "^1.0.3",
     "@zk-kit/lean-imt": "^2.2.2",
     "@zk-kit/utils": "^1.2.1",
     "buffer": "^6.0.3",
@@ -52,10 +52,10 @@
     "@pcd/pcd-types": "0.15.0",
     "@pcd/semaphore-identity-v3-wrapper": "0.1.0",
     "@pcd/tsconfig": "0.15.0",
+    "@pcd/util": "0.9.0",
     "@types/chai": "^4.3.5",
     "@types/circomlibjs": "^0.1.6",
     "@types/mocha": "^10.0.1",
-    "@zk-kit/baby-jubjub": "^1.0.3",
     "circomlibjs": "^0.1.7",
     "eslint": "^8.57.0",
     "fix-esm-import-path": "^1.10.0",

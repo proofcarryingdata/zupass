@@ -46,6 +46,9 @@
       "path": "../pod"
     },
     {
+      "path": "../../pcd/pod-pcd"
+    },
+    {
       "path": "../../pcd/pod-ticket-pcd"
     },
     {
@@ -53,9 +56,6 @@
     },
     {
       "path": "../../pcd/semaphore-identity-pcd"
-    },
-    {
-      "path": "../../pcd/pod-pcd"
     },
     {
       "path": "../semaphore-identity-v3-wrapper"
