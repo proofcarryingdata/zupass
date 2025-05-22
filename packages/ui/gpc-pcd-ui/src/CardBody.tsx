@@ -41,7 +41,7 @@ function GPCCardBody({ pcd }: { pcd: GPCPCD }): JSX.Element {
       <p>
         This is a ZK proof of info about PODs using a General Purpose Circuit.
         You can learn more about PODs and GPCs{" "}
-        <a href="https://zupass.org/pod">here</a>.
+        <a href="https://pod.org/pod/introduction">here</a>.
       </p>
 
       <Separator />

@@ -2,6 +2,11 @@
   "name": "@pcd/gpc-pcd",
   "version": "0.4.0",
   "license": "GPL-3.0-or-later",
+  "repository": "git@github.com:proofcarryingdata/zupass",
+  "homepage": "https://github.com/proofcarryingdata/zupass/tree/main/packages/pcd/gpc-pcd",
+  "bugs": {
+    "url": "https://github.com/proofcarryingdata/zupass/issues"
+  },
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
   "types": "./dist/types/src/index.d.ts",

@@ -18,7 +18,7 @@
         <img alt="Downloads" src="https://img.shields.io/npm/dm/@pcd/gpc.svg?style=flat-square" />
     </a>
 <br>
-    <a href="https://zupass.org/pod">
+    <a href="https://pod.org/gpc/introduction">
         <img alt="Developer Site" src="https://img.shields.io/badge/Developer_Site-green.svg?style=flat-square">
     </a>
     <a href="https://github.com/proofcarryingdata/zupass/blob/main/examples/pod-gpc-example/src/gpcExample.ts#L88">
@@ -34,7 +34,7 @@
 
 A library for creating and verifying zero-knowledge proofs using General Purpose
 Circuits. For a full introduction, see the
-[Developer Site](https://zupass.org/pod).
+[Developer Site](https://pod.org/gpc/introduction).
 
 **POD** libraries enable any app to create zero-knowledge proofs of cryptographic data. A POD could represent your ticket to an event, a secure
 message, a collectible badge, or an item in a role-playing game. Using PODs,
