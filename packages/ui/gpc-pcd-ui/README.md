@@ -18,7 +18,7 @@
         <img alt="Downloads" src="https://img.shields.io/npm/dm/@pcd/gpc-pcd-ui.svg?style=flat-square" />
     </a>
 <br>
-    <a href="https://zupass.org/pod">
+    <a href="https://pod.org/gpc/introduction">
         <img alt="Developer Site" src="https://img.shields.io/badge/Developer_Site-green.svg?style=flat-square">
     </a>
     <a href="https://docs.pcd.team/modules/_pcd_gpc_pcd_ui.html">
@@ -33,4 +33,4 @@ This package provides React UI for
 [`@pcd/gpc-pcd`](https://github.com/proofcarryingdata/zupass/tree/main/packages/pcd/gpc-pcd).
 See that package for more details on functionality.
 
-For a full introduction, see the [Developer Site](https://zupass.org/pod).
+For a full introduction, see the [Developer Site](https://pod.org/gpc/introduction).
