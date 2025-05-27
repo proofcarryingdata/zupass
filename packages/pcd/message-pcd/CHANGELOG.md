@@ -1,5 +1,12 @@
 # @pcd/message-pcd
 
+## 0.5.1
+
+### Patch Changes
+
+- 96eb9b869: Add direct import of Buffer to avoid need for polyfill
+  - @pcd/semaphore-signature-pcd@0.15.1
+
 ## 0.5.0
 
 ### Minor Changes

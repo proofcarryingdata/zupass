@@ -1,6 +1,6 @@
 {
   "name": "@pcd/rsa-ticket-pcd",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@pcd/pcd-types": "0.15.0",
-    "@pcd/rsa-pcd": "0.10.0",
+    "@pcd/rsa-pcd": "0.10.1",
     "chai": "^4.3.7",
     "json-bigint": "^1.0.0",
     "node-rsa": "^1.1.1",

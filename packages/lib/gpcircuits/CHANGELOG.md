@@ -1,5 +1,18 @@
 # @pcd/gpcircuits
 
+## 0.5.1
+
+### Patch Changes
+
+- 96eb9b869: Add direct import of Buffer to avoid need for polyfill
+- 39b481f8c: Update package dependencies to match code
+- f7cb31e04: Update links in README and NPM metadata
+- Updated dependencies [96eb9b869]
+- Updated dependencies [437103846]
+- Updated dependencies [39b481f8c]
+- Updated dependencies [f7cb31e04]
+  - @pcd/pod@0.5.1
+
 ## 0.5.0
 
 ### Minor Changes

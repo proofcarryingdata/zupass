@@ -1,6 +1,6 @@
 {
   "name": "@pcd/eddsa-ticket-pcd",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",

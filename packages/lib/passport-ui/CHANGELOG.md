@@ -1,5 +1,14 @@
 # @pcd/passport-ui
 
+## 0.15.1
+
+### Patch Changes
+
+- 96eb9b869: Add direct import of Buffer to avoid need for polyfill
+- 157a4ed4a: Add support for React 19 as a peer dependency
+- Updated dependencies [96eb9b869]
+  - @pcd/message-pcd@0.5.1
+
 ## 0.15.0
 
 ### Minor Changes

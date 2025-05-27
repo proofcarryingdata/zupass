@@ -1,6 +1,6 @@
 {
   "name": "@pcd/pod-ticket-pcd",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -33,8 +33,8 @@
   },
   "dependencies": {
     "@pcd/pcd-types": "0.15.0",
-    "@pcd/pod": "0.5.0",
-    "@pcd/pod-pcd": "0.5.0",
+    "@pcd/pod": "0.5.1",
+    "@pcd/pod-pcd": "0.5.1",
     "@pcd/util": "0.9.0",
     "json-bigint": "^1.0.0",
     "uuid": "^9.0.0",

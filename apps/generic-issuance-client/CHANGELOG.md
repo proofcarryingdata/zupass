@@ -1,5 +1,18 @@
 # generic-issuance-client
 
+## 0.0.16
+
+### Patch Changes
+
+- Updated dependencies [96eb9b869]
+- Updated dependencies [157a4ed4a]
+- Updated dependencies [437103846]
+- Updated dependencies [39b481f8c]
+- Updated dependencies [f7cb31e04]
+  - @pcd/pod@0.5.1
+  - @pcd/passport-interface@0.15.1
+  - @pcd/podbox-shared@0.4.1
+
 ## 0.0.15
 
 ### Patch Changes

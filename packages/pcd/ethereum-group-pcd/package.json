@@ -1,6 +1,6 @@
 {
   "name": "@pcd/ethereum-group-pcd",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -34,8 +34,8 @@
   },
   "dependencies": {
     "@pcd/pcd-types": "0.15.0",
-    "@pcd/semaphore-identity-pcd": "0.15.0",
-    "@pcd/semaphore-signature-pcd": "0.15.0",
+    "@pcd/semaphore-identity-pcd": "0.15.1",
+    "@pcd/semaphore-signature-pcd": "0.15.1",
     "@pcd/util": "0.9.0",
     "@personaelabs/spartan-ecdsa": "^2.1.4",
     "@semaphore-protocol/identity": "^3.15.2",

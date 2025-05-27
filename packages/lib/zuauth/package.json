@@ -1,7 +1,7 @@
 {
   "name": "@pcd/zuauth",
   "private": false,
-  "version": "1.8.0",
+  "version": "1.8.1",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -53,11 +53,11 @@
   },
   "dependencies": {
     "@pcd/eddsa-pcd": "^0.10.0",
-    "@pcd/eddsa-ticket-pcd": "^0.10.0",
-    "@pcd/passport-interface": "^0.15.0",
+    "@pcd/eddsa-ticket-pcd": "^0.10.1",
+    "@pcd/passport-interface": "^0.15.1",
     "@pcd/pcd-types": "^0.15.0",
-    "@pcd/semaphore-identity-pcd": "^0.15.0",
-    "@pcd/zk-eddsa-event-ticket-pcd": "^0.10.0"
+    "@pcd/semaphore-identity-pcd": "^0.15.1",
+    "@pcd/zk-eddsa-event-ticket-pcd": "^0.10.1"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.15.0",
