@@ -1,5 +1,29 @@
 # consumer-client
 
+## 0.0.52
+
+### Patch Changes
+
+- Updated dependencies [96eb9b869]
+- Updated dependencies [157a4ed4a]
+- Updated dependencies [437103846]
+- Updated dependencies [39b481f8c]
+- Updated dependencies [f7cb31e04]
+  - @pcd/pod@0.5.1
+  - @pcd/eddsa-ticket-pcd@0.10.1
+  - @pcd/ethereum-group-pcd@0.9.1
+  - @pcd/semaphore-identity-pcd@0.15.1
+  - @pcd/passport-interface@0.15.1
+  - @pcd/zuauth@1.8.1
+  - @pcd/gpc@0.4.1
+  - @pcd/gpc-pcd@0.4.1
+  - @pcd/pod-pcd@0.5.1
+  - @pcd/zk-eddsa-event-ticket-pcd@0.10.1
+  - @pcd/ethereum-ownership-pcd@0.15.1
+  - @pcd/semaphore-group-pcd@0.15.1
+  - @pcd/semaphore-signature-pcd@0.15.1
+  - @pcd/zk-eddsa-frog-pcd@0.7.1
+
 ## 0.0.51
 
 ### Patch Changes

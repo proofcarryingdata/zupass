@@ -1,5 +1,17 @@
 # consumer-server
 
+## 0.0.35
+
+### Patch Changes
+
+- Updated dependencies [96eb9b869]
+- Updated dependencies [157a4ed4a]
+  - @pcd/eddsa-ticket-pcd@0.10.1
+  - @pcd/passport-interface@0.15.1
+  - @pcd/zuauth@1.8.1
+  - @pcd/zk-eddsa-event-ticket-pcd@0.10.1
+  - @pcd/semaphore-signature-pcd@0.15.1
+
 ## 0.0.34
 
 ### Patch Changes

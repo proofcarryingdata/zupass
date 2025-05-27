@@ -1,5 +1,13 @@
 # @pcd/unknown-pcd-ui
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [96eb9b869]
+- Updated dependencies [157a4ed4a]
+  - @pcd/passport-ui@0.15.1
+
 ## 0.4.0
 
 ### Minor Changes

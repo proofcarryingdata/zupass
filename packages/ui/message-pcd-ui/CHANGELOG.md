@@ -1,5 +1,15 @@
 # @pcd/message-pcd-ui
 
+## 0.5.1
+
+### Patch Changes
+
+- 157a4ed4a: Add support for React 19 as a peer dependency
+- Updated dependencies [96eb9b869]
+- Updated dependencies [157a4ed4a]
+  - @pcd/passport-ui@0.15.1
+  - @pcd/message-pcd@0.5.1
+
 ## 0.5.0
 
 ### Minor Changes

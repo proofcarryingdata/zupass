@@ -1,6 +1,6 @@
 {
   "name": "@pcd/message-pcd",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -34,7 +34,7 @@
   "dependencies": {
     "@pcd/eddsa-pcd": "0.10.0",
     "@pcd/pcd-types": "0.15.0",
-    "@pcd/semaphore-signature-pcd": "0.15.0",
+    "@pcd/semaphore-signature-pcd": "0.15.1",
     "@trufflesuite/bigint-buffer": "^1.1.10",
     "buffer": "^6.0.3",
     "chai": "^4.3.7",

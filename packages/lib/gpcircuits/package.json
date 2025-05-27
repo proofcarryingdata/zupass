@@ -1,6 +1,6 @@
 {
   "name": "@pcd/gpcircuits",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "license": "GPL-3.0-or-later",
   "repository": "git@github.com:proofcarryingdata/zupass",
   "homepage": "https://github.com/proofcarryingdata/zupass/tree/main/packages/lib/gpcircuits",
@@ -49,7 +49,7 @@
     "package-artifacts": "./scripts/make-artifacts-package.sh"
   },
   "dependencies": {
-    "@pcd/pod": "0.5.0",
+    "@pcd/pod": "0.5.1",
     "@pcd/util": "^0.9.0",
     "buffer": "^6.0.3",
     "fastfile": "0.0.20",

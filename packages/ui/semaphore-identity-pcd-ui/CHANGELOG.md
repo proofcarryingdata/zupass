@@ -1,5 +1,16 @@
 # @pcd/semaphore-identity-pcd-ui
 
+## 0.6.1
+
+### Patch Changes
+
+- 157a4ed4a: Add support for React 19 as a peer dependency
+- Updated dependencies [96eb9b869]
+- Updated dependencies [157a4ed4a]
+- Updated dependencies [437103846]
+  - @pcd/passport-ui@0.15.1
+  - @pcd/semaphore-identity-pcd@0.15.1
+
 ## 0.6.0
 
 ### Minor Changes

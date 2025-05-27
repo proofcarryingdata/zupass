@@ -1,5 +1,14 @@
 # @pcd/pod
 
+## 0.5.1
+
+### Patch Changes
+
+- 96eb9b869: Add direct import of Buffer to avoid need for polyfill
+- 437103846: Update zk-kit dependencies
+- 39b481f8c: Update package dependencies to match code
+- f7cb31e04: Update links in README and NPM metadata
+
 ## 0.5.0
 
 ### Minor Changes
