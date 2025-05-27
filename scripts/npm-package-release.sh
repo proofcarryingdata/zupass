@@ -23,7 +23,7 @@
 # These steps are idempotent.  If there are no new changesets, and all current
 # versions are already on NPM, nothing will be published.
 #
-# After publishing you should push the resulting changes to git (without
+# After publishing you should push the resulting changes to git (ideally without
 # squashing to maintain the commit hash).
 
 set -ex
@@ -48,8 +48,10 @@ fi
 yarn changeset version
 
 # Commit results to git
-git add -A
-git commit -m "NPM package release"
+if [[ `git status --porcelain` ]]; then
+  git add -A
+  git commit -m "NPM package release"
+fi
 
 # Default to using the npm registry, use REGISTRY env var to override, for
 # example to publish to Verdaccio you might set REGISTRY=http://localhost:4873
