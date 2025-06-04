@@ -1,5 +1,16 @@
 # @pcd/pod-ticket-pcd-ui
 
+## 0.5.1
+
+### Patch Changes
+
+- 96eb9b869: Add direct import of Buffer to avoid need for polyfill
+- 157a4ed4a: Add support for React 19 as a peer dependency
+- Updated dependencies [96eb9b869]
+- Updated dependencies [157a4ed4a]
+  - @pcd/passport-ui@0.15.1
+  - @pcd/pod-ticket-pcd@0.5.1
+
 ## 0.5.0
 
 ### Minor Changes

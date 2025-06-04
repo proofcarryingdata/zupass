@@ -1,5 +1,23 @@
 # @pcd/passport-interface
 
+## 0.15.1
+
+### Patch Changes
+
+- 157a4ed4a: Add support for React 19 as a peer dependency
+- Updated dependencies [96eb9b869]
+- Updated dependencies [437103846]
+- Updated dependencies [39b481f8c]
+- Updated dependencies [f7cb31e04]
+  - @pcd/pod@0.5.1
+  - @pcd/eddsa-ticket-pcd@0.10.1
+  - @pcd/semaphore-identity-pcd@0.15.1
+  - @pcd/pod-pcd@0.5.1
+  - @pcd/pod-ticket-pcd@0.5.1
+  - @pcd/pcd-collection@0.15.1
+  - @pcd/semaphore-group-pcd@0.15.1
+  - @pcd/semaphore-signature-pcd@0.15.1
+
 ## 0.15.0
 
 ### Minor Changes

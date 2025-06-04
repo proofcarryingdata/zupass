@@ -1,5 +1,11 @@
 # @pcd/halo-nonce-pcd
 
+## 0.11.1
+
+### Patch Changes
+
+- 96eb9b869: Add direct import of Buffer to avoid need for polyfill
+
 ## 0.11.0
 
 ### Minor Changes

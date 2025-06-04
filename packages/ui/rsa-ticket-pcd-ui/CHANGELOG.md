@@ -1,5 +1,15 @@
 # @pcd/rsa-ticket-pcd-ui
 
+## 0.6.1
+
+### Patch Changes
+
+- 157a4ed4a: Add support for React 19 as a peer dependency
+- Updated dependencies [96eb9b869]
+- Updated dependencies [157a4ed4a]
+  - @pcd/passport-ui@0.15.1
+  - @pcd/rsa-ticket-pcd@0.10.1
+
 ## 0.6.0
 
 ### Minor Changes

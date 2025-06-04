@@ -1,5 +1,15 @@
 # @pcd/ethereum-group-pcd
 
+## 0.9.1
+
+### Patch Changes
+
+- 96eb9b869: Add direct import of Buffer to avoid need for polyfill
+- Updated dependencies [96eb9b869]
+- Updated dependencies [437103846]
+  - @pcd/semaphore-identity-pcd@0.15.1
+  - @pcd/semaphore-signature-pcd@0.15.1
+
 ## 0.9.0
 
 ### Minor Changes

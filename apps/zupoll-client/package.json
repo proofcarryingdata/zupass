@@ -1,6 +1,6 @@
 {
   "name": "zupoll-client",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -18,10 +18,10 @@
     "@heroicons/react": "^2.1.3",
     "@hookform/resolvers": "^3.3.4",
     "@pcd/client-shared": "0.4.0",
-    "@pcd/passport-interface": "0.15.0",
+    "@pcd/passport-interface": "0.15.1",
     "@pcd/pcd-types": "0.15.0",
-    "@pcd/semaphore-group-pcd": "0.15.0",
-    "@pcd/semaphore-identity-pcd": "0.15.0",
+    "@pcd/semaphore-group-pcd": "0.15.1",
+    "@pcd/semaphore-identity-pcd": "0.15.1",
     "@pcd/util": "0.9.0",
     "@pcd/zupoll-shared": "0.4.0",
     "@radix-ui/react-dialog": "^1.0.5",

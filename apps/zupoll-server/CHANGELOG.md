@@ -1,5 +1,12 @@
 # zupoll-server
 
+## 0.0.13
+
+### Patch Changes
+
+- @pcd/semaphore-group-pcd@0.15.1
+- @pcd/semaphore-signature-pcd@0.15.1
+
 ## 0.0.12
 
 ### Patch Changes

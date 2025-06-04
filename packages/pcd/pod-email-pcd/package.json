@@ -1,7 +1,7 @@
 {
   "name": "@pcd/pod-email-pcd",
   "private": false,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@pcd/pcd-types": "0.15.0",
-    "@pcd/pod": "0.5.0"
+    "@pcd/pod": "0.5.1"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.15.0",
