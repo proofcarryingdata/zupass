@@ -6,7 +6,7 @@ import { PODTicketPCD, isPODTicketPCD, ticketToPOD } from "@pcd/pod-ticket-pcd";
 
 export const COLLECTIONS_ROOT_FOLDER_NAME = "Collections";
 
-export const VIRTUAL_COLLECTIONS = ["Devcon SEA", "Email"];
+export const VIRTUAL_COLLECTIONS = ["Devcon SEA", "Protocol Berg v2", "Email"];
 
 export function collectionIdToFolderName(collectionId: string): string {
   return `${COLLECTIONS_ROOT_FOLDER_NAME}/${collectionId}`;
