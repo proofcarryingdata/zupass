@@ -10,6 +10,7 @@ import { useStateContext } from "../appHooks";
 import { StateContextValue } from "../dispatch";
 import { useSyncE2EEStorage } from "../useSyncE2EEStorage";
 import { ZupassRPCProcessor } from "./ZappServer";
+import { PRIORITY_COLLECTION } from "./collections";
 
 export enum ListenMode {
   LISTEN_IF_EMBEDDED,
@@ -37,7 +38,7 @@ async function waitForFirstSync(context: StateContextValue): Promise<void> {
   return new Promise<void>((resolve) => {
     if (
       context.getState().downloadedPCDs &&
-      context.getState().pcds.getAllPCDsInFolder("Devcon SEA").length > 0
+      context.getState().pcds.getAllPCDsInFolder(PRIORITY_COLLECTION).length > 0
     ) {
       resolve();
       return;
@@ -45,7 +46,8 @@ async function waitForFirstSync(context: StateContextValue): Promise<void> {
     const unlisten = context.stateEmitter.listen((state) => {
       if (
         context.getState().downloadedPCDs &&
-        context.getState().pcds.getAllPCDsInFolder("Devcon SEA").length > 0
+        context.getState().pcds.getAllPCDsInFolder(PRIORITY_COLLECTION).length >
+          0
       ) {
         resolve();
         return;

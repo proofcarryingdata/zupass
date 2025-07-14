@@ -33,6 +33,7 @@ import { EmbeddedScreenType } from "../embedded";
 import { getGPCArtifactsURL } from "../util";
 import {
   collectionIdToFolderName,
+  DEVCON_COLLECTIONS,
   getPODsForCollections,
   VIRTUAL_COLLECTIONS
 } from "./collections";
@@ -143,7 +144,7 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
       throw new MissingPermissionError("READ_POD", "pod.query");
     }
     if (
-      collectionId === "Devcon SEA" &&
+      DEVCON_COLLECTIONS.includes(collectionId) &&
       (!origin || !appConfig.devconTicketQueryOrigins.includes(origin))
     ) {
       throw new Error("Operation not allowed");
