@@ -6,7 +6,22 @@ import { PODTicketPCD, isPODTicketPCD, ticketToPOD } from "@pcd/pod-ticket-pcd";
 
 export const COLLECTIONS_ROOT_FOLDER_NAME = "Collections";
 
-export const VIRTUAL_COLLECTIONS = ["Devcon SEA", "Protocol Berg v2", "Email"];
+export const DEVCONNECT_COLLECTION_NAME = "Devconnect ARG";
+export const DEVCON_COLLECTION_NAME = "Devcon SEA";
+export const PROTOCOL_BERG_COLLECTION_NAME = "Protocol Berg v2";
+export const EMAIL_COLLECTION_NAME = "Email";
+
+export const VIRTUAL_COLLECTIONS = [
+  DEVCON_COLLECTION_NAME,
+  DEVCONNECT_COLLECTION_NAME,
+  PROTOCOL_BERG_COLLECTION_NAME,
+  EMAIL_COLLECTION_NAME
+];
+export const DEVCON_COLLECTIONS = [
+  DEVCON_COLLECTION_NAME,
+  DEVCONNECT_COLLECTION_NAME
+];
+export const PRIORITY_COLLECTION = DEVCONNECT_COLLECTION_NAME;
 
 export function collectionIdToFolderName(collectionId: string): string {
   return `${COLLECTIONS_ROOT_FOLDER_NAME}/${collectionId}`;
