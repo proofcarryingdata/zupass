@@ -104,7 +104,30 @@ export class LocalFileService {
             return undefined;
           }
 
-          const parsed = JSON.parse(serialized) as SerializedPipelineLoad<T>;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const reviver = function (key: string, value: any): any {
+            if (
+              value !== null &&
+              typeof value === "object" &&
+              Object.keys(value).length === 2 &&
+              Object.keys(value).includes("type") &&
+              Object.keys(value).includes("value") &&
+              value.type === "Date"
+            ) {
+              return new Date(value.value);
+            } else if (
+              key === "timestampConsumed" &&
+              typeof value === "string"
+            ) {
+              return new Date(value);
+            } else {
+              return value;
+            }
+          };
+          const parsed = JSON.parse(
+            serialized,
+            reviver
+          ) as SerializedPipelineLoad<T>;
 
           if (
             parsed?.summary?.latestLogs &&
@@ -160,12 +183,25 @@ export class LocalFileService {
     return traced("LocalFileService", "savePipelineLoad", async () => {
       return await this.mutex.runExclusive(async () => {
         try {
-          const serialized = JSON.stringify({
-            timestampSaved: Date.now(),
-            pipelineId,
-            summary,
-            atoms
-          } satisfies SerializedPipelineLoad<T>);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const replacer = function (_key: string, value: any): any {
+            return value instanceof Date
+              ? {
+                  value: value.toUTCString(),
+                  type: "Date"
+                }
+              : value;
+          };
+
+          const serialized = JSON.stringify(
+            {
+              timestampSaved: Date.now(),
+              pipelineId,
+              summary,
+              atoms
+            } satisfies SerializedPipelineLoad<T>,
+            replacer
+          );
 
           const tempPath = this.getPipelineLoadCachePath(pipelineId);
 
