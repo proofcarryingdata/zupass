@@ -1,5 +1,4 @@
 import { Spacer } from "@pcd/passport-ui";
-import { ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
 import styled from "styled-components";
 import { useBottomModal, useDispatch, useSelf } from "../../../src/appHooks";
 import { Accordion } from "../Accordion";
@@ -18,7 +17,7 @@ export const HelpModal = (): JSX.Element => {
     <BottomModal isOpen={activeBottomModal.modalType === "help-modal"}>
       <BottomModalHeader
         title="DON’T SEE YOUR TICKET?"
-        description="We don’t see an upcoming event that matches the emails under your account."
+        description="We don’t see an event that matches the emails under your account."
       />
       <Spacer h={20} />
       {self && (
@@ -47,17 +46,13 @@ export const HelpModal = (): JSX.Element => {
       )}
       <Spacer h={8} />
       <ButtonsContainer>
-        <Button2
-          onClick={() => {
-            window.open(
-              `mailto:${ZUPASS_SUPPORT_EMAIL}?subject=Ticket Support (${self.emails.join(
-                ", "
-              )})&body=Hi, I'd like to request support on finding my ticket in Zupass. My email(s) are listed in the subject of this email.`
-            );
-          }}
-        >
-          Contact support
-        </Button2>
+        <Description>
+          Make sure the email above matches the one you used to purchase your
+          ticket. If it does not, you can either add that email to your existing
+          Zupass account, or ask the event organizing team to update the ticket
+          with the new email.
+        </Description>
+
         <Button2
           variant="secondary"
           onClick={() => {
@@ -73,6 +68,14 @@ export const HelpModal = (): JSX.Element => {
     </BottomModal>
   );
 };
+
+const Description = styled.div`
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  margin-top: 16px;
+`;
 
 const ButtonsContainer = styled.div`
   display: flex;
