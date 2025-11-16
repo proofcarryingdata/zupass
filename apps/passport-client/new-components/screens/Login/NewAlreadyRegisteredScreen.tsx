@@ -1,3 +1,4 @@
+import { Turnstile } from "@marsidev/react-turnstile";
 import { PCDCrypto } from "@pcd/passport-crypto";
 import {
   ConfirmEmailResult,
@@ -14,7 +15,6 @@ import {
   useLayoutEffect,
   useState
 } from "react";
-import { Turnstile } from "@marsidev/react-turnstile";
 import styled from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { appConfig } from "../../../src/appConfig";
@@ -130,7 +130,13 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
     }
 
     await sendPasswordResetEmail(captchaToken);
-  }, [email, identityCommitment, requiresCaptcha, captchaToken, sendPasswordResetEmail]);
+  }, [
+    email,
+    identityCommitment,
+    requiresCaptcha,
+    captchaToken,
+    sendPasswordResetEmail
+  ]);
 
   // Auto-send email once captcha is verified
   useEffect(() => {
@@ -302,7 +308,7 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
                 family="Rubik"
                 style={{ textAlign: "center", marginTop: "16px" }}
               >
-                Please verify you're human to reset your password
+                Please complete the captcha to reset your password
               </Typography>
               <Turnstile
                 siteKey={appConfig.turnstileSiteKey!}

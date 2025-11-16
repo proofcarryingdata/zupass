@@ -226,7 +226,7 @@ const SendEmailVerification = ({
         <LoginContainer>
           <LoginTitleContainer>
             <Typography fontSize={24} fontWeight={800} color="#1E2C50">
-              VERIFY YOU'RE HUMAN
+              COMPLETE VERIFICATION
             </Typography>
             <Typography
               fontSize={16}
