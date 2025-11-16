@@ -25,6 +25,8 @@ interface AppConfig {
   ignoreNonPriorityFeeds: boolean;
   // URLs of feed providers that are priority feeds.
   priorityFeedProviderUrls: string[];
+  // Cloudflare Turnstile site key for captcha verification
+  turnstileSiteKey?: string;
 }
 
 if (
@@ -92,7 +94,8 @@ export const appConfig: AppConfig = {
   ignoreNonPriorityFeeds: process.env.IGNORE_NON_PRIORITY_FEEDS === "true",
   priorityFeedProviderUrls: process.env.PRIORITY_FEED_PROVIDER_URLS
     ? JSON.parse(process.env.PRIORITY_FEED_PROVIDER_URLS)
-    : []
+    : [],
+  turnstileSiteKey: process.env.TURNSTILE_SITE_KEY
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));

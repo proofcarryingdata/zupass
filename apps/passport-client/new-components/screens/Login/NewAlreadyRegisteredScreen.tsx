@@ -14,6 +14,7 @@ import {
   useLayoutEffect,
   useState
 } from "react";
+import { Turnstile } from "@marsidev/react-turnstile";
 import styled from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { appConfig } from "../../../src/appConfig";
@@ -42,6 +43,9 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
     useState(false);
   const [password, setPassword] = useState("");
   const [verifyingCode, setVerifyingCode] = useState(false);
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | undefined>();
+  const requiresCaptcha = !!appConfig.turnstileSiteKey;
 
   const verifyToken = useCallback(
     async (token: string) => {
@@ -90,6 +94,26 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
     [email, identityCommitment, verifyToken]
   );
 
+  const sendPasswordResetEmail = useCallback(
+    async (token?: string) => {
+      if (!email || !identityCommitment) {
+        return;
+      }
+      setSendingConfirmationEmail(true);
+      const emailConfirmationResult = await requestConfirmationEmail(
+        appConfig.zupassServer,
+        email,
+        true,
+        token
+      );
+      handleConfirmationEmailResult(emailConfirmationResult);
+      // Reset captcha token after use
+      setCaptchaToken(undefined);
+      setShowCaptcha(false);
+    },
+    [email, identityCommitment, handleConfirmationEmailResult]
+  );
+
   const onOverwriteClick = useCallback(async () => {
     if (!email || !identityCommitment) {
       return;
@@ -99,14 +123,21 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
       identityCommitment
     });
 
-    setSendingConfirmationEmail(true);
-    const emailConfirmationResult = await requestConfirmationEmail(
-      appConfig.zupassServer,
-      email,
-      true
-    );
-    handleConfirmationEmailResult(emailConfirmationResult);
-  }, [email, identityCommitment, handleConfirmationEmailResult]);
+    // If captcha is required, show it first
+    if (requiresCaptcha && !captchaToken) {
+      setShowCaptcha(true);
+      return;
+    }
+
+    await sendPasswordResetEmail(captchaToken);
+  }, [email, identityCommitment, requiresCaptcha, captchaToken, sendPasswordResetEmail]);
+
+  // Auto-send email once captcha is verified
+  useEffect(() => {
+    if (showCaptcha && captchaToken) {
+      sendPasswordResetEmail(captchaToken);
+    }
+  }, [captchaToken, showCaptcha, sendPasswordResetEmail]);
 
   const onLoginWithMasterPasswordClick = useCallback(() => {
     requestLogToServer(
@@ -262,16 +293,53 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
           <Button2 onClick={onCancelClick} variant="secondary">
             Cancel
           </Button2>
-          <div onClick={onOverwriteClick} style={{ cursor: "pointer" }}>
-            <Typography
-              color={"#1E2C50"}
-              fontSize={14}
-              fontWeight={500}
-              family="Rubik"
-            >
-              {salt ? "Forgot Password?" : "Lost Sync Key?"}
-            </Typography>
-          </div>
+          {showCaptcha && requiresCaptcha ? (
+            <>
+              <Typography
+                fontSize={16}
+                fontWeight={400}
+                color="#1E2C50"
+                family="Rubik"
+                style={{ textAlign: "center", marginTop: "16px" }}
+              >
+                Please verify you're human to reset your password
+              </Typography>
+              <Turnstile
+                siteKey={appConfig.turnstileSiteKey!}
+                onSuccess={(token) => {
+                  setCaptchaToken(token);
+                }}
+                onError={() => {
+                  setError("Captcha verification failed. Please try again.");
+                  setCaptchaToken(undefined);
+                  setShowCaptcha(false);
+                }}
+                onExpire={() => {
+                  setCaptchaToken(undefined);
+                }}
+              />
+              <Button2
+                variant="secondary"
+                onClick={() => {
+                  setShowCaptcha(false);
+                  setCaptchaToken(undefined);
+                }}
+              >
+                Cancel
+              </Button2>
+            </>
+          ) : (
+            <div onClick={onOverwriteClick} style={{ cursor: "pointer" }}>
+              <Typography
+                color={"#1E2C50"}
+                fontSize={14}
+                fontWeight={500}
+                family="Rubik"
+              >
+                {salt ? "Forgot Password?" : "Lost Sync Key?"}
+              </Typography>
+            </div>
+          )}
         </InputsContainer>
       </LoginContainer>
     </AppContainer>

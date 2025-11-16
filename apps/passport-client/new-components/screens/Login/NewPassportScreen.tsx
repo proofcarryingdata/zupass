@@ -1,3 +1,4 @@
+import { Turnstile } from "@marsidev/react-turnstile";
 import {
   ConfirmEmailResult,
   getNamedAPIErrorMessage,
@@ -56,7 +57,13 @@ const SendEmailVerification = ({
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [loadingAccount, setLoadingAccount] = useState(false);
   const [token, setToken] = useState("");
-  const loadingPage = loadingAccount || emailSending || !emailSent;
+  const [captchaToken, setCaptchaToken] = useState<string | undefined>();
+  const requiresCaptcha = !!appConfig.turnstileSiteKey;
+  // Only show loading page if we're not waiting for captcha
+  const waitingForCaptcha =
+    requiresCaptcha && !captchaToken && !triedSendingEmail;
+  const loadingPage =
+    (loadingAccount || emailSending || !emailSent) && !waitingForCaptcha;
 
   const verifyToken = useCallback(
     async (token: string) => {
@@ -167,23 +174,41 @@ const SendEmailVerification = ({
     [dispatch, email, identity.commitment, verifyToken]
   );
 
-  const doRequestConfirmationEmail = useCallback(async () => {
-    setEmailSending(true);
-    const confirmationEmailResult = await requestConfirmationEmail(
-      appConfig.zupassServer,
-      email,
-      false
-    );
-    setEmailSending(false);
+  const doRequestConfirmationEmail = useCallback(
+    async (captchaToken?: string) => {
+      // Double-check: never send email if captcha is required but token is missing
+      if (requiresCaptcha && !captchaToken) {
+        return;
+      }
 
-    handleConfirmationEmailResult(confirmationEmailResult);
-  }, [email, handleConfirmationEmailResult]);
+      setEmailSending(true);
+      const confirmationEmailResult = await requestConfirmationEmail(
+        appConfig.zupassServer,
+        email,
+        false,
+        captchaToken
+      );
+      setEmailSending(false);
+
+      handleConfirmationEmailResult(confirmationEmailResult);
+      // Reset captcha token after use
+      setCaptchaToken(undefined);
+    },
+    [email, handleConfirmationEmailResult, requiresCaptcha]
+  );
 
   useEffect(() => {
     if (triedSendingEmail) return;
+    // Don't auto-send if captcha is required and not yet verified
+    if (requiresCaptcha && !captchaToken) return;
     setTriedSendingEmail(true);
-    doRequestConfirmationEmail();
-  }, [triedSendingEmail, doRequestConfirmationEmail]);
+    doRequestConfirmationEmail(captchaToken);
+  }, [
+    triedSendingEmail,
+    doRequestConfirmationEmail,
+    requiresCaptcha,
+    captchaToken
+  ]);
 
   // Verify the code the user entered.
   const onSubmit = useCallback(
@@ -193,6 +218,60 @@ const SendEmailVerification = ({
     },
     [verifyToken, token]
   );
+
+  // Show captcha if required and we haven't sent email yet
+  if (waitingForCaptcha) {
+    return (
+      <AppContainer bg="gray" fullscreen>
+        <LoginContainer>
+          <LoginTitleContainer>
+            <Typography fontSize={24} fontWeight={800} color="#1E2C50">
+              VERIFY YOU'RE HUMAN
+            </Typography>
+            <Typography
+              fontSize={16}
+              fontWeight={400}
+              color="#1E2C50"
+              family="Rubik"
+            >
+              Please complete the verification below to continue.
+            </Typography>
+          </LoginTitleContainer>
+          <LoginForm>
+            <Input2 variant="primary" value={email} disabled />
+            {appConfig.turnstileSiteKey && (
+              <Turnstile
+                siteKey={appConfig.turnstileSiteKey}
+                onSuccess={(token) => {
+                  setCaptchaToken(token);
+                }}
+                onError={() => {
+                  setError("Captcha verification failed. Please try again.");
+                  setCaptchaToken(undefined);
+                }}
+                onExpire={() => {
+                  setCaptchaToken(undefined);
+                }}
+              />
+            )}
+            {error && (
+              <Typography
+                fontSize={14}
+                fontWeight={400}
+                color="#FF0000"
+                family="Rubik"
+              >
+                {error}
+              </Typography>
+            )}
+            <Button2 variant="secondary" onClick={() => navigate("/")}>
+              Cancel
+            </Button2>
+          </LoginForm>
+        </LoginContainer>
+      </AppContainer>
+    );
+  }
 
   if (loadingPage) {
     let loaderText = "";

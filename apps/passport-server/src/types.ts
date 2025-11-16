@@ -128,4 +128,5 @@ export interface EnvironmentVariables {
   GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY?: string;
   PASSPORT_SERVER_URL: string;
   STYTCH_BYPASS?: string;
+  TURNSTILE_SECRET_KEY?: string;
 }
