@@ -556,6 +556,11 @@ export type ConfirmEmailRequest = {
    * Required to be 'true' if a user with the same email already exists.
    */
   force: "true" | "false";
+
+  /**
+   * Optional captcha token to verify the user is not a bot.
+   */
+  captchaToken?: string;
 };
 
 /**

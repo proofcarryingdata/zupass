@@ -87,9 +87,10 @@ export function initAccountRoutes(
       );
       const force =
         checkBody<ConfirmEmailRequest, "force">(req, "force") === "true";
+      const captchaToken = (req.body as ConfirmEmailRequest).captchaToken;
 
       const result = await sqlQueryWithPool(context.dbPool, (client) =>
-        userService.handleSendTokenEmail(client, email, force)
+        userService.handleSendTokenEmail(client, email, force, captchaToken)
       );
 
       if (result) {
