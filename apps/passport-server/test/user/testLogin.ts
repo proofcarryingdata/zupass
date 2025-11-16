@@ -45,7 +45,8 @@ export async function testLogin(
   const confirmationEmailResult = await requestConfirmationEmail(
     application.expressContext.localEndpoint,
     email,
-    force
+    force,
+    "test-captcha-token" // Captcha tokens are not verified in tests
   );
 
   if (expectEmailIncorrect) {
