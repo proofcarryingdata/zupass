@@ -18,7 +18,8 @@ import { httpPostSimple } from "./makeRequest";
 export async function requestConfirmationEmail(
   zupassServerUrl: string,
   email: string,
-  force: boolean
+  force: boolean,
+  captchaToken?: string
 ): Promise<ConfirmEmailResult> {
   return httpPostSimple(
     urlJoin(zupassServerUrl, "/account/send-login-email"),
@@ -31,7 +32,8 @@ export async function requestConfirmationEmail(
           },
     {
       email,
-      force: force ? "true" : "false"
+      force: force ? "true" : "false",
+      captchaToken
     } satisfies ConfirmEmailRequest
   );
 }

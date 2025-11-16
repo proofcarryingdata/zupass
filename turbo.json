@@ -247,6 +247,8 @@
     "GENERIC_ISSUANCE_TEST_MODE",
     "PRETIX_BATCH_ENABLED_FOR",
     "DB_POOL_SIZE",
+    "TURNSTILE_SECRET_KEY",
+    "TURNSTILE_SITE_KEY",
     "//// add env vars above this line ////"
   ]
 }

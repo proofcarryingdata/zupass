@@ -101,6 +101,13 @@ const define = {
           process.env.PRIORITY_FEED_PROVIDER_URLS
         )
       }
+    : {}),
+  ...(process.env.TURNSTILE_SITE_KEY !== undefined
+    ? {
+        "process.env.TURNSTILE_SITE_KEY": JSON.stringify(
+          process.env.TURNSTILE_SITE_KEY
+        )
+      }
     : {})
 };
 

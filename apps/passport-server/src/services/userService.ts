@@ -48,6 +48,7 @@ import {
 } from "../database/queries/users";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
+import { verifyTurnstileToken } from "../util/captchaVerification";
 import { logger } from "../util/logger";
 import { userRowToZupassUserJson } from "../util/zuzaluUser";
 import { EmailService } from "./emailService";
@@ -186,7 +187,8 @@ export class UserService {
   public async handleSendTokenEmail(
     client: PoolClient,
     email: string,
-    force: boolean
+    force: boolean,
+    captchaToken?: string
   ): Promise<ConfirmEmailResponseValue> {
     logger(
       `[USER_SERVICE] send-token-email ${JSON.stringify({
@@ -197,6 +199,22 @@ export class UserService {
 
     if (!validateEmail(email)) {
       throw new PCDHTTPError(400, `'${email}' is not a valid email`);
+    }
+
+    // Verify captcha if secret key is configured
+    const turnstileSecretKey = process.env.TURNSTILE_SECRET_KEY;
+    if (turnstileSecretKey) {
+      if (!captchaToken) {
+        throw new PCDHTTPError(400, "Captcha verification required");
+      }
+
+      const isValid = await verifyTurnstileToken(
+        captchaToken,
+        turnstileSecretKey
+      );
+      if (!isValid) {
+        throw new PCDHTTPError(400, "Captcha verification failed");
+      }
     }
 
     if (
